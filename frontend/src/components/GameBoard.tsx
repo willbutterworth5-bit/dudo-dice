@@ -299,6 +299,24 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     }
   }, [multiplayerMode?.roundResult, isMultiplayer, gameState, startChallengeAnimation]);
 
+  // Clear round result overlay when game ends (prevents it stacking behind Game Over modal)
+  const hasWinner = isMultiplayer
+    ? !!multiplayerMode?.winnerId
+    : !!(gameEngine?.getWinner());
+  useEffect(() => {
+    if (hasWinner) {
+      setShowDice(false);
+      setLastRoundResult(null);
+      setChallengedBidPlayerId(null);
+      setRevealState(null);
+      setRevealComplete(false);
+      setInnerCircleChallenge(false);
+      setIsTallying(false);
+      setIsCalzaRound(false);
+      setModalClosing(false);
+    }
+  }, [hasWinner]);
+
   // Handle AI turns (local mode only — in multiplayer, server handles AI)
   useEffect(() => {
     if (isMultiplayer) return;
