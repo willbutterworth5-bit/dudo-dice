@@ -83,9 +83,8 @@ export function useMultiplayerConnection() {
   const connect = useCallback(() => {
     if (socketRef.current?.connected) return;
 
-    const serverUrl = import.meta.env.PROD
-      ? window.location.origin
-      : 'http://localhost:3001';
+    const serverUrl = import.meta.env.VITE_SERVER_URL
+      || (import.meta.env.PROD ? window.location.origin : 'http://localhost:3001');
 
     const socket = io(serverUrl, {
       transports: ['websocket', 'polling'],

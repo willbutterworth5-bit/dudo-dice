@@ -12,11 +12,17 @@ const __dirname = dirname(__filename);
 const app = express();
 const httpServer = createServer(app);
 
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? [
+      'https://dudodice.com',
+      'https://www.dudodice.com',
+      ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : []),
+    ]
+  : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:59033'];
+
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.NODE_ENV === 'production'
-      ? false // Same origin in production
-      : ['http://localhost:5173', 'http://localhost:3000'],
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
   },
 });
