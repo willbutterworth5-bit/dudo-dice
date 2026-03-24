@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import HomeScreen from './components/HomeScreen'
 import GameBoard from './components/GameBoard'
 import ProfileScreen from './components/ProfileScreen'
+import LobbyScreen from './components/LobbyScreen'
+import WaitingRoom from './components/WaitingRoom'
 import { GameProvider } from './context/GameContext'
-import { Difficulty } from './game/AIPlayer'
+import { useMultiplayerConnection } from './hooks/useMultiplayerConnection'
+import type { Difficulty } from './game/AIPlayer'
 
-type Screen = 'home' | 'game' | 'profile'
+type Screen = 'home' | 'game' | 'profile' | 'lobby' | 'waiting' | 'online-game'
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home')
@@ -15,6 +18,8 @@ function App() {
   const [analysisEnabled, setAnalysisEnabled] = useState(false)
   const [palificoEnabled, setPalificoEnabled] = useState(true)
   const [calzaEnabled, setCalzaEnabled] = useState(false)
+
+  const mp = useMultiplayerConnection()
 
   const handleStartGame = (count: number, diff: Difficulty, dice: number, analysis: boolean, palifico: boolean, calza: boolean) => {
     setPlayerCount(count)
@@ -26,24 +31,34 @@ function App() {
     setCurrentScreen('game')
   }
 
+  const handlePlayOnline = () => {
+    mp.connect()
+    setCurrentScreen('lobby')
+  }
+
   const handleBackToHome = () => {
+    mp.disconnect()
     setCurrentScreen('home')
   }
 
-  const handleShowProfile = () => {
-    setCurrentScreen('profile')
-  }
-
-  const handleBackFromProfile = () => {
-    setCurrentScreen('home')
-  }
+  // Watch for room updates to auto-navigate
+  useEffect(() => {
+    if (mp.roomUpdate) {
+      if (mp.roomUpdate.phase === 'waiting' && currentScreen === 'lobby') {
+        setCurrentScreen('waiting')
+      } else if (mp.roomUpdate.phase === 'playing' && (currentScreen === 'waiting' || currentScreen === 'lobby')) {
+        setCurrentScreen('online-game')
+      }
+    }
+  }, [mp.roomUpdate, currentScreen])
 
   return (
     <GameProvider>
       {currentScreen === 'home' && (
         <HomeScreen
           onStartGame={handleStartGame}
-          onShowProfile={handleShowProfile}
+          onShowProfile={() => setCurrentScreen('profile')}
+          onPlayOnline={handlePlayOnline}
         />
       )}
       {currentScreen === 'game' && (
@@ -54,11 +69,70 @@ function App() {
           analysisEnabled={analysisEnabled}
           palificoEnabled={palificoEnabled}
           calzaEnabled={calzaEnabled}
-          onBackToHome={handleBackToHome}
+          onBackToHome={() => setCurrentScreen('home')}
         />
       )}
       {currentScreen === 'profile' && (
-        <ProfileScreen onBack={handleBackFromProfile} />
+        <ProfileScreen onBack={() => setCurrentScreen('home')} />
+      )}
+      {currentScreen === 'lobby' && (
+        <LobbyScreen
+          isConnected={mp.isConnected}
+          publicRooms={mp.publicRooms}
+          error={mp.error}
+          onCreateRoom={mp.createRoom}
+          onJoinRoom={mp.joinRoom}
+          onQuickMatch={mp.quickMatch}
+          onListRooms={mp.listRooms}
+          onBack={handleBackToHome}
+        />
+      )}
+      {currentScreen === 'waiting' && mp.roomUpdate && (
+        <WaitingRoom
+          roomCode={mp.roomUpdate.roomCode}
+          players={mp.roomUpdate.players}
+          hostId={mp.roomUpdate.hostId}
+          mySessionId={mp.sessionId}
+          settings={mp.roomUpdate.settings}
+          onStartGame={mp.startGame}
+          onLeave={() => {
+            mp.leaveRoom()
+            setCurrentScreen('lobby')
+          }}
+        />
+      )}
+      {currentScreen === 'online-game' && mp.gameState && (
+        <GameBoard
+          playerCount={mp.gameState.players.length}
+          difficulty="medium"
+          startingDice={mp.gameState.settings.startingDice}
+          analysisEnabled={false}
+          palificoEnabled={mp.gameState.settings.palificoEnabled}
+          calzaEnabled={mp.gameState.settings.calzaEnabled}
+          onBackToHome={handleBackToHome}
+          multiplayerMode={{
+            sessionId: mp.sessionId,
+            gameState: mp.gameState,
+            turnTimeRemaining: mp.turnTimeRemaining,
+            roundResult: mp.roundResult,
+            winnerId: mp.winnerId,
+            isReconnecting: mp.isReconnecting,
+            roomPlayers: mp.roomUpdate?.players ?? [],
+            onMakeBid: mp.makeBid,
+            onChallenge: mp.challenge,
+            onCalza: mp.calza,
+          }}
+        />
+      )}
+      {/* Reconnecting overlay */}
+      {mp.isReconnecting && currentScreen === 'online-game' && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100]">
+          <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl p-6 text-center">
+            <div className="animate-spin w-8 h-8 border-2 border-white border-t-transparent rounded-full mx-auto mb-3" />
+            <p className="text-white font-bold">Reconnecting...</p>
+            <p className="text-white/50 text-sm mt-1">Please wait</p>
+          </div>
+        </div>
       )}
     </GameProvider>
   )

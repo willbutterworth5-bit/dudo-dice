@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { RoundResult } from '../game/GameState';
 import DiceFace from './DiceFace';
 
@@ -8,6 +9,7 @@ interface RoundResultModalProps {
   analysisEnabled?: boolean;
   revealComplete?: boolean;
   closing?: boolean;
+  autoClose?: boolean;
   players?: Array<{ id: string; name: string; isHuman?: boolean }>;
 }
 
@@ -18,8 +20,16 @@ export default function RoundResultModal({
   analysisEnabled = false,
   revealComplete = false,
   closing = false,
+  autoClose = false,
   players = [],
 }: RoundResultModalProps) {
+  // In multiplayer, auto-close after 3 seconds once reveal is complete
+  useEffect(() => {
+    if (autoClose && revealComplete) {
+      const timer = setTimeout(onClose, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [autoClose, revealComplete, onClose]);
   const loser = players.find(p => p.id === result.loserId);
   const winner = players.find(p => p.id === result.winnerId);
   const isHumanLoser = loser?.isHuman || false;

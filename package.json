@@ -1,0 +1,16 @@
+{
+  "name": "dudo-dice-monorepo",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "frontend",
+    "server"
+  ],
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+    "build:server": "cd server && npm run build",
+    "build": "npm run build:frontend && npm run build:server"
+  }
+}

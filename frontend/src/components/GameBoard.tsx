@@ -11,6 +11,20 @@ import PalificoInfoModal from './PalificoInfoModal';
 import GameLogPanel from './GameLogPanel';
 import RoundAnalysisModal from './RoundAnalysisModal';
 import GameAnalysisModal from './GameAnalysisModal';
+import type { RoomPlayerInfo } from '../hooks/useMultiplayerConnection';
+
+export interface MultiplayerMode {
+  sessionId: string;
+  gameState: GameState;
+  turnTimeRemaining: number;
+  roundResult: RoundResult | null;
+  winnerId: string | null;
+  isReconnecting: boolean;
+  roomPlayers: RoomPlayerInfo[];
+  onMakeBid: (quantity: number, faceValue: number) => void;
+  onChallenge: () => void;
+  onCalza: () => void;
+}
 
 interface GameBoardProps {
   playerCount: number;
@@ -20,6 +34,7 @@ interface GameBoardProps {
   palificoEnabled: boolean;
   calzaEnabled: boolean;
   onBackToHome: () => void;
+  multiplayerMode?: MultiplayerMode;
 }
 
 /** Darken a hex colour by subtracting `amount` from each RGB channel. */
@@ -31,14 +46,20 @@ function darkenHex(hex: string, amount: number): string {
   return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 }
 
-export default function GameBoard({ playerCount, difficulty, startingDice, analysisEnabled, palificoEnabled, calzaEnabled, onBackToHome }: GameBoardProps) {
-  const { gameEngine, gameState, initializeGame, makeBid, challengeBid, callCalza, updateGameState } = useGameContext();
+export default function GameBoard({ playerCount, difficulty, startingDice, analysisEnabled, palificoEnabled, calzaEnabled, onBackToHome, multiplayerMode }: GameBoardProps) {
+  const isMultiplayer = !!multiplayerMode;
+  const { gameEngine, gameState: localGameState, initializeGame, makeBid: localMakeBid, challengeBid: localChallengeBid, callCalza: localCallCalza, updateGameState } = useGameContext();
   const [aiPlayer, setAiPlayer] = useState(() => new AIPlayer(difficulty));
 
-  // Update AI player difficulty if it changes
+  // In multiplayer mode, use server-provided state; in local mode, use context state
+  const gameState = isMultiplayer ? multiplayerMode.gameState : localGameState;
+
+  // Update AI player difficulty if it changes (local mode only)
   useEffect(() => {
-    setAiPlayer(new AIPlayer(difficulty));
-  }, [difficulty]);
+    if (!isMultiplayer) {
+      setAiPlayer(new AIPlayer(difficulty));
+    }
+  }, [difficulty, isMultiplayer]);
   const [showDice, setShowDice] = useState(false);
   const [lastRoundResult, setLastRoundResult] = useState<RoundResult | null>(null);
   const [showPalificoInfo, setShowPalificoInfo] = useState(false);
@@ -73,8 +94,10 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     const revealed: { [key: string]: number[] } = {};
     const matchingDice: { [key: string]: number[] } = {};
 
-    // Mirror the sector mapping from the render — human always at sector 3 (bottom)
-    const humanIdxInner = state.players.findIndex((p: any) => p.isHuman);
+    // Mirror the sector mapping from the render — local player always at sector 3 (bottom)
+    const humanIdxInner = isMultiplayer
+      ? state.players.findIndex((p: any) => p.id === multiplayerMode?.sessionId)
+      : state.players.findIndex((p: any) => p.isHuman);
     const playerCountInner = state.players.length;
     const sectorToPlayerIdxInner: (number | null)[] = [null, null, null, humanIdxInner, null, null];
     for (let i = 0; i < Math.min(humanIdxInner, 3); i++) {
@@ -194,7 +217,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     setTimeout(() => {
       revealNextDie(0, revealed, matchingDice);
     }, 200);
-  }, []);
+  }, [isMultiplayer, multiplayerMode?.sessionId]);
 
   // Shared challenge animation sequence used by both AI and human challenges
   const startChallengeAnimation = useCallback((result: RoundResult, state: GameState, isCalza = false) => {
@@ -219,8 +242,9 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     }, 1200);
   }, [startSequentialReveal]);
 
-  // Initialize game on mount
+  // Initialize game on mount (local mode only)
   useEffect(() => {
+    if (isMultiplayer) return; // Server handles initialization in multiplayer
     const settings: GameSettings = {
       playerCount,
       startingDice,
@@ -232,7 +256,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     // Trigger dice throw animation on initial game start
     setDiceThrowing(true);
     setTimeout(() => setDiceThrowing(false), 800);
-  }, [playerCount, startingDice, palificoEnabled, calzaEnabled, initializeGame]);
+  }, [playerCount, startingDice, palificoEnabled, calzaEnabled, initializeGame, isMultiplayer]);
 
   // Initialize previousRoundNumber when gameState first becomes available
   useEffect(() => {
@@ -263,9 +287,21 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     }
   }, [gameState?.roundNumber, previousRoundNumber]);
 
-
-  // Handle AI turns
+  // Handle multiplayer round results — trigger reveal animation
+  const prevMpRoundResult = useRef<RoundResult | null>(null);
   useEffect(() => {
+    if (!isMultiplayer || !multiplayerMode || !gameState) return;
+    const result = multiplayerMode.roundResult;
+    if (result && result !== prevMpRoundResult.current) {
+      prevMpRoundResult.current = result;
+      const isCalza = result.challengeType === 'calza';
+      startChallengeAnimation(result, gameState, isCalza);
+    }
+  }, [multiplayerMode?.roundResult, isMultiplayer, gameState, startChallengeAnimation]);
+
+  // Handle AI turns (local mode only — in multiplayer, server handles AI)
+  useEffect(() => {
+    if (isMultiplayer) return;
     if (!gameState || !gameEngine) return;
     if (gameState.gamePhase === 'gameOver') return;
     if (aiTurnInProgress.current) return;
@@ -296,7 +332,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           const decision = aiPlayer.makeDecision(freshState, freshPlayer);
 
           if (decision === 'challenge') {
-            const result = challengeBid(freshPlayer.id);
+            const result = localChallengeBid(freshPlayer.id);
             aiTurnInProgress.current = false;
             if (result) {
               updateGameState();
@@ -307,7 +343,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               startChallengeAnimation(result, freshState, false);
             }
           } else if (decision === 'calza') {
-            const result = callCalza(freshPlayer.id);
+            const result = localCallCalza(freshPlayer.id);
             aiTurnInProgress.current = false;
             if (result) {
               updateGameState();
@@ -316,7 +352,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           } else {
             const bid = aiPlayer.generateBid(freshState, freshPlayer);
             if (bid) {
-              const result = await makeBid(bid);
+              const result = await localMakeBid(bid);
               aiTurnInProgress.current = false;
               if (result.success) {
                 updateGameState();
@@ -324,7 +360,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               }
             } else {
               // Can't generate valid bid, challenge instead
-              const result = challengeBid(freshPlayer.id);
+              const result = localChallengeBid(freshPlayer.id);
               aiTurnInProgress.current = false;
               if (result) {
                 updateGameState();
@@ -343,44 +379,49 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
       };
 
     handleAITurn();
-  }, [gameState?.currentPlayerIndex, gameState?.gamePhase, gameEngine, aiPlayer, makeBid, challengeBid, startChallengeAnimation, lastRoundResult, showDice, updateGameState, isTallying, innerCircleChallenge]);
+  }, [gameState?.currentPlayerIndex, gameState?.gamePhase, gameEngine, aiPlayer, localMakeBid, localChallengeBid, startChallengeAnimation, lastRoundResult, showDice, updateGameState, isTallying, innerCircleChallenge, isMultiplayer]);
 
   const handleHumanBid = useCallback(async (bid: Bid) => {
+    if (isMultiplayer && multiplayerMode) {
+      multiplayerMode.onMakeBid(bid.quantity, bid.faceValue);
+      setBidAnimationKey(prev => prev + 1);
+      return;
+    }
+
     if (!gameEngine || !gameState) return;
 
-    // Get the latest game state from the engine to ensure we have the current player
     const latestState = gameEngine.getState();
     const currentPlayer = latestState.players[latestState.currentPlayerIndex];
 
-    // Verify it's actually the human player's turn (silent guard — BidInput is hidden when not human's turn)
     if (!currentPlayer || !currentPlayer.isHuman) return;
 
-    // Update the bid with the correct current player ID from the engine
     const updatedBid: Bid = {
       ...bid,
       playerId: currentPlayer.id,
     };
 
-    const result = await makeBid(updatedBid);
+    const result = await localMakeBid(updatedBid);
     if (result.success) {
       setBidAnimationKey(prev => prev + 1);
     }
-    // On failure, BidInput's own validation already shows an inline error message
-  }, [gameEngine, gameState, makeBid]);
+  }, [gameEngine, gameState, localMakeBid, isMultiplayer, multiplayerMode]);
 
   const handleHumanChallenge = useCallback(() => {
+    if (isMultiplayer && multiplayerMode) {
+      multiplayerMode.onChallenge();
+      return;
+    }
+
     if (!gameEngine || !gameState) return;
 
-    // Get the latest game state from the engine to ensure we have the current player
     const latestState = gameEngine.getState();
     const currentPlayer = latestState.players[latestState.currentPlayerIndex];
 
-    // Silent guards — Dudo button is only rendered when it's the human's turn with an active bid
     if (!currentPlayer || !currentPlayer.isHuman) return;
     if (!latestState.currentBid) return;
 
     try {
-      const result = challengeBid(currentPlayer.id);
+      const result = localChallengeBid(currentPlayer.id);
       if (result) {
         updateGameState();
         const freshState = gameEngine.getState();
@@ -390,9 +431,14 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     } catch (error) {
       console.error('Error challenging bid:', error);
     }
-  }, [gameEngine, gameState, challengeBid, startChallengeAnimation, updateGameState]);
+  }, [gameEngine, gameState, localChallengeBid, startChallengeAnimation, updateGameState, isMultiplayer, multiplayerMode]);
 
   const handleHumanCalza = useCallback(() => {
+    if (isMultiplayer && multiplayerMode) {
+      multiplayerMode.onCalza();
+      return;
+    }
+
     if (!gameEngine || !gameState) return;
 
     const latestState = gameEngine.getState();
@@ -402,7 +448,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     if (!latestState.currentBid) return;
 
     try {
-      const result = callCalza(currentPlayer.id);
+      const result = localCallCalza(currentPlayer.id);
       if (result) {
         updateGameState();
         const freshState = gameEngine.getState();
@@ -411,9 +457,9 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     } catch (error) {
       console.error('Error calling calza:', error);
     }
-  }, [gameEngine, gameState, callCalza, startChallengeAnimation, updateGameState]);
+  }, [gameEngine, gameState, localCallCalza, startChallengeAnimation, updateGameState, isMultiplayer, multiplayerMode]);
 
-  if (!gameState || !gameEngine) {
+  if (!gameState || (!isMultiplayer && !gameEngine)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-xl text-text-primary">Loading game...</div>
@@ -438,7 +484,9 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     );
   }
 
-  const winner = gameEngine.getWinner();
+  const winner = isMultiplayer
+    ? (multiplayerMode?.winnerId ? gameState.players.find(p => p.id === multiplayerMode.winnerId) ?? null : null)
+    : gameEngine?.getWinner() ?? null;
 
   // Calculate total dice
   const totalDice = gameState.players.reduce((sum, p) => sum + p.diceCount, 0);
@@ -457,7 +505,21 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   
   // Always put human at sector 3 (bottom); distribute others in array order around it.
   // Works correctly for 2–6 players. For 4–6 players produces same result as before.
-  const humanIdx = gameState.players.findIndex(p => p.isHuman);
+  // In multiplayer: "me" is the player matching my session ID (dice are visible)
+  // In local: "me" is the player marked isHuman
+  const humanIdx = isMultiplayer
+    ? gameState.players.findIndex(p => p.id === multiplayerMode!.sessionId)
+    : gameState.players.findIndex(p => p.isHuman);
+
+  // Helper to check if a player is "me" (the local human player)
+  const isMyPlayer = (playerId: string) => isMultiplayer
+    ? playerId === multiplayerMode!.sessionId
+    : gameState.players.find(p => p.id === playerId)?.isHuman ?? false;
+
+  // Is it my turn?
+  const isMyTurn = gameState.players[gameState.currentPlayerIndex]
+    ? isMyPlayer(gameState.players[gameState.currentPlayerIndex].id)
+    : false;
   const numPlayers = gameState.players.length;
   const sectorToPlayerIdx: (number | null)[] = [null, null, null, humanIdx, null, null];
   // Fill sectors 0–2 with players that come before human in array order
@@ -823,7 +885,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               // After reveal is complete, show all dice
               const isRevealing = revealState !== null && lastRoundResult !== null;
               // Don't show dice during challenge phases or tallying - only show after reveal starts
-              const shouldShowDice = player.isHuman || (isRevealing ? true : false);
+              const isLocalPlayer = isMyPlayer(player.id);
+              const shouldShowDice = isLocalPlayer || (isRevealing ? true : false);
               
               // Get dice for this player
               const originalDice = (lastRoundResult && revealState)
@@ -866,7 +929,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
                     // Human always sees their own dice during the reveal (just not the glow until counted)
                     const isRevealed = isRevealing
-                      ? (player.isHuman || hasBeenCounted)
+                      ? (isLocalPlayer || hasBeenCounted)
                       : (shouldShowDice && die !== undefined);
 
                     // Glow only after the die has been sequentially counted — never before
@@ -896,7 +959,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                             flex items-center justify-center relative
                             ${isThrowing
                               ? 'animate-dice-roll-throw'
-                              : player.isHuman
+                              : isLocalPlayer
                                 ? (isMatchingAndRevealing ? 'animate-die-count-pop-match' : (isCurrentlyRevealing ? 'animate-die-count-pop' : ''))
                                 : (isMatchingAndRevealing ? 'animate-reveal-match' : (isCurrentlyRevealing ? 'animate-reveal' : ''))
                             }
@@ -978,17 +1041,24 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                     </div>
                   </div>
                 ) : (
-                  // Normal play — human shows "Your Turn", AI shows "Thinking"
+                  // Normal play — human shows "Your Turn", AI/others show "Thinking" or player name
                   <div className="text-center flex flex-col items-center justify-center w-full px-2 gap-0 select-none">
-                    {currentPlayer.isHuman ? (
+                    {isMyTurn ? (
                       <>
                         <div className="text-[9px] font-bold tracking-widest text-white/75 uppercase leading-none">Your</div>
                         <div className="text-xl font-bold text-white leading-tight" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>Turn!</div>
+                        {isMultiplayer && (
+                          <div className="text-[9px] text-white/60 mt-0.5">{Math.ceil((multiplayerMode?.turnTimeRemaining ?? 0) / 1000)}s</div>
+                        )}
                       </>
                     ) : (
                       <>
-                        <div className="text-[9px] text-white/70 uppercase tracking-wide leading-none">Thinking</div>
-                        <div className="text-lg font-bold text-white leading-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>…</div>
+                        <div className="text-[9px] text-white/70 uppercase tracking-wide leading-none">
+                          {isMultiplayer ? currentPlayer.name : 'Thinking'}
+                        </div>
+                        <div className="text-lg font-bold text-white leading-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+                          {isMultiplayer ? `${Math.ceil((multiplayerMode?.turnTimeRemaining ?? 0) / 1000)}s` : '…'}
+                        </div>
                       </>
                     )}
                   </div>
@@ -1040,7 +1110,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
         {/* Bid Input Section */}
         <div className="max-w-2xl mx-auto" style={{ marginTop: '1.25rem' }}>
-          {currentPlayer.isHuman && gameState.gamePhase === 'bidding' && !lastRoundResult && !showDice && (
+          {isMyTurn && gameState.gamePhase === 'bidding' && !lastRoundResult && !showDice && (
             <BidInput
               currentBid={gameState.currentBid}
               palificoMode={gameState.palificoMode}
@@ -1052,7 +1122,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               disabled={aiTurnInProgress.current}
             />
           )}
-          {!currentPlayer.isHuman && gameState.gamePhase === 'bidding' && !lastRoundResult && !innerCircleChallenge && (
+          {!isMyTurn && gameState.gamePhase === 'bidding' && !lastRoundResult && !innerCircleChallenge && (
             <div
               key={`waiting-${gameState.currentPlayerIndex}`}
               className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-3 shadow-2xl text-center animate-fade-slide-up"
@@ -1086,8 +1156,9 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
             result={lastRoundResult}
             revealComplete={revealComplete}
             players={gameState.players}
-            analysisEnabled={analysisEnabled}
+            analysisEnabled={isMultiplayer ? false : analysisEnabled}
             closing={modalClosing}
+            autoClose={isMultiplayer}
             onViewAnalysis={() => setShowRoundAnalysis(true)}
             onClose={() => {
               // Start exit animation, then reset state after it completes
@@ -1128,10 +1199,9 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         {winner && (
           <GameOverModal
             winner={winner}
-            analysisEnabled={analysisEnabled}
+            analysisEnabled={isMultiplayer ? false : analysisEnabled}
             onViewGameAnalysis={() => setShowGameAnalysis(true)}
-            onNewGame={() => {
-              // Track game completion - check if human player won
+            onNewGame={isMultiplayer ? undefined : () => {
               const humanPlayer = gameState.players.find(p => p.isHuman);
               const humanWon = humanPlayer && winner.id === humanPlayer.id;
               ProfileStorage.recordGame(!!humanWon);
@@ -1144,15 +1214,14 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                 calzaEnabled,
               };
               initializeGame(settings);
-              // Recreate AI player with same difficulty
               setAiPlayer(new AIPlayer(difficulty));
             }}
             onQuit={() => {
-              // Track game completion - check if human player won
-              const humanPlayer = gameState.players.find(p => p.isHuman);
-              const humanWon = humanPlayer && winner.id === humanPlayer.id;
-              ProfileStorage.recordGame(!!humanWon);
-
+              if (!isMultiplayer) {
+                const humanPlayer = gameState.players.find(p => p.isHuman);
+                const humanWon = humanPlayer && winner.id === humanPlayer.id;
+                ProfileStorage.recordGame(!!humanWon);
+              }
               onBackToHome();
             }}
           />

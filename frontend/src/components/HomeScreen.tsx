@@ -5,9 +5,10 @@ import { Difficulty } from '../game/AIPlayer';
 interface HomeScreenProps {
   onStartGame: (playerCount: number, difficulty: Difficulty, startingDice: number, analysisEnabled: boolean, palificoEnabled: boolean, calzaEnabled: boolean) => void;
   onShowProfile: () => void;
+  onPlayOnline?: () => void;
 }
 
-export default function HomeScreen({ onStartGame, onShowProfile }: HomeScreenProps) {
+export default function HomeScreen({ onStartGame, onShowProfile, onPlayOnline }: HomeScreenProps) {
   const [playerCount, setPlayerCount] = useState(6);
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [startingDice, setStartingDice] = useState(5);
@@ -167,13 +168,21 @@ export default function HomeScreen({ onStartGame, onShowProfile }: HomeScreenPro
             </div>
           </div>
 
-          <div className="flex justify-center">
+          <div className="flex justify-center gap-3">
             <button
               onClick={handleStart}
               className="px-6 py-2.5 text-white font-extrabold text-base rounded-xl transition-colors btn-3d-accent"
             >
               Start Game
             </button>
+            {onPlayOnline && (
+              <button
+                onClick={onPlayOnline}
+                className="px-6 py-2.5 text-white font-extrabold text-base rounded-xl transition-colors btn-glass border-2 border-white/30"
+              >
+                🌐 Play Online
+              </button>
+            )}
           </div>
         </div>
 

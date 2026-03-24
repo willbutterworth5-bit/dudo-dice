@@ -2,7 +2,7 @@ import { Player, PLAYER_COLOR_MAP } from '../game/GameState';
 
 interface GameOverModalProps {
   winner: Player;
-  onNewGame: () => void;
+  onNewGame?: (() => void) | undefined;
   onQuit: () => void;
   onViewGameAnalysis?: () => void;
   analysisEnabled?: boolean;
@@ -36,12 +36,14 @@ export default function GameOverModal({
           </p>
 
           <div className="flex gap-3 justify-center flex-wrap">
-            <button
-              onClick={onNewGame}
-              className="px-6 py-3 bg-white hover:bg-gray-100 text-orange-600 font-bold rounded-xl transition-all transform hover:scale-105 shadow-xl"
-            >
-              New Game
-            </button>
+            {onNewGame && (
+              <button
+                onClick={onNewGame}
+                className="px-6 py-3 bg-white hover:bg-gray-100 text-orange-600 font-bold rounded-xl transition-all transform hover:scale-105 shadow-xl"
+              >
+                New Game
+              </button>
+            )}
             {analysisEnabled && (
               <button
                 onClick={onViewGameAnalysis}
