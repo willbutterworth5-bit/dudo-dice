@@ -88,6 +88,11 @@ export function setupSocketHandlers(io: Server, roomManager: RoomManager): void 
         return;
       }
 
+      if (room.players.find(p => p.id === data.sessionId)) {
+        socket.emit('error', { message: 'You are already in this room' });
+        return;
+      }
+
       const added = room.addPlayer(data.sessionId, socket.id, data.playerName);
       if (!added) {
         socket.emit('error', { message: 'Room is full' });

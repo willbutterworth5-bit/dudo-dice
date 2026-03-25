@@ -36,13 +36,16 @@ export interface PublicRoom {
   hostName: string;
 }
 
-const SESSION_ID_KEY = 'dudo-session-id';
+const SESSION_STORAGE_KEY = 'dudo-tab-session-id';
 
 function getOrCreateSessionId(): string {
-  let id = localStorage.getItem(SESSION_ID_KEY);
+  // sessionStorage is tab-scoped: each tab gets its own session ID.
+  // On page reload within the same tab, sessionStorage persists so we
+  // reconnect to any in-progress game.  A new tab always gets a fresh UUID.
+  let id = sessionStorage.getItem(SESSION_STORAGE_KEY);
   if (!id) {
     id = crypto.randomUUID();
-    localStorage.setItem(SESSION_ID_KEY, id);
+    sessionStorage.setItem(SESSION_STORAGE_KEY, id);
   }
   return id;
 }

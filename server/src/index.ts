@@ -16,9 +16,10 @@ const allowedOrigins = process.env.NODE_ENV === 'production'
   ? [
       'https://dudodice.com',
       'https://www.dudodice.com',
+      ...(process.env.RENDER_EXTERNAL_URL ? [process.env.RENDER_EXTERNAL_URL] : []),
       ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : []),
     ]
-  : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:59033'];
+  : '*' as const;
 
 const io = new Server(httpServer, {
   cors: {
