@@ -3,7 +3,7 @@ services:
     name: dudo-dice
     runtime: node
     plan: free
-    buildCommand: rm -f package-lock.json && npm install && npm install --no-save @rollup/rollup-linux-x64-gnu && npm run build
+    buildCommand: rm -f package-lock.json && npm install && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
