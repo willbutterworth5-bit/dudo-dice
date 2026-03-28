@@ -143,7 +143,7 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
               </div>
 
               <div className="flex items-center gap-2 text-xs text-white/70">
-                <span>Actual count:</span>
+                <span>Actual count</span>
                 <span className="font-bold text-white">{result.actualCount}</span>
                 {result.challengeType !== 'calza' && (
                   <>
@@ -169,25 +169,33 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
                 <>
                   {humanWasChallenger && !humanLost && (
                     <p className="text-xs text-green-300 font-semibold">
-                      ✓ Good call — the bid was unlikely to be true.
+                      {challengedBidProb < 0.35
+                        ? `✓ Good call — the bid was only ${Math.round(challengedBidProb * 100)}% likely to be true.`
+                        : `✓ Lucky — the bid was ${Math.round(challengedBidProb * 100)}% likely, but it wasn't true.`}
                     </p>
                   )}
 
                   {humanWasChallenger && humanLost && (
                     <p className="text-xs text-amber-300 font-semibold">
-                      The bid was actually true ({Math.round(challengedBidProb * 100)}% likely). DUDO was risky here.
+                      {challengedBidProb < 0.35
+                        ? `Unlucky — the bid was only ${Math.round(challengedBidProb * 100)}% likely but turned out to be true. DUDO was the right call statistically.`
+                        : `The bid was ${Math.round(challengedBidProb * 100)}% likely to be true. DUDO was risky here.`}
                     </p>
                   )}
 
                   {!humanWasChallenger && humanWasBidder && !humanLost && (
                     <p className="text-xs text-green-300 font-semibold">
-                      ✓ Your bid held up — {challengerPlayer?.name} was wrong to challenge.
+                      {challengedBidProb >= 0.35
+                        ? `✓ Your bid held up (${Math.round(challengedBidProb * 100)}% likely) — ${challengerPlayer?.name} was wrong to challenge.`
+                        : `✓ Your bluff worked — only ${Math.round(challengedBidProb * 100)}% likely, but it was true!`}
                     </p>
                   )}
 
                   {!humanWasChallenger && humanWasBidder && humanLost && (
                     <p className="text-xs text-amber-300 font-semibold">
-                      Your bid was challenged correctly — it was unlikely to be true.
+                      {challengedBidProb < 0.35
+                        ? `Your bid was only ${Math.round(challengedBidProb * 100)}% likely — ${challengerPlayer?.name} was right to challenge.`
+                        : `Unlucky — your bid was ${Math.round(challengedBidProb * 100)}% likely but wasn't true.`}
                     </p>
                   )}
 
@@ -207,7 +215,7 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
           {humanWasChallenger && humanLost && (
             <div className="bg-white/10 rounded-lg p-3 space-y-2">
               <div className="flex items-center gap-1.5">
-                <p className="text-xs font-bold text-white/50 uppercase tracking-wider">Instead, you could have bid:</p>
+                <p className="text-xs font-bold text-white/50 uppercase tracking-wider">Instead, you could have bid</p>
                 <InfoTooltip align="right" text="Bids that were truthful based on the actual dice on the board — alternatives above the challenged bid that you could have safely made instead of calling DUDO." />
               </div>
               {alternatives.length > 0 ? (

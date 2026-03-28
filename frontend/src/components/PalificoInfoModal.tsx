@@ -28,7 +28,7 @@ export default function PalificoInfoModal({ onClose, lockedFaceValue: _lockedFac
           </div>
 
           <div className="bg-white/10 border border-white/20 rounded-lg p-4 mb-4">
-            <p className="font-semibold text-white mb-2">Rules in Palifico Mode:</p>
+            <p className="font-semibold text-white mb-2">Rules in Palifico Mode</p>
             <ul className="list-disc list-inside space-y-1 text-sm text-white/90">
               <li>Ones lose their wild status and are <strong>NOT counted</strong></li>
               <li>Only exact matches count (no wild ones)</li>

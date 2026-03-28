@@ -81,6 +81,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   const [showRoundAnalysis, setShowRoundAnalysis] = useState(false);
   const [showGameAnalysis, setShowGameAnalysis] = useState(false);
   const [dudoFadingOut, setDudoFadingOut] = useState(false);
+  const [boardShaking, setBoardShaking] = useState(false);
   const [modalClosing, setModalClosing] = useState(false);
   const [isCalzaRound, setIsCalzaRound] = useState(false);
 
@@ -148,8 +149,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     const wasPalificoRound = (result.bids[0] as any)?.palificoMode ?? false;
 
     setRevealState({
-      playerIndex: 0,
-      dieIndex: 0,
+      playerIndex: -1,
+      dieIndex: -1,
       revealed,
       matchingDice: {}, // pre-initialize so key starts at "found-0", avoiding spurious animation
     });
@@ -230,6 +231,10 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     setIsCalzaRound(isCalza);
     setIsTallying(false);
 
+    // Shake the board on Dudo call
+    setBoardShaking(true);
+    setTimeout(() => setBoardShaking(false), 600);
+
     // Brief dramatic pause: flash the challenge moment, then crossfade into the reveal.
     setTimeout(() => {
       // Begin crossfade: fade out DUDO/CALZA text before switching to the Found counter
@@ -278,7 +283,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
       }, 800); // Match animation duration
       setIsTallying(false);
       setInnerCircleChallenge(false);
-      setChallengedBidPlayerId(null);
+      // Don't clear challengedBidPlayerId here — it's needed for the red
+      // highlight during the reveal. It gets cleared when the modal is dismissed.
     }
     
     // Update previous round number after checking
@@ -567,47 +573,22 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   const lastBidX = Math.cos(lastBidMidRad) * innerRingMidR;
   const lastBidY = Math.sin(lastBidMidRad) * innerRingMidR;
 
-  // Challenge overlay positions — bidder sector (challenged bid chip) + challenger sector (DUDO badge)
-  // Challenge overlay positions — use radius 148 (outer part of inner ring, away from center circle)
-  const challengeOverlayR = 148;
+  // Challenge overlay positions — same radius as normal bid display
   const challengedSectorIdx = challengedBidPlayerId
     ? sectorPlayers.findIndex(p => p?.id === challengedBidPlayerId)
     : -1;
   const challengedMidRad = ((challengedSectorIdx >= 0 ? sectorAngles[challengedSectorIdx] : 0) + 30) * Math.PI / 180;
-  const challengeBidChipX = Math.cos(challengedMidRad) * challengeOverlayR;
-  const challengeBidChipY = Math.sin(challengedMidRad) * challengeOverlayR;
+  const challengeBidChipX = Math.cos(challengedMidRad) * innerRingMidR;
+  const challengeBidChipY = Math.sin(challengedMidRad) * innerRingMidR;
 
 
   return (
     <div className="min-h-screen relative" style={{ padding: '0.5rem', paddingTop: '3rem', minWidth: '0', overflowX: 'auto' }}>
       <div className="max-w-4xl mx-auto relative">
-        {/* Player Color Legend - fixed left column, below back button */}
-        <div className="fixed z-50 flex flex-col gap-1.5" style={{ left: '0.75rem', top: '3.75rem', width: '4rem' }}>
-        {gameState.players.map((player, playerIdx) => {
-          const color = PLAYER_COLOR_MAP[player.color] || '#6B7280';
-          const isCurrentTurn = playerIdx === gameState.currentPlayerIndex && gameState.gamePhase === 'bidding' && !lastRoundResult && !showDice;
-          return (
-            <div key={player.id}>
-              <div
-                className="rounded-md px-1.5 py-0.5 flex items-center justify-center flex-shrink-0 transition-all duration-300"
-                style={{
-                  backgroundColor: color,
-                  boxShadow: isCurrentTurn ? '0 0 0 2px white' : 'none',
-                  transform: isCurrentTurn ? 'scale(1.08)' : 'scale(1)',
-                  opacity: isCurrentTurn ? 1 : 0.6,
-                }}
-              >
-                <span className="text-[10px] font-bold text-white text-center whitespace-nowrap">{player.name}</span>
-              </div>
-            </div>
-          );
-        })}
-        </div>
-        
         {/* Back button - fixed top left */}
         <button
           onClick={onBackToHome}
-          className="fixed text-white text-sm font-semibold z-50 rounded-xl px-2 py-1 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900"
+          className="fixed h-8 text-white text-sm font-semibold z-50 rounded-xl px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
           style={{ left: '0.75rem', top: '0.75rem' }}
         >
           ← Back
@@ -615,21 +596,21 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
         {/* Dice count + Round + Palifico + Log - fixed top right, aligned with back button */}
         <div className="fixed z-50 flex items-center gap-1.5" style={{ right: '0.75rem', top: '0.75rem' }}>
-          <div className="text-white px-2 py-1 rounded-xl flex items-center gap-1 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900">
+          <div className="h-8 text-white px-2 rounded-xl flex items-center gap-1 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900">
             <span className="text-xs">🎲</span>
             <span className="font-bold text-sm">x{totalDice}</span>
           </div>
           {gameState.palificoMode.active && (
             <button
               onClick={() => setShowPalificoInfo(true)}
-              className="text-white px-2 py-1 rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-md bg-gradient-to-br from-indigo-700 to-purple-900"
+              className="h-8 text-white px-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
             >
               Palifico
             </button>
           )}
           <button
             onClick={() => setShowGameLog(v => !v)}
-            className="text-white px-2 py-1 rounded-xl text-xs font-semibold shadow-md bg-gradient-to-br from-indigo-700 to-purple-900"
+            className="h-8 text-white px-2 rounded-xl text-xs font-semibold shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
             title="Game Log"
           >
             📋
@@ -637,10 +618,10 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         </div>
 
         {/* Redesigned Game Board - Segmented Circle */}
-        <div className="relative w-full max-w-4xl mx-auto" style={{ height: '450px', marginTop: '0.5rem', overflow: 'visible' }}>
+        <div className="relative w-full max-w-4xl mx-auto" style={{ height: '450px', marginTop: '0.25rem', overflow: 'visible' }}>
           {/* Table Container */}
           <div className="absolute inset-0 flex items-center justify-center" style={{ overflow: 'visible', padding: '20px' }}>
-            <div className="relative" style={{ width: '450px', height: '450px', overflow: 'visible', flexShrink: 0 }}>
+            <div className={`relative ${boardShaking ? 'animate-board-shake' : ''}`} style={{ width: '450px', height: '450px', overflow: 'visible', flexShrink: 0 }}>
               {/* Base Circle */}
               <div
                 className="absolute inset-0 rounded-full"
@@ -654,13 +635,13 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               {/* Player Sectors - Colored segments */}
               {sectorAngles.map((startAngle, sectorIdx) => {
                 const player = sectorPlayers[sectorIdx];
-                // During a dudo, suppress the current-player highlight so only the called player is shown
-                const isCurrentPlayer = !challengedBidPlayerId && player && gameState.players.findIndex(p => p.id === player.id) === gameState.currentPlayerIndex;
+                // During a dudo/reveal, suppress the current-player highlight — only the last bidder is shown
+                const isCurrentPlayer = !challengedBidPlayerId && !lastRoundResult && player && gameState.players.findIndex(p => p.id === player.id) === gameState.currentPlayerIndex;
                 const isEliminated = player && player.diceCount === 0;
-                // During dudo/tallying: use the captured bidder ID so the highlight stays locked
-                const isLastBidder = challengedBidPlayerId
-                  ? !!(player && player.id === challengedBidPlayerId)
-                  : !!(player && gameState.currentBid && gameState.currentBid.playerId === player.id);
+                // During dudo/tallying: the challenged bidder gets red highlight
+                const isDudoChallenged = !!(challengedBidPlayerId && player && player.id === challengedBidPlayerId);
+                // Normal play: track who made the last bid (for subtle glow, not red)
+                const isLastBidder = !challengedBidPlayerId && !!(player && gameState.currentBid && gameState.currentBid.playerId === player.id);
                 const hexColor = player
                   ? (isEliminated ? '#9CA3AF' : (PLAYER_COLOR_MAP[player.color] || '#6B7280'))
                   : '#9CA3AF'; // Grey for empty sectors
@@ -709,18 +690,20 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                       zIndex: 1,
                       opacity: player ? (isEliminated ? 0.4 : 1) : 0.9,
                       overflow: 'visible',
-                      filter: isLastBidder
-                        ? `drop-shadow(0 0 10px ${hexColor})`
-                        : 'none',
+                      filter: isDudoChallenged
+                        ? 'drop-shadow(0 0 14px rgba(220, 38, 38, 0.6))'
+                        : (isLastBidder ? `drop-shadow(0 0 10px ${hexColor})` : 'none'),
+                      transition: 'filter 0.6s ease',
                     }}
                   >
                     {/* Inner part of sector (70 to 175) */}
                     <path
                       d={`M ${225 + x1} ${225 + y1} L ${225 + x2} ${225 + y2} A ${ringRadius} ${ringRadius} 0 ${largeArc} 1 ${225 + x3} ${225 + y3} L ${225 + x4} ${225 + y4} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${225 + x1} ${225 + y1} Z`}
-                      fill={hexColor}
-                      fillOpacity={player ? (isCurrentPlayer ? 0.65 : 0.15) : 0.08}
+                      fill={isDudoChallenged ? '#DC2626' : hexColor}
+                      fillOpacity={player ? ((isCurrentPlayer ? 0.65 : isDudoChallenged ? 0.45 : 0.15)) : 0.08}
                       stroke={isCurrentPlayer ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.06)'}
                       strokeWidth={isCurrentPlayer ? '2' : '0.5'}
+                      style={{ transition: 'fill 0.6s ease, fill-opacity 0.6s ease' }}
                     />
                     {/* Outer part of sector (175 to 225) */}
                     <path
@@ -745,16 +728,21 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                   const endY = Math.sin((angle * Math.PI) / 180) * tableRadius;
 
                   // Line idx is the left boundary of sector idx and the right boundary of sector (idx-1).
-                  // Freeze lines to neutral during challenge/reveal so they don't flicker to the next player's colour.
-                  const isActiveLine = !lastRoundResult && !innerCircleChallenge && (
+                  // During challenge/reveal, highlight the last bidder's sector lines in red.
+                  const isDudoLine = (lastRoundResult || innerCircleChallenge) && challengedSectorIdx >= 0 && (
+                    idx === challengedSectorIdx ||
+                    idx === (challengedSectorIdx + 1) % 6
+                  );
+                  const isActiveLine = isDudoLine || (!lastRoundResult && !innerCircleChallenge && (
                     idx === currentPlayerSector ||
                     idx === (currentPlayerSector + 1) % 6
-                  );
+                  ));
 
                   // First pass: only inactive lines. Second pass: only active lines (drawn on top).
                   if (isActiveLine !== renderActive) return null;
 
                   const gradientId = `active-line-grad-${idx}`;
+                  const lineColor = isDudoLine ? '#E03030' : currentPlayerColor;
 
                   return (
                     <svg
@@ -780,10 +768,10 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                             x2={225 + endX}
                             y2={225 + endY}
                           >
-                            <stop offset="0%" stopColor="white" stopOpacity="1" />
-                            <stop offset="15%" stopColor={currentPlayerColor} stopOpacity="1" />
-                            <stop offset="65%" stopColor={currentPlayerColor} stopOpacity="1" />
-                            <stop offset="100%" stopColor={darkenHex(currentPlayerColor, 65)} stopOpacity="1" />
+                            <stop offset="0%" stopColor={isDudoLine ? lineColor : 'white'} stopOpacity="1" />
+                            <stop offset="15%" stopColor={lineColor} stopOpacity="1" />
+                            <stop offset="65%" stopColor={lineColor} stopOpacity="1" />
+                            <stop offset="100%" stopColor={darkenHex(lineColor, 65)} stopOpacity="1" />
                           </linearGradient>
                         </defs>
                       )}
@@ -793,8 +781,9 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                         x2={225 + endX}
                         y2={225 + endY}
                         stroke={isActiveLine ? `url(#${gradientId})` : 'rgba(255, 255, 255, 0.33)'}
-                        strokeWidth="12"
+                        strokeWidth={isDudoLine ? '14' : '12'}
                         strokeLinecap="round"
+                        style={{ transition: 'stroke-width 0.4s ease' }}
                       />
                     </svg>
                   );
@@ -875,12 +864,14 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                   transform: `translate(calc(-50% + ${challengeBidChipX}px), calc(-50% + ${challengeBidChipY}px))`,
                 }}
               >
-                <div className="flex flex-col items-center gap-0.5 bg-white rounded-lg px-2 py-1.5"
-                  style={{ boxShadow: '0 0 0 2.5px #E03030, 0 3px 10px rgba(0,0,0,0.4)', minWidth: '2.5rem' }}>
-                  <div className="w-8 h-8 bg-white rounded flex items-center justify-center flex-shrink-0">
+                <div className="flex flex-col items-center justify-center gap-0.5">
+                  <div className="w-7 h-7 bg-white rounded flex items-center justify-center shadow-sm flex-shrink-0">
                     <DiceFace value={lastRoundResult.challengedBid.faceValue} size="sm" />
                   </div>
-                  <div className="text-xs font-bold leading-none" style={{ color: '#E03030' }}>
+                  <div
+                    className="text-sm font-bold text-white leading-none"
+                    style={{ textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
+                  >
                     ×{lastRoundResult.challengedBid.quantity}
                   </div>
                 </div>
@@ -1098,7 +1089,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl px-4 py-2.5 shadow-2xl">
                 <div className="flex items-center justify-center gap-1.5 flex-wrap text-sm">
                   {/* Challenger */}
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: challColor }} />
                     <span className="font-bold text-white">{challPlayer?.name ?? 'Player'}</span>
                   </div>
@@ -1108,15 +1099,14 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                     <span className="text-white/65">called <span className="font-bold text-red-300">DUDO</span> on</span>
                   )}
                   {/* Bidder */}
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: bidColor }} />
-                    <span className="font-bold text-white">{bidPlayer?.name ?? 'Player'}</span>
+                    <span className="font-bold text-white">{bidPlayer?.name ?? 'Player'}<span className="font-normal text-white/65">'s bid of</span></span>
                   </div>
-                  <span className="text-white/65">'s bid of</span>
                   {/* The bid itself */}
                   <div className="flex items-center gap-1">
                     <span className="font-bold text-white">{lastRoundResult.challengedBid.quantity}×</span>
-                    <div className="w-5 h-5 bg-white/20 border border-white/30 rounded flex items-center justify-center flex-shrink-0">
+                    <div className="w-5 h-5 bg-white rounded flex items-center justify-center flex-shrink-0">
                       <DiceFace value={lastRoundResult.challengedBid.faceValue} size="sm" />
                     </div>
                   </div>
@@ -1126,46 +1116,74 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           );
         })()}
 
-        {/* Bid Input Section */}
-        <div className="max-w-2xl mx-auto" style={{ marginTop: '1.25rem' }}>
-          {isMyTurn && gameState.gamePhase === 'bidding' && !lastRoundResult && !showDice && (
-            <BidInput
-              currentBid={gameState.currentBid}
-              palificoMode={gameState.palificoMode}
-              playerId={currentPlayer.id}
-              onBid={handleHumanBid}
-              onChallenge={handleHumanChallenge}
-              calzaEnabled={calzaEnabled}
-              onCalza={handleHumanCalza}
-              disabled={aiTurnInProgress.current}
-            />
-          )}
-          {!isMyTurn && gameState.gamePhase === 'bidding' && !lastRoundResult && !innerCircleChallenge && (
-            <div
-              key={`waiting-${gameState.currentPlayerIndex}`}
-              className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-3 shadow-2xl text-center animate-fade-slide-up"
-            >
-              <div className="flex items-center justify-center gap-2">
+        {/* Player Legend + Bid Input */}
+        <div className="px-3">
+          {/* Bid Input Section */}
+          <div className="max-w-2xl mx-auto">
+          {/* Player Color Legend */}
+          <div className="flex gap-1.5 mb-1.5 mt-2">
+            {gameState.players.map((player, playerIdx) => {
+              const color = PLAYER_COLOR_MAP[player.color] || '#6B7280';
+              const isCurrentTurn = playerIdx === gameState.currentPlayerIndex && gameState.gamePhase === 'bidding' && !lastRoundResult && !showDice;
+              const isEliminated = player.diceCount === 0;
+              return (
                 <div
-                  className="w-3 h-3 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: PLAYER_COLOR_MAP[currentPlayer.color] || '#6B7280' }}
-                />
-                <span className="text-sm font-semibold text-white">
-                  {currentPlayer.name}
-                </span>
-                <span className="text-white/70 text-sm">is thinking</span>
-                <span className="flex gap-0.5 items-end pb-0.5">
-                  {[0, 1, 2].map(i => (
-                    <span
-                      key={i}
-                      className="block w-1 h-1 rounded-full bg-white/70 animate-bounce"
-                      style={{ animationDelay: `${i * 0.15}s` }}
-                    />
-                  ))}
-                </span>
+                  key={player.id}
+                  className="flex-1 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md"
+                  style={{
+                    background: `linear-gradient(to bottom right, ${color}, ${color}dd)`,
+                    boxShadow: isCurrentTurn
+                      ? `0 0 0 2px white, 0 4px 12px ${color}66`
+                      : `0 2px 4px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)`,
+                    transform: isCurrentTurn ? 'scale(1.08)' : 'scale(1)',
+                    opacity: isEliminated ? 0.4 : (isCurrentTurn ? 1 : 0.75),
+                    height: '1.75rem',
+                  }}
+                >
+                  <span className="text-[11px] font-bold text-white text-center whitespace-nowrap px-2.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>{player.name}</span>
+                </div>
+              );
+            })}
+          </div>
+            {isMyTurn && gameState.gamePhase === 'bidding' && !lastRoundResult && !showDice && (
+              <BidInput
+                currentBid={gameState.currentBid}
+                palificoMode={gameState.palificoMode}
+                playerId={currentPlayer.id}
+                onBid={handleHumanBid}
+                onChallenge={handleHumanChallenge}
+                calzaEnabled={calzaEnabled}
+                onCalza={handleHumanCalza}
+                disabled={aiTurnInProgress.current}
+              />
+            )}
+            {!isMyTurn && gameState.gamePhase === 'bidding' && !lastRoundResult && !innerCircleChallenge && (
+              <div
+                key={`waiting-${gameState.currentPlayerIndex}`}
+                className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-3 shadow-2xl text-center animate-fade-slide-up"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <div
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: PLAYER_COLOR_MAP[currentPlayer.color] || '#6B7280' }}
+                  />
+                  <span className="text-sm font-semibold text-white">
+                    {currentPlayer.name}
+                  </span>
+                  <span className="text-white/70 text-sm">is thinking</span>
+                  <span className="flex gap-0.5 items-end pb-0.5">
+                    {[0, 1, 2].map(i => (
+                      <span
+                        key={i}
+                        className="block w-1 h-1 rounded-full bg-white/70 animate-bounce"
+                        style={{ animationDelay: `${i * 0.15}s` }}
+                      />
+                    ))}
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Round Result Modal */}

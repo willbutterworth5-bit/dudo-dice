@@ -148,11 +148,6 @@ export function setupSocketHandlers(io: Server, roomManager: RoomManager): void 
       const room = roomManager.getRoomByPlayer(sessionId);
       if (!room) return;
 
-      if (room.hostId !== sessionId) {
-        socket.emit('error', { message: 'Only the host can start the game' });
-        return;
-      }
-
       const started = room.startGame();
       if (!started) {
         socket.emit('error', { message: 'Cannot start game (need at least 2 players)' });

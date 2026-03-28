@@ -25,7 +25,6 @@ export default function WaitingRoom({
   onStartGame,
   onLeave,
 }: WaitingRoomProps) {
-  const isHost = mySessionId === hostId;
   const canStart = players.length >= 2;
 
   const copyCode = () => {
@@ -34,6 +33,14 @@ export default function WaitingRoom({
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8">
+      {/* Back button - fixed top left */}
+      <button
+        onClick={onLeave}
+        className="fixed text-white text-sm font-semibold z-50 rounded-xl px-2 py-1 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900"
+        style={{ left: '0.75rem', top: '0.75rem' }}
+      >
+        ← Back
+      </button>
       <div className="max-w-md w-full">
         <div className="flex items-center justify-center gap-4 mb-5">
           <img src="/Logo.png" alt="Dudo Dice Logo" className="flex-shrink-0" style={{ width: '56px', height: '56px' }} />
@@ -108,27 +115,15 @@ export default function WaitingRoom({
           </div>
 
           {/* Actions */}
-          {isHost ? (
-            <button
-              onClick={onStartGame}
-              disabled={!canStart}
-              className="w-full py-2.5 text-white font-extrabold rounded-xl btn-3d-accent disabled:opacity-50"
-            >
-              {canStart ? 'Start Game' : 'Need at least 2 players'}
-            </button>
-          ) : (
-            <p className="text-center text-white/50 text-sm">
-              Waiting for host to start the game...
-            </p>
-          )}
+          <button
+            onClick={onStartGame}
+            disabled={!canStart}
+            className="w-full py-2.5 text-white font-extrabold rounded-xl btn-3d-accent disabled:opacity-50"
+          >
+            {canStart ? 'Start Game' : 'Need at least 2 players'}
+          </button>
         </div>
 
-        <button
-          onClick={onLeave}
-          className="w-full py-2 text-white/70 font-semibold text-sm hover:text-white transition-colors"
-        >
-          ← Leave Room
-        </button>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import LandingPage from './components/LandingPage'
 import HomeScreen from './components/HomeScreen'
 import GameBoard from './components/GameBoard'
 import ProfileScreen from './components/ProfileScreen'
@@ -8,16 +9,17 @@ import { GameProvider } from './context/GameContext'
 import { useMultiplayerConnection } from './hooks/useMultiplayerConnection'
 import type { Difficulty } from './game/AIPlayer'
 
-type Screen = 'home' | 'game' | 'profile' | 'lobby' | 'waiting' | 'online-game'
+type Screen = 'landing' | 'home' | 'game' | 'profile' | 'lobby' | 'waiting' | 'online-game'
 
 function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('home')
+  const [currentScreen, setCurrentScreen] = useState<Screen>('landing')
   const [playerCount, setPlayerCount] = useState(6)
   const [difficulty, setDifficulty] = useState<Difficulty>('medium')
   const [startingDice, setStartingDice] = useState(5)
   const [analysisEnabled, setAnalysisEnabled] = useState(false)
   const [palificoEnabled, setPalificoEnabled] = useState(true)
   const [calzaEnabled, setCalzaEnabled] = useState(false)
+  const [profileReturnScreen, setProfileReturnScreen] = useState<Screen>('home')
 
   const mp = useMultiplayerConnection()
 
@@ -38,7 +40,7 @@ function App() {
 
   const handleBackToHome = () => {
     mp.disconnect()
-    setCurrentScreen('home')
+    setCurrentScreen('landing')
   }
 
   // Watch for room updates to auto-navigate
@@ -54,11 +56,17 @@ function App() {
 
   return (
     <GameProvider>
+      {currentScreen === 'landing' && (
+        <LandingPage
+          onPlayComputer={() => setCurrentScreen('home')}
+          onPlayOnline={handlePlayOnline}
+        />
+      )}
       {currentScreen === 'home' && (
         <HomeScreen
           onStartGame={handleStartGame}
-          onShowProfile={() => setCurrentScreen('profile')}
-          onPlayOnline={handlePlayOnline}
+          onShowProfile={() => { setProfileReturnScreen('home'); setCurrentScreen('profile') }}
+          onBack={() => setCurrentScreen('landing')}
         />
       )}
       {currentScreen === 'game' && (
@@ -73,7 +81,7 @@ function App() {
         />
       )}
       {currentScreen === 'profile' && (
-        <ProfileScreen onBack={() => setCurrentScreen('home')} />
+        <ProfileScreen onBack={() => setCurrentScreen(profileReturnScreen)} />
       )}
       {currentScreen === 'lobby' && (
         <LobbyScreen
@@ -84,6 +92,7 @@ function App() {
           onJoinRoom={mp.joinRoom}
           onQuickMatch={mp.quickMatch}
           onListRooms={mp.listRooms}
+          onShowProfile={() => { setProfileReturnScreen('lobby'); setCurrentScreen('profile') }}
           onBack={handleBackToHome}
         />
       )}
@@ -109,7 +118,10 @@ function App() {
           analysisEnabled={false}
           palificoEnabled={mp.gameState.settings.palificoEnabled}
           calzaEnabled={mp.gameState.settings.calzaEnabled}
-          onBackToHome={handleBackToHome}
+          onBackToHome={() => {
+            mp.disconnect()
+            setCurrentScreen('home')
+          }}
           multiplayerMode={{
             sessionId: mp.sessionId,
             gameState: mp.gameState,

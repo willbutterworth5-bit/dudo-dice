@@ -130,7 +130,7 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
               {/* Photo Upload */}
               <div className="flex flex-col">
                 <label className="block text-base font-medium text-white mb-2">
-                  Profile Photo:
+                  Profile Photo
                 </label>
                 <div className="flex items-center gap-3">
                   <div className="relative">
@@ -180,7 +180,7 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
                 {/* Name Input */}
                 <div>
                   <label className="block text-base font-medium text-white mb-2">
-                    Player Name:
+                    Player Name
                   </label>
                   <input
                     type="text"
@@ -195,7 +195,7 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
                 {/* Country Picker */}
                 <div>
                   <label className="block text-base font-medium text-white mb-2">
-                    Country:
+                    Country
                   </label>
                   <div className="relative">
                     {/* Trigger button */}

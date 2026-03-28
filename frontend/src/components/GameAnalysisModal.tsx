@@ -136,7 +136,7 @@ function RoundDetail({ round, players }: { round: RoundResult; players: Player[]
               )}
               {humanWasChallenger && humanLost && (
                 <div>
-                  <p className="text-xs text-amber-300 mb-1">Could have bid instead:</p>
+                  <p className="text-xs text-amber-300 mb-1">Could have bid instead</p>
                   {alternatives.length > 0 ? (
                     <div className="flex gap-2 flex-wrap">
                       {alternatives.map((alt, i) => (

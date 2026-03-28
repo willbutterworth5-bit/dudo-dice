@@ -68,7 +68,7 @@ export type PlayerColor = typeof PLAYER_COLORS[number];
 export const PLAYER_COLOR_MAP: Record<string, string> = {
   red: '#FF3333',
   orange: '#FF6600',
-  yellow: '#FFD700',
+  yellow: '#E6B800',
   pink: '#FF1493',
   green: '#00CC66',
   blue: '#0080FF',

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import type { Difficulty } from '@dudo-dice/shared';
 import { ProfileStorage } from '../utils/profileStorage';
+import RulesModal from './RulesModal';
 import type { PublicRoom } from '../hooks/useMultiplayerConnection';
 
 interface LobbyScreenProps {
@@ -17,6 +17,7 @@ interface LobbyScreenProps {
   onJoinRoom: (code: string, playerName: string) => void;
   onQuickMatch: (playerName: string) => void;
   onListRooms: () => void;
+  onShowProfile: () => void;
   onBack: () => void;
 }
 
@@ -30,21 +31,18 @@ export default function LobbyScreen({
   onJoinRoom,
   onQuickMatch,
   onListRooms,
+  onShowProfile,
   onBack,
 }: LobbyScreenProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('join');
+  const [activeTab, setActiveTab] = useState<Tab>('create');
   const [roomCode, setRoomCode] = useState('');
-  const [playerName, setPlayerName] = useState(() => {
-    const profile = ProfileStorage.getProfile();
-    return profile.name === 'You' ? '' : profile.name;
-  });
+  const [showRules, setShowRules] = useState(false);
 
   // Create room settings
   const [maxPlayers, setMaxPlayers] = useState(6);
   const [startingDice, setStartingDice] = useState(5);
   const [palificoEnabled, setPalificoEnabled] = useState(true);
   const [calzaEnabled, setCalzaEnabled] = useState(false);
-  const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [isPublic, setIsPublic] = useState(true);
 
   useEffect(() => {
@@ -53,7 +51,10 @@ export default function LobbyScreen({
     }
   }, [activeTab, onListRooms]);
 
-  const getName = () => playerName.trim() || 'Player';
+  const getName = () => {
+    const profile = ProfileStorage.getProfile();
+    return profile.name === 'You' ? 'Player' : profile.name;
+  };
 
   const handleJoin = () => {
     if (!roomCode.trim()) return;
@@ -66,7 +67,7 @@ export default function LobbyScreen({
 
   const handleCreate = () => {
     onCreateRoom(
-      { maxPlayers, startingDice, palificoEnabled, calzaEnabled, difficulty },
+      { maxPlayers, startingDice, palificoEnabled, calzaEnabled, difficulty: 'medium' },
       isPublic,
       getName()
     );
@@ -74,6 +75,14 @@ export default function LobbyScreen({
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8">
+      {/* Back button - fixed top left */}
+      <button
+        onClick={onBack}
+        className="fixed text-white text-sm font-semibold z-50 rounded-xl px-2 py-1 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900"
+        style={{ left: '0.75rem', top: '0.75rem' }}
+      >
+        ← Back
+      </button>
       <div className="max-w-lg w-full">
         {/* Header */}
         <div className="flex items-center justify-center gap-4 mb-5">
@@ -91,19 +100,6 @@ export default function LobbyScreen({
             {error}
           </div>
         )}
-
-        {/* Player name */}
-        <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl p-5 mb-4">
-          <label className="block text-sm font-semibold text-white mb-2">Your Name:</label>
-          <input
-            type="text"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            placeholder="Enter your name"
-            maxLength={16}
-            className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30"
-          />
-        </div>
 
         {/* Tabs */}
         <div className="flex gap-2 mb-4">
@@ -125,7 +121,7 @@ export default function LobbyScreen({
           {activeTab === 'join' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-white mb-2">Room Code:</label>
+                <label className="block text-sm font-semibold text-white mb-2">Room Code</label>
                 <input
                   type="text"
                   value={roomCode}
@@ -160,79 +156,146 @@ export default function LobbyScreen({
 
           {/* Create tab */}
           {activeTab === 'create' && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-white mb-2">
-                  Max Players: <span className="font-extrabold">{maxPlayers}</span>
-                </label>
-                <input
-                  type="range" min="2" max="6" value={maxPlayers}
-                  onChange={(e) => setMaxPlayers(Number(e.target.value))}
-                  className="w-full h-3 bg-white/20 rounded-xl appearance-none cursor-pointer accent-white"
-                />
-                <div className="flex justify-between text-xs text-white/70 mt-1">
-                  {[2,3,4,5,6].map(n => <span key={n}>{n}</span>)}
+            <div className="-m-5 overflow-hidden rounded-2xl">
+              {/* Header */}
+              <div className="bg-white/10 border-b border-white/20 px-5 py-4 flex justify-between items-center">
+                <h2 className="text-lg font-bold text-white">Create Room</h2>
+                <div className="flex gap-2 items-center">
+                  <button
+                    onClick={onShowProfile}
+                    className="h-9 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"
+                  >
+                    Profile
+                  </button>
+                  <button
+                    onClick={() => setShowRules(true)}
+                    className="h-9 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"
+                  >
+                    Rules
+                  </button>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-white mb-2">
-                  Starting Dice: <span className="font-extrabold">{startingDice}</span>
-                </label>
-                <input
-                  type="range" min="1" max="5" value={startingDice}
-                  onChange={(e) => setStartingDice(Number(e.target.value))}
-                  className="w-full h-3 bg-white/20 rounded-xl appearance-none cursor-pointer accent-white"
-                />
-                <div className="flex justify-between text-xs text-white/70 mt-1">
-                  {[1,2,3,4,5].map(n => <span key={n}>{n}</span>)}
-                </div>
-              </div>
+              {/* Body */}
+              <div className="px-5 divide-y divide-white/20">
+                {/* Players & Dice */}
+                <div className="py-3">
+                  <div className="flex gap-4">
+                    <div className="flex-1 flex flex-col items-center">
+                      <label className="block text-sm font-semibold text-white mb-2">Max Players</label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setMaxPlayers(Math.max(2, maxPlayers - 1))}
+                          disabled={maxPlayers <= 2}
+                          className="w-9 h-9 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-base flex items-center justify-center btn-glass"
+                        >−</button>
+                        <div className="w-12 h-9 bg-white/20 border border-white/30 rounded-xl flex items-center justify-center">
+                          <span className="text-lg font-bold text-white">{maxPlayers}</span>
+                        </div>
+                        <button
+                          onClick={() => setMaxPlayers(Math.min(6, maxPlayers + 1))}
+                          disabled={maxPlayers >= 6}
+                          className="w-9 h-9 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-base flex items-center justify-center btn-glass"
+                        >+</button>
+                      </div>
+                    </div>
 
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <label className="block text-xs font-semibold text-white mb-1">Palifico</label>
-                  <div className="flex gap-1">
-                    {(['off', 'on'] as const).map((val) => (
-                      <button
-                        key={val}
-                        onClick={() => setPalificoEnabled(val === 'on')}
-                        className={`flex-1 py-1.5 rounded-lg font-bold text-xs ${
-                          palificoEnabled === (val === 'on') ? 'text-white btn-3d-accent' : 'btn-glass'
-                        }`}
-                      >
-                        {val.charAt(0).toUpperCase() + val.slice(1)}
-                      </button>
-                    ))}
+                    <div className="flex-1 flex flex-col items-center">
+                      <label className="block text-sm font-semibold text-white mb-2">Starting Dice</label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setStartingDice(Math.max(1, startingDice - 1))}
+                          disabled={startingDice <= 1}
+                          className="w-9 h-9 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-base flex items-center justify-center btn-glass"
+                        >−</button>
+                        <div className="w-12 h-9 bg-white/20 border border-white/30 rounded-xl flex items-center justify-center">
+                          <span className="text-lg font-bold text-white">{startingDice}</span>
+                        </div>
+                        <button
+                          onClick={() => setStartingDice(Math.min(5, startingDice + 1))}
+                          disabled={startingDice >= 5}
+                          className="w-9 h-9 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-base flex items-center justify-center btn-glass"
+                        >+</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-semibold text-white mb-1">Calza</label>
-                  <div className="flex gap-1">
-                    {(['off', 'on'] as const).map((val) => (
-                      <button
-                        key={val}
-                        onClick={() => setCalzaEnabled(val === 'on')}
-                        className={`flex-1 py-1.5 rounded-lg font-bold text-xs ${
-                          calzaEnabled === (val === 'on') ? 'text-white btn-3d-accent' : 'btn-glass'
-                        }`}
-                      >
-                        {val.charAt(0).toUpperCase() + val.slice(1)}
-                      </button>
-                    ))}
+
+                {/* Rules — Palifico + Calza together */}
+                <div className="py-3 space-y-4">
+                  {/* Palifico */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="text-sm font-semibold text-white">Palifico</label>
+                      <div className="relative group">
+                        <div className="w-5 h-5 rounded-full bg-white/20 group-hover:bg-white/30 text-white text-xs font-bold flex items-center justify-center transition-colors cursor-help">
+                          i
+                        </div>
+                        <div className="absolute left-1/2 -translate-x-1/2 top-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                          <p className="text-xs text-white/90 bg-indigo-900 border border-white/20 rounded-lg p-2 shadow-lg">
+                            When a player is down to their last die, that round becomes a Palifico round. Ones are not wild and all bids must use the same face value as the first bid.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-center gap-2">
+                      {(['off', 'on'] as const).map((val) => (
+                        <button
+                          key={val}
+                          onClick={() => setPalificoEnabled(val === 'on')}
+                          style={{ width: 'calc((100% - 1rem) / 3)' }}
+                          className={`py-2 rounded-xl font-bold text-sm ${
+                            palificoEnabled === (val === 'on') ? 'text-white btn-3d-accent' : 'btn-glass'
+                          }`}
+                        >
+                          {val.charAt(0).toUpperCase() + val.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Calza */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="text-sm font-semibold text-white">Calza</label>
+                      <div className="relative group">
+                        <div className="w-5 h-5 rounded-full bg-white/20 group-hover:bg-white/30 text-white text-xs font-bold flex items-center justify-center transition-colors cursor-help">
+                          i
+                        </div>
+                        <div className="absolute left-1/2 -translate-x-1/2 top-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                          <p className="text-xs text-white/90 bg-indigo-900 border border-white/20 rounded-lg p-2 shadow-lg">
+                            Instead of raising the bid or calling Dudo, call Calza to claim the bid is exactly right. If correct, gain a die back. If wrong, lose a die.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-center gap-2">
+                      {(['off', 'on'] as const).map((val) => (
+                        <button
+                          key={val}
+                          onClick={() => setCalzaEnabled(val === 'on')}
+                          style={{ width: 'calc((100% - 1rem) / 3)' }}
+                          className={`py-2 rounded-xl font-bold text-sm ${
+                            calzaEnabled === (val === 'on') ? 'text-white btn-3d-accent' : 'btn-glass'
+                          }`}
+                        >
+                          {val.charAt(0).toUpperCase() + val.slice(1)}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <label className="block text-xs font-semibold text-white mb-1">Visibility</label>
-                  <div className="flex gap-1">
+                {/* Visibility */}
+                <div className="py-3">
+                  <label className="block text-sm font-semibold text-white mb-2">Visibility</label>
+                  <div className="flex justify-center gap-2">
                     {([true, false] as const).map((val) => (
                       <button
                         key={String(val)}
                         onClick={() => setIsPublic(val)}
-                        className={`flex-1 py-1.5 rounded-lg font-bold text-xs ${
+                        style={{ width: 'calc((100% - 1rem) / 3)' }}
+                        className={`py-2 rounded-xl font-bold text-sm ${
                           isPublic === val ? 'text-white btn-3d-accent' : 'btn-glass'
                         }`}
                       >
@@ -241,31 +304,18 @@ export default function LobbyScreen({
                     ))}
                   </div>
                 </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-semibold text-white mb-1">AI Difficulty</label>
-                  <div className="flex gap-1">
-                    {(['easy', 'medium', 'hard'] as Difficulty[]).map((d) => (
-                      <button
-                        key={d}
-                        onClick={() => setDifficulty(d)}
-                        className={`flex-1 py-1.5 rounded-lg font-bold text-xs ${
-                          difficulty === d ? 'text-white btn-3d-accent' : 'btn-glass'
-                        }`}
-                      >
-                        {d.charAt(0).toUpperCase() + d.slice(1)}
-                      </button>
-                    ))}
-                  </div>
+
+                {/* Create Room */}
+                <div className="py-3">
+                  <button
+                    onClick={handleCreate}
+                    disabled={!isConnected}
+                    className="w-full py-2.5 text-white font-extrabold rounded-xl btn-3d-accent disabled:opacity-50"
+                  >
+                    Create Room
+                  </button>
                 </div>
               </div>
-
-              <button
-                onClick={handleCreate}
-                disabled={!isConnected}
-                className="w-full py-2.5 text-white font-extrabold rounded-xl btn-3d-accent disabled:opacity-50"
-              >
-                Create Room
-              </button>
             </div>
           )}
 
@@ -309,13 +359,11 @@ export default function LobbyScreen({
           )}
         </div>
 
-        <button
-          onClick={onBack}
-          className="mt-4 w-full py-2 text-white/70 font-semibold text-sm hover:text-white transition-colors"
-        >
-          ← Back to Menu
-        </button>
       </div>
+
+      {showRules && (
+        <RulesModal onClose={() => setShowRules(false)} />
+      )}
     </div>
   );
 }

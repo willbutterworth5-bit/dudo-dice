@@ -27,6 +27,7 @@ export default function BidInput({
   const [quantity, setQuantity] = useState(1);
   const [faceValue, setFaceValue] = useState(2);
   const [error, setError] = useState<string | null>(null);
+  const [manuallyAdjusted, setManuallyAdjusted] = useState(false);
 
   useEffect(() => {
     if (palificoMode.active && palificoMode.lockedFaceValue !== null) {
@@ -53,6 +54,7 @@ export default function BidInput({
       setFaceValue(2);
     }
     setError(null);
+    setManuallyAdjusted(false);
   }, [currentBid, palificoMode.active]);
 
   const handleBid = () => {
@@ -111,7 +113,7 @@ export default function BidInput({
         <div className="flex flex-row items-start gap-4 justify-center">
           {/* Face Value - Left Side */}
           <div className="flex-1 flex flex-col items-center">
-            <label className="block text-xs font-medium text-white mb-1 text-center">Face Value:</label>
+            <label className="block text-xs font-medium text-white mb-1 text-center">Face Value</label>
             <div className="flex gap-1.5 flex-wrap justify-center">
               {[1, 2, 3, 4, 5, 6].map((value) => {
                 const isDisabled = value === 1 ? !canBidOnes : !canBidNonOnes;
@@ -123,8 +125,18 @@ export default function BidInput({
                     onClick={() => {
                       if (!isDisabled && !isLocked) {
                         const newMin = getMinQuantity(value);
+                        const switchingToOrFromOnes = (value === 1) !== (faceValue === 1);
                         setFaceValue(value);
-                        setQuantity(newMin);
+                        if (switchingToOrFromOnes) {
+                          // Always reset when switching to/from ones
+                          setQuantity(newMin);
+                          setManuallyAdjusted(false);
+                        } else if (manuallyAdjusted && quantity >= newMin) {
+                          // Keep manual quantity if still valid
+                          // no change to quantity
+                        } else {
+                          setQuantity(newMin);
+                        }
                         setError(null);
                       }
                     }}
@@ -151,7 +163,7 @@ export default function BidInput({
           {/* Quantity - Right Side */}
           <div className="flex-1 flex flex-col items-center">
             <label className="block text-xs font-medium text-white mb-1 text-center">
-              Quantity:
+              Quantity
             </label>
             <div className="flex items-center justify-center gap-2">
               <button
@@ -159,6 +171,7 @@ export default function BidInput({
                   const minQty = getMinQuantity();
                   if (quantity > minQty) {
                     setQuantity(quantity - 1);
+                    setManuallyAdjusted(true);
                   }
                 }}
                 disabled={disabled || quantity <= getMinQuantity()}
@@ -174,6 +187,7 @@ export default function BidInput({
                   const maxQty = getMaxQuantity();
                   if (quantity < maxQty) {
                     setQuantity(quantity + 1);
+                    setManuallyAdjusted(true);
                   }
                 }}
                 disabled={disabled || quantity >= getMaxQuantity()}
