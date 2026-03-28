@@ -101,7 +101,7 @@ export default function BidInput({
   const canBidNonOnes = !palificoMode.active || (palificoMode.lockedFaceValue !== null && faceValue === palificoMode.lockedFaceValue);
 
   return (
-    <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-3 shadow-2xl animate-fade-slide-up">
+    <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-2 sm:p-3 shadow-2xl animate-fade-slide-up">
       {error && (
         <div className="bg-red-500/30 border border-red-400/40 text-red-100 px-3 py-1.5 rounded mb-2 text-sm">
           {error}
@@ -110,7 +110,7 @@ export default function BidInput({
 
       <div className="space-y-2">
         {/* Horizontal Container for Face Value and Quantity */}
-        <div className="flex flex-row items-start gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-4 justify-center">
           {/* Face Value - Left Side */}
           <div className="flex-1 flex flex-col items-center">
             <label className="block text-xs font-medium text-white mb-1 text-center">Face Value</label>
@@ -142,7 +142,7 @@ export default function BidInput({
                     }}
                     disabled={disabled || isDisabled || isLocked}
                     className={`
-                      w-10 h-10 rounded-xl transition-colors flex items-center justify-center relative
+                      w-9 h-9 sm:w-10 sm:h-10 rounded-xl transition-colors flex items-center justify-center relative
                       ${faceValue === value
                         ? 'bg-white/30 ring-2 ring-white shadow-sm'
                         : 'bg-white/15 border border-white/25'

@@ -5,7 +5,7 @@ interface LandingPageProps {
 
 export default function LandingPage({ onPlayComputer, onPlayOnline }: LandingPageProps) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
       <div className="max-w-md w-full">
         {/* Logo and title */}
         <div className="flex items-center justify-center gap-4 mb-8">

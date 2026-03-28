@@ -23,7 +23,7 @@ export default function HomeScreen({ onStartGame, onShowProfile, onBack }: HomeS
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8 relative">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 relative">
       {/* Back button - fixed top left */}
       <button
         onClick={onBack}
@@ -55,7 +55,7 @@ export default function HomeScreen({ onStartGame, onShowProfile, onBack }: HomeS
           {/* Header */}
           <div className="bg-white/10 border-b border-white/20 px-5 py-4 flex justify-between items-center">
             <h2 className="text-xl font-bold text-white">Game Setup</h2>
-            <div className="flex gap-2 items-center">
+            <div className="flex flex-wrap gap-2 items-center">
               <button
                 onClick={onShowProfile}
                 className="h-9 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"

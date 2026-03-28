@@ -85,6 +85,27 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   const [modalClosing, setModalClosing] = useState(false);
   const [isCalzaRound, setIsCalzaRound] = useState(false);
 
+  // Responsive board scaling for mobile
+  // On mobile, reserve space for top bar (~40px), player legend (~30px), bid input (~200px), and margins
+  const BOARD_BASE = 450;
+  const [boardSize, setBoardSize] = useState(() => {
+    if (typeof window === 'undefined') return BOARD_BASE;
+    const widthBased = window.innerWidth - 48; // 24px padding each side for dice overhang
+    const heightBased = window.innerHeight - 300; // reserve 300px for UI above/below board
+    return Math.min(BOARD_BASE, widthBased, heightBased);
+  });
+  useEffect(() => {
+    const updateSize = () => {
+      const widthBased = window.innerWidth - 48;
+      const heightBased = window.innerHeight - 300;
+      setBoardSize(Math.min(BOARD_BASE, widthBased, heightBased));
+    };
+    window.addEventListener('resize', updateSize);
+    updateSize();
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
+  const boardScale = Math.max(0.55, boardSize / BOARD_BASE);
+
   // Sequential reveal function - defined early to avoid hoisting issues
   const startSequentialReveal = useCallback((result: RoundResult, state: GameState, onComplete?: () => void) => {
     if (!result || !result.allDice) {
@@ -588,29 +609,29 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         {/* Back button - fixed top left */}
         <button
           onClick={onBackToHome}
-          className="fixed h-8 text-white text-sm font-semibold z-50 rounded-xl px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
+          className="fixed h-7 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-1.5 sm:px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
           style={{ left: '0.75rem', top: '0.75rem' }}
         >
           ← Back
         </button>
 
         {/* Dice count + Round + Palifico + Log - fixed top right, aligned with back button */}
-        <div className="fixed z-50 flex items-center gap-1.5" style={{ right: '0.75rem', top: '0.75rem' }}>
-          <div className="h-8 text-white px-2 rounded-xl flex items-center gap-1 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900">
+        <div className="fixed z-50 flex items-center gap-1 sm:gap-1.5" style={{ right: '0.75rem', top: '0.75rem' }}>
+          <div className="h-7 sm:h-8 text-white px-1.5 sm:px-2 rounded-xl flex items-center gap-1 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900">
             <span className="text-xs">🎲</span>
-            <span className="font-bold text-sm">x{totalDice}</span>
+            <span className="font-bold text-xs sm:text-sm">x{totalDice}</span>
           </div>
           {gameState.palificoMode.active && (
             <button
               onClick={() => setShowPalificoInfo(true)}
-              className="h-8 text-white px-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
+              className="h-7 sm:h-8 text-white px-1.5 sm:px-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
             >
-              Palifico
+              <span className="hidden sm:inline">Palifico</span><span className="sm:hidden">P!</span>
             </button>
           )}
           <button
             onClick={() => setShowGameLog(v => !v)}
-            className="h-8 text-white px-2 rounded-xl text-xs font-semibold shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
+            className="h-7 sm:h-8 text-white px-1.5 sm:px-2 rounded-xl text-xs font-semibold shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
             title="Game Log"
           >
             📋
@@ -618,10 +639,10 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         </div>
 
         {/* Redesigned Game Board - Segmented Circle */}
-        <div className="relative w-full max-w-4xl mx-auto" style={{ height: '450px', marginTop: '0.25rem', overflow: 'visible' }}>
+        <div className="relative w-full max-w-4xl mx-auto" style={{ height: `${boardSize}px`, marginTop: '0.25rem', overflow: 'visible' }}>
           {/* Table Container */}
-          <div className="absolute inset-0 flex items-center justify-center" style={{ overflow: 'visible', padding: '20px' }}>
-            <div className={`relative ${boardShaking ? 'animate-board-shake' : ''}`} style={{ width: '450px', height: '450px', overflow: 'visible', flexShrink: 0 }}>
+          <div className="absolute inset-0 flex items-center justify-center" style={{ overflow: 'visible', padding: '0' }}>
+            <div className={`relative ${boardShaking ? 'animate-board-shake' : ''}`} style={{ width: '450px', height: '450px', overflow: 'visible', flexShrink: 0, transform: `scale(${boardScale})`, transformOrigin: 'center center' }}>
               {/* Base Circle */}
               <div
                 className="absolute inset-0 rounded-full"
@@ -810,10 +831,6 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                   stroke="none"
                 />
               </svg>
-
-
-            </div>
-          </div>
 
           {/* Bid display — own layer above sector fills, below central circle */}
           {gameState.currentBid && lastBidSectorIdx >= 0 && !lastRoundResult && (
@@ -1076,6 +1093,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
             </div>
           </div>
 
+            </div>
+          </div>
         </div>
 
         {/* Challenge Context Banner — who called who and what the bid was (visible during DUDO flash too) */}
@@ -1117,11 +1136,11 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         })()}
 
         {/* Player Legend + Bid Input */}
-        <div className="px-3">
+        <div className="px-3 relative z-10">
           {/* Bid Input Section */}
           <div className="max-w-2xl mx-auto">
           {/* Player Color Legend */}
-          <div className="flex gap-1.5 mb-1.5 mt-2">
+          <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-1.5 mt-2">
             {gameState.players.map((player, playerIdx) => {
               const color = PLAYER_COLOR_MAP[player.color] || '#6B7280';
               const isCurrentTurn = playerIdx === gameState.currentPlayerIndex && gameState.gamePhase === 'bidding' && !lastRoundResult && !showDice;
@@ -1129,7 +1148,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               return (
                 <div
                   key={player.id}
-                  className="flex-1 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md"
+                  className="flex-1 min-w-0 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md h-6 sm:h-7"
                   style={{
                     background: `linear-gradient(to bottom right, ${color}, ${color}dd)`,
                     boxShadow: isCurrentTurn
@@ -1137,10 +1156,9 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                       : `0 2px 4px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)`,
                     transform: isCurrentTurn ? 'scale(1.08)' : 'scale(1)',
                     opacity: isEliminated ? 0.4 : (isCurrentTurn ? 1 : 0.75),
-                    height: '1.75rem',
                   }}
                 >
-                  <span className="text-[11px] font-bold text-white text-center whitespace-nowrap px-2.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>{player.name}</span>
+                  <span className="text-[9px] sm:text-[11px] font-bold text-white text-center truncate px-1 sm:px-2.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>{player.name}</span>
                 </div>
               );
             })}

@@ -117,16 +117,16 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
             style={{ width: '72px', height: '72px' }}
           />
           <div className="flex flex-col">
-            <h1 className="text-4xl font-bold text-white">Player Profile</h1>
+            <h1 className="text-2xl sm:text-4xl font-bold text-white">Player Profile</h1>
           </div>
         </div>
 
         {/* Profile Settings Card */}
-        <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl shadow-2xl p-8 mb-6">
+        <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl shadow-2xl p-4 sm:p-8 mb-6">
           <h2 className="text-2xl font-semibold text-white mb-6">Profile Settings</h2>
 
           <div className="mb-6">
-            <div className="flex flex-row items-start gap-6">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
               {/* Photo Upload */}
               <div className="flex flex-col">
                 <label className="block text-base font-medium text-white mb-2">
@@ -272,7 +272,7 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
         </div>
 
         {/* Statistics Card */}
-        <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl shadow-2xl p-8 mb-6">
+        <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl shadow-2xl p-4 sm:p-8 mb-6">
           <h2 className="text-2xl font-semibold text-white mb-6">Statistics</h2>
 
           <div className="grid grid-cols-2 gap-4">

@@ -74,7 +74,7 @@ export default function LobbyScreen({
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
       {/* Back button - fixed top left */}
       <button
         onClick={onBack}
