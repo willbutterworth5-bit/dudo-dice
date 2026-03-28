@@ -583,7 +583,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
 
   return (
-    <div className="min-h-screen relative" style={{ padding: '0.5rem', paddingTop: '3rem', minWidth: '0', overflowX: 'auto' }}>
+    <div className="min-h-screen relative" style={{ padding: '0.5rem', paddingTop: '1.5rem', minWidth: '0', overflowX: 'auto' }}>
       <div className="max-w-4xl mx-auto relative">
         {/* Back button - fixed top left */}
         <button
