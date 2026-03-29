@@ -204,7 +204,7 @@ export default function BidInput({
           <button
             onClick={handleBid}
             disabled={disabled}
-            className="flex-1 bg-accent hover:bg-accent-hover disabled:bg-gray-300 text-white font-semibold py-1.5 px-4 rounded-xl transition-colors text-sm btn-3d-accent"
+            className="flex-1 bg-accent hover:bg-accent-hover disabled:bg-gray-300 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors text-sm btn-3d-accent"
           >
             Bid
           </button>
@@ -212,7 +212,7 @@ export default function BidInput({
             <button
               onClick={onChallenge}
               disabled={disabled}
-              className="flex-1 bg-accent-danger hover:bg-accent-danger-hover disabled:bg-gray-300 text-white font-semibold py-1.5 px-4 rounded-xl transition-colors text-sm btn-3d-danger"
+              className="flex-1 bg-accent-danger hover:bg-accent-danger-hover disabled:bg-gray-300 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors text-sm btn-3d-danger"
             >
               Dudo
             </button>
@@ -221,7 +221,7 @@ export default function BidInput({
             <button
               onClick={onCalza}
               disabled={disabled}
-              className="px-3 py-1.5 text-white font-semibold rounded-xl transition-colors text-xs btn-3d-calza disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-2.5 text-white font-semibold rounded-xl transition-colors text-xs btn-3d-calza disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Calza
             </button>
