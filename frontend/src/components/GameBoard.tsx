@@ -402,43 +402,51 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
           if (decision === 'challenge') {
             const result = localChallengeBid(freshPlayer.id);
-            aiTurnInProgress.current = false;
             if (result) {
-              updateGameState();
               const humanPlayer = freshState.players.find(p => p.isHuman);
               if (humanPlayer && result.bidderId === humanPlayer.id) {
                 ProfileStorage.recordCalledAgainst(result.winnerId === result.challengerId);
               }
+              // Set animation state BEFORE updating game state to prevent
+              // a render frame where dice count shows the new (reduced) value
+              // before lastRoundResult is set (which would make the die flash away then back).
               startChallengeAnimation(result, freshState, false);
+              updateGameState();
             }
+            aiTurnInProgress.current = false;
           } else if (decision === 'calza') {
             const result = localCallCalza(freshPlayer.id);
-            aiTurnInProgress.current = false;
             if (result) {
-              updateGameState();
               startChallengeAnimation(result, freshState, true);
+              updateGameState();
             }
+            aiTurnInProgress.current = false;
           } else {
             const bid = aiPlayer.generateBid(freshState, freshPlayer);
             if (bid) {
               const result = await localMakeBid(bid);
-              aiTurnInProgress.current = false;
               if (result.success) {
                 updateGameState();
                 setBidAnimationKey(prev => prev + 1);
               }
+              // Release AI lock after a microtask so the state update from
+              // updateGameState() is processed first, preventing the effect
+              // from re-firing with stale currentPlayerIndex and skipping
+              // the human's turn.
+              await Promise.resolve();
+              aiTurnInProgress.current = false;
             } else {
               // Can't generate valid bid, challenge instead
               const result = localChallengeBid(freshPlayer.id);
-              aiTurnInProgress.current = false;
               if (result) {
-                updateGameState();
                 const humanPlayer = freshState.players.find(p => p.isHuman);
                 if (humanPlayer && result.bidderId === humanPlayer.id) {
                   ProfileStorage.recordCalledAgainst(result.winnerId === result.challengerId);
                 }
                 startChallengeAnimation(result, freshState);
+                updateGameState();
               }
+              aiTurnInProgress.current = false;
             }
           }
         } catch (error) {
@@ -492,10 +500,10 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     try {
       const result = localChallengeBid(currentPlayer.id);
       if (result) {
-        updateGameState();
         const freshState = gameEngine.getState();
         ProfileStorage.recordDudoCall(result.winnerId === result.challengerId);
         startChallengeAnimation(result, freshState, false);
+        updateGameState();
       }
     } catch (error) {
       console.error('Error challenging bid:', error);
@@ -519,9 +527,9 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     try {
       const result = localCallCalza(currentPlayer.id);
       if (result) {
-        updateGameState();
         const freshState = gameEngine.getState();
         startChallengeAnimation(result, freshState, true);
+        updateGameState();
       }
     } catch (error) {
       console.error('Error calling calza:', error);
@@ -710,12 +718,15 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                 const player = sectorPlayers[sectorIdx];
                 // During a dudo/reveal, suppress the current-player highlight — only the last bidder is shown
                 const isCurrentPlayer = !challengedBidPlayerId && !lastRoundResult && player && gameState.players.findIndex(p => p.id === player.id) === gameState.currentPlayerIndex;
-                // During reveal, use the round-result snapshot so a player who just
-                // lost their last die still looks alive until the tally finishes.
+                // During reveal/tally, use the round-result snapshot so a player who just
+                // lost their last die still looks alive until the modal is dismissed.
+                // Also suppress elimination during the challenge banner (innerCircleChallenge)
+                // and while dice are being shown (showDice) to prevent premature greying.
                 const hadDiceInRound = lastRoundResult && player
                   ? (lastRoundResult.allDice?.find(d => d.playerId === player.id)?.dice?.length ?? 0) > 0
                   : false;
-                const isEliminated = player && player.diceCount === 0 && !hadDiceInRound;
+                const duringRevealSequence = !!(lastRoundResult || innerCircleChallenge || showDice || isTallying);
+                const isEliminated = player && player.diceCount === 0 && !hadDiceInRound && !duringRevealSequence;
                 // During dudo/tallying: the challenged bidder gets red highlight
                 const isDudoChallenged = !!(challengedBidPlayerId && player && player.id === challengedBidPlayerId);
                 // Normal play: track who made the last bid (for subtle glow, not red)
@@ -1167,7 +1178,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               const hadDiceInRoundLegend = lastRoundResult
                 ? (lastRoundResult.allDice?.find(d => d.playerId === player.id)?.dice?.length ?? 0) > 0
                 : false;
-              const isEliminated = player.diceCount === 0 && !hadDiceInRoundLegend;
+              const duringRevealLegend = !!(lastRoundResult || innerCircleChallenge || showDice || isTallying);
+              const isEliminated = player.diceCount === 0 && !hadDiceInRoundLegend && !duringRevealLegend;
               return (
                 <div
                   key={player.id}
