@@ -75,7 +75,7 @@ function PreviousRound({ round, players, analysisEnabled }: {
           {round.bids.map((bid, i) => (
             <BidRow
               key={i}
-              bid={bid.bid as any}
+              bid={bid.bid as Bid}
               players={players}
               record={bid}
               analysisEnabled={analysisEnabled}
@@ -110,7 +110,7 @@ export default function GameLogPanel({
       <div
         className="fixed top-0 right-0 h-full z-50 flex flex-col"
         style={{
-          width: '260px',
+          width: 'min(260px, 85vw)',
           transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
           transition: 'transform 0.25s ease',
           background: 'linear-gradient(135deg, #3730a3, #581c87)',

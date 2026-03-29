@@ -1,70 +1,120 @@
 import { Server, Socket } from 'socket.io';
 import { RoomManager } from './RoomManager.js';
-import { RoomSettings } from './Room.js';
+import { RoomSettings, RoomPlayer } from './Room.js';
 import type { RoundResult } from '@dudo-dice/shared';
 
+const SECURITY_WINDOW_MS = 10_000;
+const MAX_SECURITY_ATTEMPTS = 12;
 
+function createRateLimiter() {
+  const attempts = new Map<string, number[]>();
+
+  return (key: string): boolean => {
+    const now = Date.now();
+    const recent = (attempts.get(key) ?? []).filter((timestamp) => now - timestamp < SECURITY_WINDOW_MS);
+    recent.push(now);
+    attempts.set(key, recent);
+    return recent.length <= MAX_SECURITY_ATTEMPTS;
+  };
+}
 
 export function setupSocketHandlers(io: Server, roomManager: RoomManager): void {
   io.on('connection', (socket: Socket) => {
-    let sessionId: string | null = null;
+    let boundPlayerId: string | null = null;
+    const allowAttempt = createRateLimiter();
 
-    // ── Session registration ──────────────────────────────────────────────
-    socket.on('register_session', (data: { sessionId: string }) => {
-      sessionId = data.sessionId;
-
-      // Check for reconnection to an existing room
-      const existingRoom = roomManager.getRoomByPlayer(sessionId);
-      if (existingRoom && existingRoom.phase === 'playing') {
-        existingRoom.reconnectPlayer(sessionId, socket.id);
-        socket.join(existingRoom.code);
-
-        const sanitised = existingRoom.getSanitisedStateForPlayer(sessionId);
-        socket.emit('game_state', {
-          state: sanitised,
-          turnTimeRemaining: existingRoom.getTurnTimeRemaining(),
-        });
-        socket.emit('room_update', {
-          roomCode: existingRoom.code,
-          players: existingRoom.players.map(p => ({
-            id: p.id,
-            name: p.name,
-            isConnected: p.isConnected,
-            isAI: p.isAI,
-          })),
-          hostId: existingRoom.hostId,
-          settings: existingRoom.settings,
-          phase: existingRoom.phase,
-        });
+    const rejectRateLimitedAttempt = (bucket: string): boolean => {
+      if (allowAttempt(bucket)) {
+        return false;
       }
+      socket.emit('error', { message: 'Too many multiplayer attempts. Please wait a moment.' });
+      return true;
+    };
+
+    const getBoundRoom = () => {
+      if (!boundPlayerId) return undefined;
+      return roomManager.getRoomByPlayer(boundPlayerId);
+    };
+
+    const bindPlayer = (roomCode: string, player: RoomPlayer) => {
+      boundPlayerId = player.id;
+      socket.join(roomCode);
+      socket.emit('session_bound', {
+        playerId: player.id,
+        reconnectToken: player.reconnectToken,
+        roomCode,
+      });
+    };
+
+    socket.on('register_session', (data: { reconnectToken?: string }) => {
+      if (rejectRateLimitedAttempt('register_session')) return;
+      if (!data?.reconnectToken) return;
+
+      const reconnectTarget = roomManager.findRoomByReconnectToken(data.reconnectToken);
+      if (!reconnectTarget) {
+        socket.emit('error', { message: 'Reconnect failed' });
+        return;
+      }
+
+      const { room, playerId } = reconnectTarget;
+      if (room.phase !== 'playing') {
+        socket.emit('error', { message: 'Reconnect failed' });
+        return;
+      }
+
+      const reconnectedPlayer = room.reconnectPlayer(playerId, socket.id);
+      if (!reconnectedPlayer) {
+        socket.emit('error', { message: 'Reconnect failed' });
+        return;
+      }
+
+      bindPlayer(room.code, reconnectedPlayer);
+
+      const sanitised = room.getSanitisedStateForPlayer(reconnectedPlayer.id);
+      socket.emit('game_state', {
+        state: sanitised,
+        turnTimeRemaining: room.getTurnTimeRemaining(),
+      });
+      emitRoomUpdate(io, room);
     });
 
-    // ── Room creation ─────────────────────────────────────────────────────
     socket.on('create_room', (data: {
       settings: RoomSettings;
       isPublic: boolean;
       playerName: string;
-      sessionId: string;
     }) => {
-      sessionId = data.sessionId;
-      const room = roomManager.createRoom(data.sessionId, data.settings, data.isPublic);
-      room.addPlayer(data.sessionId, socket.id, data.playerName);
-      socket.join(room.code);
+      if (rejectRateLimitedAttempt('create_room')) return;
+      if (getBoundRoom()) {
+        socket.emit('error', { message: 'Leave your current room before creating another one' });
+        return;
+      }
 
-      // Wire up room callbacks
+      const room = roomManager.createRoom(data.settings, data.isPublic);
+      const player = room.addPlayer(socket.id, data.playerName);
+      if (!player) {
+        socket.emit('error', { message: 'Could not create room' });
+        return;
+      }
+
+      socket.join(room.code);
+      bindPlayer(room.code, player);
+
       wireRoomCallbacks(io, room, roomManager);
 
       socket.emit('room_created', { roomCode: room.code });
       emitRoomUpdate(io, room);
     });
 
-    // ── Join room ─────────────────────────────────────────────────────────
     socket.on('join_room', (data: {
       code: string;
       playerName: string;
-      sessionId: string;
     }) => {
-      sessionId = data.sessionId;
+      if (rejectRateLimitedAttempt('join_room')) return;
+      if (getBoundRoom()) {
+        socket.emit('error', { message: 'Leave your current room before joining another one' });
+        return;
+      }
+
       const room = roomManager.getRoom(data.code);
 
       if (!room) {
@@ -73,47 +123,31 @@ export function setupSocketHandlers(io: Server, roomManager: RoomManager): void 
       }
 
       if (room.phase !== 'waiting') {
-        // Try reconnection
-        if (room.reconnectPlayer(data.sessionId, socket.id)) {
-          socket.join(room.code);
-          const sanitised = room.getSanitisedStateForPlayer(data.sessionId);
-          socket.emit('game_state', {
-            state: sanitised,
-            turnTimeRemaining: room.getTurnTimeRemaining(),
-          });
-          emitRoomUpdate(io, room);
-          return;
-        }
         socket.emit('error', { message: 'Game already in progress' });
         return;
       }
 
-      if (room.players.find(p => p.id === data.sessionId)) {
-        socket.emit('error', { message: 'You are already in this room' });
-        return;
-      }
-
-      const added = room.addPlayer(data.sessionId, socket.id, data.playerName);
-      if (!added) {
+      const player = room.addPlayer(socket.id, data.playerName);
+      if (!player) {
         socket.emit('error', { message: 'Room is full' });
         return;
       }
 
       socket.join(room.code);
+      bindPlayer(room.code, player);
       emitRoomUpdate(io, room);
     });
 
-    // ── Quick match ───────────────────────────────────────────────────────
-    socket.on('quick_match', (data: {
-      playerName: string;
-      sessionId: string;
-    }) => {
-      sessionId = data.sessionId;
+    socket.on('quick_match', (data: { playerName: string }) => {
+      if (rejectRateLimitedAttempt('quick_match')) return;
+      if (getBoundRoom()) {
+        socket.emit('error', { message: 'Leave your current room before joining another one' });
+        return;
+      }
 
       let room = roomManager.findQuickMatchRoom();
 
       if (!room) {
-        // Create a new public room with default settings
         const defaultSettings: RoomSettings = {
           maxPlayers: 6,
           startingDice: 5,
@@ -121,31 +155,29 @@ export function setupSocketHandlers(io: Server, roomManager: RoomManager): void 
           calzaEnabled: false,
           difficulty: 'medium',
         };
-        room = roomManager.createRoom(data.sessionId, defaultSettings, true);
+        room = roomManager.createRoom(defaultSettings, true);
         wireRoomCallbacks(io, room, roomManager);
       }
 
-      const added = room.addPlayer(data.sessionId, socket.id, data.playerName);
-      if (!added) {
+      const player = room.addPlayer(socket.id, data.playerName);
+      if (!player) {
         socket.emit('error', { message: 'Could not join room' });
         return;
       }
 
       socket.join(room.code);
+      bindPlayer(room.code, player);
       socket.emit('room_created', { roomCode: room.code });
       emitRoomUpdate(io, room);
     });
 
-    // ── List rooms ────────────────────────────────────────────────────────
     socket.on('list_rooms', () => {
       const rooms = roomManager.getPublicRooms();
       socket.emit('room_list', { rooms });
     });
 
-    // ── Start game ────────────────────────────────────────────────────────
     socket.on('start_game', () => {
-      if (!sessionId) return;
-      const room = roomManager.getRoomByPlayer(sessionId);
+      const room = getBoundRoom();
       if (!room) return;
 
       const started = room.startGame();
@@ -154,7 +186,6 @@ export function setupSocketHandlers(io: Server, roomManager: RoomManager): void 
         return;
       }
 
-      // Send sanitised state to each player
       for (const player of room.players) {
         const playerSocket = io.sockets.sockets.get(player.socketId);
         if (playerSocket) {
@@ -169,64 +200,53 @@ export function setupSocketHandlers(io: Server, roomManager: RoomManager): void 
       emitRoomUpdate(io, room);
     });
 
-    // ── Make bid ──────────────────────────────────────────────────────────
     socket.on('make_bid', (data: { quantity: number; faceValue: number }) => {
-      if (!sessionId) return;
-      const room = roomManager.getRoomByPlayer(sessionId);
-      if (!room) return;
+      const room = getBoundRoom();
+      if (!room || !boundPlayerId) return;
 
-      const result = room.makeBid(sessionId, data.quantity, data.faceValue);
+      const result = room.makeBid(boundPlayerId, data.quantity, data.faceValue);
       if (!result.success) {
         socket.emit('error', { message: result.reason || 'Invalid bid' });
       }
     });
 
-    // ── Challenge (Dudo) ──────────────────────────────────────────────────
     socket.on('challenge', () => {
-      if (!sessionId) return;
-      const room = roomManager.getRoomByPlayer(sessionId);
-      if (!room) return;
-
-      room.challenge(sessionId);
+      const room = getBoundRoom();
+      if (!room || !boundPlayerId) return;
+      room.challenge(boundPlayerId);
     });
 
-    // ── Calza ─────────────────────────────────────────────────────────────
     socket.on('calza', () => {
-      if (!sessionId) return;
-      const room = roomManager.getRoomByPlayer(sessionId);
-      if (!room) return;
-
-      room.calza(sessionId);
+      const room = getBoundRoom();
+      if (!room || !boundPlayerId) return;
+      room.calza(boundPlayerId);
     });
 
-    // ── Leave room ────────────────────────────────────────────────────────
     socket.on('leave_room', () => {
-      if (!sessionId) return;
-      const room = roomManager.getRoomByPlayer(sessionId);
-      if (!room) return;
+      const room = getBoundRoom();
+      if (!room || !boundPlayerId) return;
 
       socket.leave(room.code);
 
       if (room.phase === 'waiting') {
-        room.removePlayer(sessionId);
+        room.removePlayer(boundPlayerId);
         emitRoomUpdate(io, room);
 
-        // Clean up empty rooms
         if (room.players.length === 0) {
           roomManager.removeRoom(room.code);
         }
       } else {
-        room.handleDisconnect(sessionId);
+        room.handleDisconnect(boundPlayerId);
       }
+
+      boundPlayerId = null;
     });
 
-    // ── Disconnect ────────────────────────────────────────────────────────
     socket.on('disconnect', () => {
-      if (!sessionId) return;
-      const room = roomManager.getRoomByPlayer(sessionId);
-      if (!room) return;
+      const room = getBoundRoom();
+      if (!room || !boundPlayerId) return;
 
-      room.handleDisconnect(sessionId);
+      room.handleDisconnect(boundPlayerId);
       emitRoomUpdate(io, room);
     });
   });
@@ -279,11 +299,11 @@ function wireRoomCallbacks(io: Server, room: ReturnType<RoomManager['createRoom'
 function emitRoomUpdate(io: Server, room: ReturnType<RoomManager['createRoom']>): void {
   io.to(room.code).emit('room_update', {
     roomCode: room.code,
-    players: room.players.map(p => ({
-      id: p.id,
-      name: p.name,
-      isConnected: p.isConnected,
-      isAI: p.isAI,
+    players: room.players.map((player) => ({
+      id: player.id,
+      name: player.name,
+      isConnected: player.isConnected,
+      isAI: player.isAI,
     })),
     hostId: room.hostId,
     settings: room.settings,

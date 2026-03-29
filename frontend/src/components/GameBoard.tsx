@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useGameContext } from '../context/GameContext';
+import { useGameContext } from '../hooks/useGameContext';
 import { AIPlayer, Difficulty } from '../game/AIPlayer';
-import { Bid, GameSettings, GameState, RoundResult, PLAYER_COLOR_MAP } from '../game/GameState';
+import { Bid, GameSettings, GameState, Player, RoundResult, PLAYER_COLOR_MAP } from '../game/GameState';
 import { ProfileStorage } from '../utils/profileStorage';
 import DiceFace from './DiceFace';
 import BidInput from './BidInput';
@@ -12,9 +12,22 @@ import GameLogPanel from './GameLogPanel';
 import RoundAnalysisModal from './RoundAnalysisModal';
 import GameAnalysisModal from './GameAnalysisModal';
 import type { RoomPlayerInfo } from '../hooks/useMultiplayerConnection';
+import {
+  BOARD_BASE,
+  buildSectorPlayerIndexes,
+  findMyPlayerIndex,
+  getBoardScale,
+  getResponsiveBoardSize,
+  isMyPlayer as isMyPlayerForBoard,
+} from './game-board/layout';
+import {
+  countMatchingDice,
+  getRevealedDiceForPlayer,
+  type RevealState,
+} from './game-board/reveal';
 
 export interface MultiplayerMode {
-  sessionId: string;
+  playerId: string | null;
   gameState: GameState;
   turnTimeRemaining: number;
   roundResult: RoundResult | null;
@@ -64,12 +77,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   const [lastRoundResult, setLastRoundResult] = useState<RoundResult | null>(null);
   const [showPalificoInfo, setShowPalificoInfo] = useState(false);
   const [bidAnimationKey, setBidAnimationKey] = useState(0);
-  const [revealState, setRevealState] = useState<{
-    playerIndex: number;
-    dieIndex: number;
-    revealed: { [playerId: string]: number[] };
-    matchingDice?: { [playerId: string]: number[] };
-  } | null>(null);
+  const [revealState, setRevealState] = useState<RevealState | null>(null);
   const [revealComplete, setRevealComplete] = useState(false);
   const [diceThrowing, setDiceThrowing] = useState(false);
   const [previousRoundNumber, setPreviousRoundNumber] = useState(0);
@@ -82,32 +90,26 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   const [showGameAnalysis, setShowGameAnalysis] = useState(false);
   const [dudoFadingOut, setDudoFadingOut] = useState(false);
   const [boardShaking, setBoardShaking] = useState(false);
+  const [showDiceBreakdown, setShowDiceBreakdown] = useState(false);
   const animationTimeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [modalClosing, setModalClosing] = useState(false);
   const [isCalzaRound, setIsCalzaRound] = useState(false);
 
   // Responsive board scaling for mobile
   // Only constrain board size on narrow screens; desktop always gets full 450px
-  const BOARD_BASE = 450;
   const [boardSize, setBoardSize] = useState(() => {
     if (typeof window === 'undefined') return BOARD_BASE;
-    const isMobile = window.innerWidth < 640; // sm breakpoint
-    const widthBased = window.innerWidth - 48; // 24px padding each side for dice overhang
-    const heightBased = isMobile ? window.innerHeight - 300 : BOARD_BASE; // only height-constrain on mobile
-    return Math.min(BOARD_BASE, widthBased, heightBased);
+    return getResponsiveBoardSize(window.innerWidth, window.innerHeight);
   });
   useEffect(() => {
     const updateSize = () => {
-      const isMobile = window.innerWidth < 640;
-      const widthBased = window.innerWidth - 48;
-      const heightBased = isMobile ? window.innerHeight - 300 : BOARD_BASE;
-      setBoardSize(Math.min(BOARD_BASE, widthBased, heightBased));
+      setBoardSize(getResponsiveBoardSize(window.innerWidth, window.innerHeight));
     };
     window.addEventListener('resize', updateSize);
     updateSize();
     return () => window.removeEventListener('resize', updateSize);
   }, []);
-  const boardScale = Math.max(0.55, boardSize / BOARD_BASE);
+  const boardScale = getBoardScale(boardSize);
 
   // Track timeouts for cleanup on unmount
   const trackTimeout = useCallback((fn: () => void, delay: number) => {
@@ -136,8 +138,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
     // Mirror the sector mapping from the render — local player always at sector 3 (bottom)
     const humanIdxInner = isMultiplayer
-      ? state.players.findIndex((p: any) => p.id === multiplayerMode?.sessionId)
-      : state.players.findIndex((p: any) => p.isHuman);
+      ? state.players.findIndex((p: Player) => p.id === multiplayerMode?.playerId)
+      : state.players.findIndex((p: Player) => p.isHuman);
     const playerCountInner = state.players.length;
     const sectorToPlayerIdxInner: (number | null)[] = [null, null, null, humanIdxInner, null, null];
     for (let i = 0; i < Math.min(humanIdxInner, 3); i++) {
@@ -166,12 +168,12 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
       const player = sectorPlayers[sectorIdx];
       if (!player) continue;
 
-      const playerDiceEntry = result.allDice.find((d: any) => d.playerId === player.id);
+      const playerDiceEntry = result.allDice.find((d: { playerId: string; dice: number[] }) => d.playerId === player.id);
       if (!playerDiceEntry || !playerDiceEntry.dice || playerDiceEntry.dice.length === 0) continue;
 
       const diceWithIndices = playerDiceEntry.dice
         .map((value: number, originalIdx: number) => ({ value, originalIdx }))
-        .sort((a: any, b: any) => a.value - b.value);
+        .sort((a: { value: number; originalIdx: number }, b: { value: number; originalIdx: number }) => a.value - b.value);
 
       for (const diceItem of diceWithIndices) {
         orderedDicePositions.push({
@@ -185,7 +187,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
     // Determine palifico mode from the bid history of this round (not the new round's state,
     // which has already reset). Ones are only wild when palifico was NOT active.
-    const wasPalificoRound = (result.bids[0] as any)?.palificoMode ?? false;
+    const wasPalificoRound = result.bids[0]?.palificoMode ?? false;
 
     setRevealState({
       playerIndex: -1,
@@ -257,7 +259,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     trackTimeout(() => {
       revealNextDie(0, revealed, matchingDice);
     }, 200);
-  }, [isMultiplayer, multiplayerMode?.sessionId, trackTimeout]);
+  }, [isMultiplayer, multiplayerMode?.playerId, trackTimeout]);
 
   // Shared challenge animation sequence used by both AI and human challenges
   const startChallengeAnimation = useCallback((result: RoundResult, state: GameState, isCalza = false) => {
@@ -304,7 +306,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     // Trigger dice throw animation on initial game start
     setDiceThrowing(true);
     trackTimeout(() => setDiceThrowing(false), 800);
-  }, [playerCount, startingDice, palificoEnabled, calzaEnabled, initializeGame, isMultiplayer]);
+  }, [playerCount, startingDice, palificoEnabled, calzaEnabled, analysisEnabled, initializeGame, isMultiplayer, trackTimeout]);
 
   // Initialize previousRoundNumber when gameState first becomes available
   useEffect(() => {
@@ -334,7 +336,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     if (gameState.roundNumber !== previousRoundNumber) {
       setPreviousRoundNumber(gameState.roundNumber);
     }
-  }, [gameState?.roundNumber, previousRoundNumber]);
+  }, [gameState, previousRoundNumber, trackTimeout]);
 
   // Handle multiplayer round results — trigger reveal animation
   const prevMpRoundResult = useRef<RoundResult | null>(null);
@@ -346,7 +348,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
       const isCalza = result.challengeType === 'calza';
       startChallengeAnimation(result, gameState, isCalza);
     }
-  }, [multiplayerMode?.roundResult, isMultiplayer, gameState, startChallengeAnimation]);
+  }, [multiplayerMode, isMultiplayer, gameState, startChallengeAnimation]);
 
   // Clear round result overlay when game ends (prevents it stacking behind Game Over modal)
   const hasWinner = isMultiplayer
@@ -446,7 +448,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
       };
 
     handleAITurn();
-  }, [gameState?.currentPlayerIndex, gameState?.gamePhase, gameEngine, aiPlayer, localMakeBid, localChallengeBid, startChallengeAnimation, lastRoundResult, showDice, updateGameState, isTallying, innerCircleChallenge, isMultiplayer]);
+  }, [gameState, gameEngine, aiPlayer, localMakeBid, localChallengeBid, localCallCalza, startChallengeAnimation, lastRoundResult, showDice, updateGameState, isTallying, innerCircleChallenge, isMultiplayer]);
 
   const handleHumanBid = useCallback(async (bid: Bid) => {
     if (isMultiplayer && multiplayerMode) {
@@ -559,9 +561,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   const totalDice = gameState.players.reduce((sum, p) => sum + p.diceCount, 0);
   
   // Calculate current matching dice count during reveal
-  const currentMatchingCount = revealState?.matchingDice
-    ? Object.values(revealState.matchingDice).reduce((sum, diceIndices) => sum + diceIndices.length, 0)
-    : 0;
+  const currentMatchingCount = countMatchingDice(revealState?.matchingDice);
 
   // Calculate positions around circle - 6 equal sectors of 60 degrees each
   // Human player always at bottom center (90 degrees = sector 3)
@@ -574,21 +574,22 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   // Works correctly for 2–6 players. For 4–6 players produces same result as before.
   // In multiplayer: "me" is the player matching my session ID (dice are visible)
   // In local: "me" is the player marked isHuman
-  const humanIdx = isMultiplayer
-    ? gameState.players.findIndex(p => p.id === multiplayerMode!.sessionId)
-    : gameState.players.findIndex(p => p.isHuman);
+  const humanIdx = findMyPlayerIndex(gameState.players, isMultiplayer, multiplayerMode?.playerId);
 
   // Helper to check if a player is "me" (the local human player)
-  const isMyPlayer = (playerId: string) => isMultiplayer
-    ? playerId === multiplayerMode!.sessionId
-    : gameState.players.find(p => p.id === playerId)?.isHuman ?? false;
+  const isMyPlayer = (playerId: string) =>
+    isMyPlayerForBoard(gameState.players, playerId, isMultiplayer, multiplayerMode?.playerId);
 
   // Is it my turn?
   const isMyTurn = gameState.players[gameState.currentPlayerIndex]
     ? isMyPlayer(gameState.players[gameState.currentPlayerIndex].id)
     : false;
   const numPlayers = gameState.players.length;
-  const sectorToPlayerIdx: (number | null)[] = [null, null, null, humanIdx, null, null];
+  const sectorToPlayerIdx: (number | null)[] = buildSectorPlayerIndexes(
+    gameState.players,
+    isMultiplayer,
+    multiplayerMode?.playerId,
+  );
   // Fill sectors 0–2 with players that come before human in array order
   for (let i = 0; i < Math.min(humanIdx, 3); i++) {
     sectorToPlayerIdx[2 - i] = ((humanIdx - 1 - i) + numPlayers) % numPlayers;
@@ -626,22 +627,51 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
 
   return (
-    <div className="min-h-screen relative" style={{ padding: '0.5rem', paddingTop: '1.5rem', minWidth: '0', overflowX: 'auto' }}>
+    <div className="min-h-screen relative" style={{ padding: '0.5rem', paddingTop: '0', minWidth: '0', overflowX: 'hidden' }}>
       <div className="max-w-4xl mx-auto relative">
         {/* Back button - fixed top left */}
         <button
           onClick={onBackToHome}
           className="fixed h-7 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-1.5 sm:px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
-          style={{ left: '0.75rem', top: '0.75rem' }}
+          style={{ left: 'max(0.75rem, env(safe-area-inset-left, 0px))', top: 'max(0.75rem, env(safe-area-inset-top, 0px))' }}
         >
           ← Back
         </button>
 
         {/* Dice count + Round + Palifico + Log - fixed top right, aligned with back button */}
-        <div className="fixed z-50 flex items-center gap-1 sm:gap-1.5" style={{ right: '0.75rem', top: '0.75rem' }}>
-          <div className="h-7 sm:h-8 text-white px-1.5 sm:px-2 rounded-xl flex items-center gap-1 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900">
-            <span className="text-xs">🎲</span>
-            <span className="font-bold text-xs sm:text-sm">x{totalDice}</span>
+        <div className="fixed z-50 flex items-center gap-1 sm:gap-1.5" style={{ right: 'max(0.75rem, env(safe-area-inset-right, 0px))', top: 'max(0.75rem, env(safe-area-inset-top, 0px))' }}>
+          <div className="relative">
+            <button
+              onClick={() => setShowDiceBreakdown(v => !v)}
+              className="h-8 sm:h-8 text-white px-2.5 sm:px-2 rounded-xl flex items-center gap-1 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 min-w-[3rem] justify-center"
+            >
+              <span className="text-xs">🎲</span>
+              <span className="font-bold text-xs sm:text-sm">x{totalDice}</span>
+            </button>
+            {showDiceBreakdown && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowDiceBreakdown(false)} />
+                <div className="absolute right-0 top-full mt-1 z-50 bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl shadow-lg border border-white/20 p-2.5 min-w-[140px]">
+                  {gameState.players.filter(p => p.diceCount > 0).map(p => {
+                    const color = PLAYER_COLOR_MAP[p.color] || '#6B7280';
+                    const displayName = p.isHuman ? 'You' : p.name;
+                    return (
+                      <div key={p.id} className="flex items-center justify-between gap-2 py-0.5">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: color }} />
+                          <span className="text-white text-xs truncate">{displayName}</span>
+                        </div>
+                        <span className="text-white font-bold text-xs flex-shrink-0">{p.diceCount}</span>
+                      </div>
+                    );
+                  })}
+                  <div className="border-t border-white/20 mt-1.5 pt-1.5 flex items-center justify-between">
+                    <span className="text-white/70 text-xs">Total</span>
+                    <span className="text-white font-bold text-xs">{totalDice}</span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
           {gameState.palificoMode.active && (
             <button
@@ -661,7 +691,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         </div>
 
         {/* Redesigned Game Board - Segmented Circle */}
-        <div className="relative w-full max-w-4xl mx-auto" style={{ height: `${boardSize}px`, marginTop: '0.25rem', overflow: 'visible' }}>
+        <div className="relative w-full max-w-4xl mx-auto mt-8 sm:mt-10" style={{ height: `${Math.round(BOARD_BASE * boardScale)}px`, overflow: 'visible' }}>
           {/* Table Container */}
           <div className="absolute inset-0 flex items-center justify-center" style={{ overflow: 'visible', padding: '0' }}>
             <div className={`relative ${boardShaking ? 'animate-board-shake' : ''}`} style={{ width: '450px', height: '450px', overflow: 'visible', flexShrink: 0, transform: `scale(${boardScale})`, transformOrigin: 'center center' }}>
@@ -680,7 +710,12 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                 const player = sectorPlayers[sectorIdx];
                 // During a dudo/reveal, suppress the current-player highlight — only the last bidder is shown
                 const isCurrentPlayer = !challengedBidPlayerId && !lastRoundResult && player && gameState.players.findIndex(p => p.id === player.id) === gameState.currentPlayerIndex;
-                const isEliminated = player && player.diceCount === 0;
+                // During reveal, use the round-result snapshot so a player who just
+                // lost their last die still looks alive until the tally finishes.
+                const hadDiceInRound = lastRoundResult && player
+                  ? (lastRoundResult.allDice?.find(d => d.playerId === player.id)?.dice?.length ?? 0) > 0
+                  : false;
+                const isEliminated = player && player.diceCount === 0 && !hadDiceInRound;
                 // During dudo/tallying: the challenged bidder gets red highlight
                 const isDudoChallenged = !!(challengedBidPlayerId && player && player.id === challengedBidPlayerId);
                 // Normal play: track who made the last bid (for subtle glow, not red)
@@ -718,7 +753,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                 const x8 = Math.cos(endRad) * ringRadius;
                 const y8 = Math.sin(endRad) * ringRadius;
                 
-                const largeArc = 60 > 180 ? 1 : 0;
+                const largeArc = 0; // 60° sector never exceeds 180°
                 
                 return (
                   <svg
@@ -936,8 +971,10 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               const isLocalPlayer = isMyPlayer(player.id);
               const shouldShowDice = isLocalPlayer || (isRevealing ? true : false);
               
-              // Get dice for this player
-              const originalDice = (lastRoundResult && revealState)
+              // Get dice for this player — use the round-result snapshot whenever a
+              // result is active so that the human's dice don't briefly flash as the
+              // new-round (re-rolled) values during the DUDO/CALZA banner.
+              const originalDice = lastRoundResult
                 ? (lastRoundResult.allDice?.find(d => d.playerId === player.id)?.dice ?? player.dice ?? [])
                 : (player.dice ?? []);
               
@@ -946,13 +983,12 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                 ? originalDice.map((value, originalIdx) => ({ value, originalIdx })).sort((a, b) => a.value - b.value)
                 : [];
               
-              const revealedIndices = revealState ? (revealState.revealed[player.id] || []) : [];
-              const matchingIndices = revealState ? (revealState.matchingDice?.[player.id] || []) : [];
+              const { revealedIndices, matchingIndices } = getRevealedDiceForPlayer(revealState, player);
               
               // Calculate positions for dice along the arc
               // During reveal, use the pre-round dice count from allDice so the loser's
               // die isn't removed visually before the tally animation finishes.
-              const diceCount = (lastRoundResult && revealState && originalDice.length > 0)
+              const diceCount = (lastRoundResult && originalDice.length > 0)
                 ? originalDice.length
                 : player.diceCount;
               const diceSpacing = sectorSpan / (diceCount + 1); // Space dice evenly in sector
@@ -1120,15 +1156,18 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         </div>
 
         {/* Player Legend + Bid Input */}
-        <div className="px-3 relative z-10">
+        <div className="px-3 relative z-10 mt-0 sm:mt-1">
           {/* Bid Input Section */}
           <div className="max-w-2xl mx-auto">
           {/* Player Color Legend */}
-          <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-1.5 mt-2">
+          <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-1.5 mt-1 sm:mt-2">
             {gameState.players.map((player, playerIdx) => {
               const color = PLAYER_COLOR_MAP[player.color] || '#6B7280';
               const isCurrentTurn = playerIdx === gameState.currentPlayerIndex && gameState.gamePhase === 'bidding' && !lastRoundResult && !showDice;
-              const isEliminated = player.diceCount === 0;
+              const hadDiceInRoundLegend = lastRoundResult
+                ? (lastRoundResult.allDice?.find(d => d.playerId === player.id)?.dice?.length ?? 0) > 0
+                : false;
+              const isEliminated = player.diceCount === 0 && !hadDiceInRoundLegend;
               return (
                 <div
                   key={player.id}
@@ -1141,7 +1180,10 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                     opacity: isEliminated ? 0.4 : (isCurrentTurn ? 1 : 0.75),
                   }}
                 >
-                  <span className="text-[9px] sm:text-[11px] font-bold text-white text-center truncate px-1 sm:px-2.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>{player.name}</span>
+                  <span className="text-[9px] sm:text-[11px] font-bold text-white text-center truncate px-1 sm:px-2.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+                    <span className="sm:hidden">{player.name.replace(/^Computer\s/, 'Comp. ')}</span>
+                    <span className="hidden sm:inline">{player.name}</span>
+                  </span>
                 </div>
               );
             })}
@@ -1222,19 +1264,28 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         </div>
 
         {/* Round Result Modal */}
-        {lastRoundResult && showDice && (
-          <RoundResultModal
-            result={lastRoundResult}
-            revealComplete={revealComplete}
-            players={gameState.players}
-            analysisEnabled={isMultiplayer ? false : analysisEnabled}
-            closing={modalClosing}
-            autoClose={isMultiplayer}
-            onViewAnalysis={() => setShowRoundAnalysis(true)}
-            onClose={() => {
-              // Start exit animation, then reset state after it completes
-              setModalClosing(true);
-              trackTimeout(() => {
+        {lastRoundResult && showDice && (() => {
+          // Check if the human was just eliminated in this round
+          const humanPlayer = isMultiplayer
+            ? gameState.players.find(p => p.id === multiplayerMode?.playerId)
+            : gameState.players.find(p => p.isHuman);
+          const humanJustEliminated = humanPlayer
+            && humanPlayer.diceCount === 0
+            && (lastRoundResult.loserId === humanPlayer.id);
+
+          return (
+            <RoundResultModal
+              result={lastRoundResult}
+              revealComplete={revealComplete}
+              players={gameState.players}
+              analysisEnabled={isMultiplayer ? false : analysisEnabled}
+              closing={modalClosing}
+              autoClose={isMultiplayer && !humanJustEliminated}
+              onViewAnalysis={() => setShowRoundAnalysis(true)}
+              onSkipToEnd={humanJustEliminated && !isMultiplayer && gameEngine ? () => {
+                gameEngine.simulateToEnd(difficulty);
+                updateGameState();
+                // Clear round result state so Game Over modal shows
                 setShowDice(false);
                 setLastRoundResult(null);
                 setChallengedBidPlayerId(null);
@@ -1244,10 +1295,28 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                 setIsTallying(false);
                 setIsCalzaRound(false);
                 setModalClosing(false);
-              }, 250); // Matches modalExit duration + small buffer
-            }}
-          />
-        )}
+              } : undefined}
+              onLeaveGame={humanJustEliminated && isMultiplayer ? () => {
+                onBackToHome();
+              } : undefined}
+              onClose={() => {
+                // Start exit animation, then reset state after it completes
+                setModalClosing(true);
+                trackTimeout(() => {
+                  setShowDice(false);
+                  setLastRoundResult(null);
+                  setChallengedBidPlayerId(null);
+                  setRevealState(null);
+                  setRevealComplete(false);
+                  setInnerCircleChallenge(false);
+                  setIsTallying(false);
+                  setIsCalzaRound(false);
+                  setModalClosing(false);
+                }, 250); // Matches modalExit duration + small buffer
+              }}
+            />
+          );
+        })()}
 
         {/* Round Analysis Modal */}
         {showRoundAnalysis && lastRoundResult && (

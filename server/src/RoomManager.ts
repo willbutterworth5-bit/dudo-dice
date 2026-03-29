@@ -11,9 +11,9 @@ export class RoomManager {
     this.cleanupInterval = setInterval(() => this.cleanupStaleRooms(), ROOM_CLEANUP_INTERVAL_MS);
   }
 
-  createRoom(hostId: string, settings: RoomSettings, isPublic: boolean): Room {
+  createRoom(settings: RoomSettings, isPublic: boolean): Room {
     const code = this.generateCode();
-    const room = new Room(code, hostId, settings, isPublic);
+    const room = new Room(code, settings, isPublic);
     this.rooms.set(code, room);
     return room;
   }
@@ -26,6 +26,16 @@ export class RoomManager {
     for (const room of this.rooms.values()) {
       if (room.players.find(p => p.id === sessionId)) {
         return room;
+      }
+    }
+    return undefined;
+  }
+
+  findRoomByReconnectToken(reconnectToken: string): { room: Room; playerId: string } | undefined {
+    for (const room of this.rooms.values()) {
+      const player = room.getPlayerByReconnectToken(reconnectToken);
+      if (player) {
+        return { room, playerId: player.id };
       }
     }
     return undefined;

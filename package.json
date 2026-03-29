@@ -7,11 +7,28 @@
     "server"
   ],
   "scripts": {
-    "dev:frontend": "cd frontend && npm run dev",
-    "dev:server": "cd server && npm run dev",
-    "build:frontend": "cd frontend && npm run build",
-    "build:server": "cd server && npm run build",
-    "build": "npm run build:frontend && npm run build:server",
-    "start": "cd server && npm start"
+    "dev:frontend": "npm run build:shared && npm run -w dudo-dice dev",
+    "dev:server": "npm run build:shared && npm run -w @dudo-dice/server dev",
+    "build:shared": "npm run -w @dudo-dice/shared build",
+    "build:frontend": "npm run build:shared && npm run -w dudo-dice build",
+    "build:server": "npm run build:shared && npm run -w @dudo-dice/server build",
+    "build": "npm run build:shared && npm run -w dudo-dice build && npm run -w @dudo-dice/server build",
+    "start": "npm run -w @dudo-dice/server start",
+    "lint:frontend": "npm run -w dudo-dice lint",
+    "typecheck:shared": "npm run -w @dudo-dice/shared typecheck",
+    "test:frontend": "tsx --test \"tests/frontend/**/*.test.ts\"",
+    "test:server": "tsx --test \"tests/server/**/*.test.ts\"",
+    "test:shared": "tsx --test \"tests/shared/**/*.test.ts\"",
+    "test": "npm run build:shared && tsx --test \"tests/**/*.test.ts\"",
+    "qa:unit": "npm run test",
+    "qa:e2e": "playwright test -c qa/playwright.config.ts",
+    "qa:e2e:headed": "playwright test -c qa/playwright.config.ts --headed",
+    "qa:all": "npm run qa:unit && npm run qa:e2e",
+    "qa:report": "playwright show-report qa/playwright-report",
+    "verify": "npm run test && npm run typecheck:shared && npm run build:server && npm run build:frontend",
+    "verify:strict": "npm run lint:frontend && npm run verify"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
   }
 }

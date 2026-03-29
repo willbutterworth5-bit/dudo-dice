@@ -7,19 +7,19 @@ export type {
   PalificoMode,
   GameState,
   RoundResult,
-} from './GameState';
+} from './GameState.js';
 
-export { PLAYER_COLORS, PLAYER_COLOR_MAP } from './GameState';
-export type { PlayerColor } from './GameState';
+export { PLAYER_COLORS, PLAYER_COLOR_MAP } from './GameState.js';
+export type { PlayerColor } from './GameState.js';
 
 // Game engine
-export { GameEngine } from './GameEngine';
-export type { PlayerConfig } from './GameEngine';
+export { GameEngine } from './GameEngine.js';
+export type { PlayerConfig } from './GameEngine.js';
 
 // Validators and utilities
-export { BidValidator } from './BidValidator';
-export { DiceCounter } from './DiceCounter';
+export { BidValidator } from './BidValidator.js';
+export { DiceCounter } from './DiceCounter.js';
 
 // AI
-export { AIPlayer } from './AIPlayer';
-export type { Difficulty } from './AIPlayer';
+export { AIPlayer } from './AIPlayer.js';
+export type { Difficulty } from './AIPlayer.js';

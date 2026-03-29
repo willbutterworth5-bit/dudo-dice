@@ -1,4 +1,4 @@
-import { Bid, PalificoMode } from './GameState';
+import { Bid, PalificoMode } from './GameState.js';
 
 export class BidValidator {
   /**

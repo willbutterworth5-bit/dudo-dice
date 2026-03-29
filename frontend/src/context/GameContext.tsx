@@ -1,22 +1,11 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { useState, useCallback, ReactNode } from 'react';
 import { GameEngine } from '../game/GameEngine';
-import { GameState, Bid, GameSettings, RoundResult } from '../game/GameState';
-
-interface GameContextType {
-  gameEngine: GameEngine | null;
-  gameState: GameState | null;
-  initializeGame: (settings: GameSettings) => void;
-  makeBid: (bid: Bid) => Promise<{ success: boolean; reason?: string }>;
-  challengeBid: (playerId: string) => RoundResult | null;
-  callCalza: (playerId: string) => RoundResult | null;
-  updateGameState: () => void;
-}
-
-const GameContext = createContext<GameContextType | undefined>(undefined);
+import { Bid, GameSettings } from '../game/GameState';
+import { GameContext } from './GameContextDef';
 
 export function GameProvider({ children }: { children: ReactNode }) {
   const [gameEngine, setGameEngine] = useState<GameEngine | null>(null);
-  const [gameState, setGameState] = useState<GameState | null>(null);
+  const [gameState, setGameState] = useState(gameEngine?.getState() ?? null);
 
   const initializeGame = useCallback((settings: GameSettings) => {
     const engine = new GameEngine(settings);
@@ -42,7 +31,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return result;
   }, [gameEngine]);
 
-  const challengeBid = useCallback((playerId: string): RoundResult | null => {
+  const challengeBid = useCallback((playerId: string) => {
     if (!gameEngine) {
       return null;
     }
@@ -52,7 +41,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return result;
   }, [gameEngine]);
 
-  const callCalza = useCallback((playerId: string): RoundResult | null => {
+  const callCalza = useCallback((playerId: string) => {
     if (!gameEngine) {
       return null;
     }
@@ -77,12 +66,4 @@ export function GameProvider({ children }: { children: ReactNode }) {
       {children}
     </GameContext.Provider>
   );
-}
-
-export function useGameContext() {
-  const context = useContext(GameContext);
-  if (context === undefined) {
-    throw new Error('useGameContext must be used within a GameProvider');
-  }
-  return context;
 }

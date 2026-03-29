@@ -1,6 +1,6 @@
-import { Bid, Player, GameState } from './GameState';
-import { BidValidator } from './BidValidator';
-import { DiceCounter } from './DiceCounter';
+import { Bid, Player, GameState } from './GameState.js';
+import { BidValidator } from './BidValidator.js';
+import { DiceCounter } from './DiceCounter.js';
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 

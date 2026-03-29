@@ -1,6 +1,7 @@
-import { GameState, Bid, BidRecord, Player, RoundResult, GameSettings, PLAYER_COLORS } from './GameState';
-import { BidValidator } from './BidValidator';
-import { DiceCounter } from './DiceCounter';
+import { GameState, Bid, BidRecord, Player, RoundResult, GameSettings, PLAYER_COLORS } from './GameState.js';
+import { BidValidator } from './BidValidator.js';
+import { DiceCounter } from './DiceCounter.js';
+import { AIPlayer } from './AIPlayer.js';
 
 export interface PlayerConfig {
   id: string;
@@ -309,5 +310,37 @@ export class GameEngine {
       return null;
     }
     return this.state.players.find(p => p.diceCount > 0) || null;
+  }
+
+  /**
+   * Auto-play all remaining rounds using AI logic until a winner is decided.
+   * Intended to be called after the human player has been eliminated so the
+   * remaining AI players finish the game instantly.
+   */
+  simulateToEnd(difficulty: 'easy' | 'medium' | 'hard' = 'medium'): void {
+    const ai = new AIPlayer(difficulty);
+    const MAX_TURNS = 5000; // safety limit
+    let turns = 0;
+
+    while (!this.isGameOver() && turns < MAX_TURNS) {
+      turns++;
+      const player = this.getCurrentPlayer();
+
+      const decision = ai.makeDecision(this.state, player);
+
+      if (decision === 'challenge') {
+        this.challengeBid(player.id);
+      } else if (decision === 'calza') {
+        this.callCalza(player.id);
+      } else {
+        const bid = ai.generateBid(this.state, player);
+        if (bid) {
+          this.makeBid(bid);
+        } else {
+          // Fallback: challenge if no valid bid can be generated
+          this.challengeBid(player.id);
+        }
+      }
+    }
   }
 }

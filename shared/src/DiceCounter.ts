@@ -1,4 +1,4 @@
-import { Player, PalificoMode } from './GameState';
+import { Player, PalificoMode } from './GameState.js';
 
 export class DiceCounter {
   /**

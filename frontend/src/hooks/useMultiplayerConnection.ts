@@ -12,7 +12,7 @@ export interface RoomPlayerInfo {
 export interface RoomUpdate {
   roomCode: string;
   players: RoomPlayerInfo[];
-  hostId: string;
+  hostId: string | null;
   settings: {
     maxPlayers: number;
     startingDice: number;
@@ -36,24 +36,48 @@ export interface PublicRoom {
   hostName: string;
 }
 
-const SESSION_STORAGE_KEY = 'dudo-tab-session-id';
+type StoredSeat = {
+  playerId: string;
+  reconnectToken: string;
+  roomCode: string;
+};
 
-function getOrCreateSessionId(): string {
-  // sessionStorage is tab-scoped: each tab gets its own session ID.
-  // On page reload within the same tab, sessionStorage persists so we
-  // reconnect to any in-progress game.  A new tab always gets a fresh UUID.
-  let id = sessionStorage.getItem(SESSION_STORAGE_KEY);
-  if (!id) {
-    id = crypto.randomUUID();
-    sessionStorage.setItem(SESSION_STORAGE_KEY, id);
+const MULTIPLAYER_SEAT_STORAGE_KEY = 'dudo-multiplayer-seat';
+
+function getStoredSeat(): StoredSeat | null {
+  try {
+    const raw = sessionStorage.getItem(MULTIPLAYER_SEAT_STORAGE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as Partial<StoredSeat>;
+    if (!parsed.playerId || !parsed.reconnectToken || !parsed.roomCode) {
+      return null;
+    }
+
+    return {
+      playerId: parsed.playerId,
+      reconnectToken: parsed.reconnectToken,
+      roomCode: parsed.roomCode,
+    };
+  } catch {
+    return null;
   }
-  return id;
+}
+
+function persistSeat(seat: StoredSeat | null): void {
+  if (!seat) {
+    sessionStorage.removeItem(MULTIPLAYER_SEAT_STORAGE_KEY);
+    return;
+  }
+
+  sessionStorage.setItem(MULTIPLAYER_SEAT_STORAGE_KEY, JSON.stringify(seat));
 }
 
 export function useMultiplayerConnection() {
   const socketRef = useRef<Socket | null>(null);
-  const sessionId = useRef(getOrCreateSessionId());
+  const seatRef = useRef<StoredSeat | null>(getStoredSeat());
 
+  const [playerId, setPlayerId] = useState<string | null>(seatRef.current?.playerId ?? null);
   const [isConnected, setIsConnected] = useState(false);
   const [roomUpdate, setRoomUpdate] = useState<RoomUpdate | null>(null);
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -64,8 +88,19 @@ export function useMultiplayerConnection() {
   const [winnerId, setWinnerId] = useState<string | null>(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
 
-  // Turn timer countdown
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const clearSeat = useCallback(() => {
+    seatRef.current = null;
+    setPlayerId(null);
+    persistSeat(null);
+  }, []);
+
+  const bindSeat = useCallback((seat: StoredSeat) => {
+    seatRef.current = seat;
+    setPlayerId(seat.playerId);
+    persistSeat(seat);
+  }, []);
 
   const startTurnCountdown = useCallback((remaining: number) => {
     if (turnTimerRef.current) clearInterval(turnTimerRef.current);
@@ -82,7 +117,6 @@ export function useMultiplayerConnection() {
     }, 100);
   }, []);
 
-  // Connect to server
   const connect = useCallback(() => {
     if (socketRef.current?.connected) return;
 
@@ -95,17 +129,27 @@ export function useMultiplayerConnection() {
 
     socket.on('connect', () => {
       setIsConnected(true);
-      setIsReconnecting(false);
-      socket.emit('register_session', { sessionId: sessionId.current });
+
+      if (seatRef.current?.reconnectToken) {
+        setIsReconnecting(true);
+        socket.emit('register_session', { reconnectToken: seatRef.current.reconnectToken });
+      } else {
+        setIsReconnecting(false);
+      }
     });
 
     socket.on('disconnect', () => {
       setIsConnected(false);
-      setIsReconnecting(true);
+      setIsReconnecting(!!seatRef.current?.reconnectToken);
     });
 
-    socket.on('room_created', (_data: { roomCode: string }) => {
-      // Room code is included in room_update
+    socket.on('session_bound', (data: StoredSeat) => {
+      bindSeat(data);
+      setIsReconnecting(false);
+    });
+
+    socket.on('room_created', () => {
+      // Room code is included in room_update and session_bound.
     });
 
     socket.on('room_update', (data: RoomUpdate) => {
@@ -114,7 +158,7 @@ export function useMultiplayerConnection() {
 
     socket.on('game_state', (data: { state: GameState; turnTimeRemaining: number }) => {
       setGameState(data.state);
-      setRoundResult(null); // Clear previous round result
+      setRoundResult(null);
       startTurnCountdown(data.turnTimeRemaining);
     });
 
@@ -127,24 +171,8 @@ export function useMultiplayerConnection() {
       setRoundResult(null);
     });
 
-    socket.on('turn_timeout', (_data: { playerId: string }) => {
-      // Could show a notification
-    });
-
     socket.on('game_over', (data: { winnerId: string }) => {
       setWinnerId(data.winnerId);
-    });
-
-    socket.on('player_disconnected', (_data: { playerId: string; graceSeconds: number }) => {
-      // Update handled via room_update
-    });
-
-    socket.on('player_reconnected', (_data: { playerId: string }) => {
-      // Update handled via room_update
-    });
-
-    socket.on('ai_takeover', (_data: { playerId: string; playerName: string }) => {
-      // Could show notification
     });
 
     socket.on('room_list', (data: { rooms: PublicRoom[] }) => {
@@ -153,28 +181,32 @@ export function useMultiplayerConnection() {
 
     socket.on('error', (data: { message: string }) => {
       setError(data.message);
+      if (/reconnect failed/i.test(data.message)) {
+        clearSeat();
+        setIsReconnecting(false);
+      }
       setTimeout(() => setError(null), 3000);
     });
 
     socketRef.current = socket;
-  }, [startTurnCountdown]);
+  }, [bindSeat, clearSeat, startTurnCountdown]);
 
-  // Disconnect
   const disconnect = useCallback(() => {
     if (socketRef.current) {
       socketRef.current.emit('leave_room');
       socketRef.current.disconnect();
       socketRef.current = null;
     }
+    clearSeat();
     setIsConnected(false);
+    setIsReconnecting(false);
     setRoomUpdate(null);
     setGameState(null);
     setRoundResult(null);
     setWinnerId(null);
     if (turnTimerRef.current) clearInterval(turnTimerRef.current);
-  }, []);
+  }, [clearSeat]);
 
-  // Actions
   const createRoom = useCallback((settings: {
     maxPlayers: number;
     startingDice: number;
@@ -186,7 +218,6 @@ export function useMultiplayerConnection() {
       settings,
       isPublic,
       playerName,
-      sessionId: sessionId.current,
     });
   }, []);
 
@@ -194,14 +225,12 @@ export function useMultiplayerConnection() {
     socketRef.current?.emit('join_room', {
       code,
       playerName,
-      sessionId: sessionId.current,
     });
   }, []);
 
   const quickMatch = useCallback((playerName: string) => {
     socketRef.current?.emit('quick_match', {
       playerName,
-      sessionId: sessionId.current,
     });
   }, []);
 
@@ -227,13 +256,13 @@ export function useMultiplayerConnection() {
 
   const leaveRoom = useCallback(() => {
     socketRef.current?.emit('leave_room');
+    clearSeat();
     setRoomUpdate(null);
     setGameState(null);
     setRoundResult(null);
     setWinnerId(null);
-  }, []);
+  }, [clearSeat]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (turnTimerRef.current) clearInterval(turnTimerRef.current);
@@ -242,7 +271,7 @@ export function useMultiplayerConnection() {
   }, []);
 
   return {
-    sessionId: sessionId.current,
+    playerId,
     isConnected,
     isReconnecting,
     roomUpdate,

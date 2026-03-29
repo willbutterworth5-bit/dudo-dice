@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { GameEngine, GameState, Bid, RoundResult, AIPlayer, PlayerConfig, Difficulty } from '@dudo-dice/shared';
 
 export interface RoomSettings {
@@ -9,8 +10,9 @@ export interface RoomSettings {
 }
 
 export interface RoomPlayer {
-  id: string;        // unique session ID
-  socketId: string;   // current socket ID (changes on reconnect)
+  id: string;
+  reconnectToken: string;
+  socketId: string;
   name: string;
   isConnected: boolean;
   isAI: boolean;
@@ -19,14 +21,14 @@ export interface RoomPlayer {
 
 export type RoomPhase = 'waiting' | 'playing' | 'finished';
 
-const TURN_TIMEOUT_MS = 20_000;     // 20 seconds per turn
-const RECONNECT_GRACE_MS = 120_000; // 2 minutes grace period
-const ROUND_ADVANCE_DELAY_MS = 3_000; // 3 seconds after reveal before next round
+const TURN_TIMEOUT_MS = 20_000;
+const RECONNECT_GRACE_MS = 120_000;
+const ROUND_ADVANCE_DELAY_MS = 3_000;
 
 export class Room {
   readonly code: string;
   readonly isPublic: boolean;
-  readonly hostId: string;
+  hostId: string | null = null;
   settings: RoomSettings;
   players: RoomPlayer[] = [];
   phase: RoomPhase = 'waiting';
@@ -35,9 +37,8 @@ export class Room {
   private aiPlayer: AIPlayer | null = null;
   private turnTimer: ReturnType<typeof setTimeout> | null = null;
   private roundAdvanceTimer: ReturnType<typeof setTimeout> | null = null;
-  private turnStartTime: number = 0;
+  private turnStartTime = 0;
 
-  // Callbacks set by SocketHandlers
   onBroadcastState: ((excludePlayerId?: string) => void) | null = null;
   onBroadcastRoundResult: ((result: RoundResult) => void) | null = null;
   onBroadcastNewRound: (() => void) | null = null;
@@ -47,53 +48,71 @@ export class Room {
   onPlayerReconnected: ((playerId: string) => void) | null = null;
   onAITakeover: ((playerId: string, playerName: string) => void) | null = null;
 
-  constructor(code: string, hostId: string, settings: RoomSettings, isPublic: boolean) {
+  constructor(code: string, settings: RoomSettings, isPublic: boolean) {
     this.code = code;
-    this.hostId = hostId;
     this.settings = settings;
     this.isPublic = isPublic;
     this.aiPlayer = new AIPlayer(settings.difficulty);
   }
 
-  addPlayer(sessionId: string, socketId: string, name: string): boolean {
-    if (this.phase !== 'waiting') return false;
-    if (this.players.length >= this.settings.maxPlayers) return false;
-    if (this.players.find(p => p.id === sessionId)) return false;
+  addPlayer(socketId: string, name: string): RoomPlayer | null {
+    if (this.phase !== 'waiting') return null;
+    if (this.players.length >= this.settings.maxPlayers) return null;
 
-    this.players.push({
-      id: sessionId,
+    const player: RoomPlayer = {
+      id: randomUUID(),
+      reconnectToken: randomUUID(),
       socketId,
       name,
       isConnected: true,
       isAI: false,
       disconnectedAt: null,
-    });
-    return true;
+    };
+
+    this.players.push(player);
+    if (!this.hostId) {
+      this.hostId = player.id;
+    }
+
+    return player;
   }
 
-  removePlayer(sessionId: string): void {
-    this.players = this.players.filter(p => p.id !== sessionId);
+  removePlayer(playerId: string): void {
+    this.players = this.players.filter((player) => player.id !== playerId);
+    if (this.hostId === playerId) {
+      this.hostId = this.players[0]?.id ?? null;
+    }
   }
 
-  reconnectPlayer(sessionId: string, socketId: string): boolean {
-    const player = this.players.find(p => p.id === sessionId);
-    if (!player) return false;
+  getPlayer(playerId: string): RoomPlayer | undefined {
+    return this.players.find((player) => player.id === playerId);
+  }
+
+  getPlayerByReconnectToken(reconnectToken: string): RoomPlayer | undefined {
+    return this.players.find((player) => player.reconnectToken === reconnectToken);
+  }
+
+  reconnectPlayer(playerId: string, socketId: string): RoomPlayer | null {
+    const player = this.players.find((candidate) => candidate.id === playerId);
+    if (!player) return null;
+    if (player.isConnected) return null;
 
     player.socketId = socketId;
     player.isConnected = true;
     player.isAI = false;
     player.disconnectedAt = null;
+    player.reconnectToken = randomUUID();
 
-    this.onPlayerReconnected?.(sessionId);
-    return true;
+    this.onPlayerReconnected?.(playerId);
+    return player;
   }
 
-  handleDisconnect(sessionId: string): void {
-    const player = this.players.find(p => p.id === sessionId);
+  handleDisconnect(playerId: string): void {
+    const player = this.players.find((candidate) => candidate.id === playerId);
     if (!player) return;
 
     if (this.phase === 'waiting') {
-      this.removePlayer(sessionId);
+      this.removePlayer(playerId);
       return;
     }
 
@@ -101,16 +120,12 @@ export class Room {
     player.disconnectedAt = Date.now();
 
     const graceSeconds = Math.round(RECONNECT_GRACE_MS / 1000);
-    this.onPlayerDisconnected?.(sessionId, graceSeconds);
+    this.onPlayerDisconnected?.(playerId, graceSeconds);
 
-    // Start grace period timer
     setTimeout(() => {
       if (!player.isConnected && this.phase === 'playing') {
-        // Convert to AI
         player.isAI = true;
-        this.onAITakeover?.(sessionId, player.name);
-
-        // If it's this player's turn, make AI move
+        this.onAITakeover?.(playerId, player.name);
         this.checkAITurn();
       }
     }, RECONNECT_GRACE_MS);
@@ -120,17 +135,17 @@ export class Room {
     if (this.phase !== 'waiting') return false;
     if (this.players.length < 2) return false;
 
-    const playerConfigs: PlayerConfig[] = this.players.map(p => ({
-      id: p.id,
-      name: p.name,
-      isHuman: true, // All are human in multiplayer (AI fills in later)
+    const playerConfigs: PlayerConfig[] = this.players.map((player) => ({
+      id: player.id,
+      name: player.name,
+      isHuman: true,
     }));
 
     this.engine = new GameEngine(
       {
         playerCount: this.players.length,
         startingDice: this.settings.startingDice,
-        analysisEnabled: false, // Never enabled in multiplayer
+        analysisEnabled: false,
         palificoEnabled: this.settings.palificoEnabled,
         calzaEnabled: this.settings.calzaEnabled,
       },
@@ -152,9 +167,9 @@ export class Room {
 
     return {
       ...state,
-      players: state.players.map(p => ({
-        ...p,
-        dice: p.id === playerId ? p.dice : [], // Hide other players' dice
+      players: state.players.map((player) => ({
+        ...player,
+        dice: player.id === playerId ? player.dice : [],
       })),
     };
   }
@@ -203,7 +218,6 @@ export class Room {
     if (!this.engine || this.phase !== 'playing') return null;
 
     const state = this.engine.getState();
-    // Calza can be called by anyone except the current bidder, on their turn
     const currentPlayer = state.players[state.currentPlayerIndex];
     if (currentPlayer.id !== playerId) return null;
     if (!state.currentBid) return null;
@@ -221,14 +235,13 @@ export class Room {
 
     if (state.gamePhase === 'gameOver') {
       this.phase = 'finished';
-      const winner = state.players.find(p => p.diceCount > 0);
+      const winner = state.players.find((player) => player.diceCount > 0);
       if (winner) {
         this.onGameOver?.(winner.id);
       }
       return;
     }
 
-    // Auto-advance to next round after delay
     this.roundAdvanceTimer = setTimeout(() => {
       this.onBroadcastNewRound?.();
       this.onBroadcastState?.();
@@ -267,11 +280,9 @@ export class Room {
 
     this.onTurnTimeout?.(currentPlayer.id);
 
-    // Auto-action: dudo if there's a bid, otherwise auto-bid lowest valid
     if (state.currentBid) {
       this.challenge(currentPlayer.id);
     } else {
-      // First turn, auto-bid: 1x face 2
       this.makeBid(currentPlayer.id, 1, 2);
     }
   }
@@ -281,17 +292,16 @@ export class Room {
 
     const state = this.engine.getState();
     const currentPlayer = state.players[state.currentPlayerIndex];
-    const roomPlayer = this.players.find(p => p.id === currentPlayer.id);
+    const roomPlayer = this.players.find((player) => player.id === currentPlayer.id);
 
     if (!roomPlayer?.isAI) return;
 
-    // AI makes a move after a short delay (feels more natural)
     setTimeout(() => {
       if (!this.engine || this.phase !== 'playing') return;
 
       const freshState = this.engine.getState();
       const aiState = freshState.players[freshState.currentPlayerIndex];
-      if (aiState.id !== currentPlayer.id) return; // Turn already advanced
+      if (aiState.id !== currentPlayer.id) return;
 
       const decision = this.aiPlayer!.makeDecision(freshState, aiState);
 
@@ -304,11 +314,10 @@ export class Room {
         if (bid) {
           this.makeBid(currentPlayer.id, bid.quantity, bid.faceValue);
         } else {
-          // Fallback: challenge
           this.challenge(currentPlayer.id);
         }
       }
-    }, 1500 + Math.random() * 1000); // 1.5-2.5 second delay
+    }, 1500 + Math.random() * 1000);
   }
 
   cleanup(): void {

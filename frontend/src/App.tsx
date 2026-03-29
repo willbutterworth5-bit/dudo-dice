@@ -77,7 +77,7 @@ function App() {
           analysisEnabled={analysisEnabled}
           palificoEnabled={palificoEnabled}
           calzaEnabled={calzaEnabled}
-          onBackToHome={() => setCurrentScreen('home')}
+          onBackToHome={() => setCurrentScreen('landing')}
         />
       )}
       {currentScreen === 'profile' && (
@@ -101,7 +101,7 @@ function App() {
           roomCode={mp.roomUpdate.roomCode}
           players={mp.roomUpdate.players}
           hostId={mp.roomUpdate.hostId}
-          mySessionId={mp.sessionId}
+          myPlayerId={mp.playerId}
           settings={mp.roomUpdate.settings}
           onStartGame={mp.startGame}
           onLeave={() => {
@@ -120,10 +120,10 @@ function App() {
           calzaEnabled={mp.gameState.settings.calzaEnabled}
           onBackToHome={() => {
             mp.disconnect()
-            setCurrentScreen('home')
+            setCurrentScreen('landing')
           }}
           multiplayerMode={{
-            sessionId: mp.sessionId,
+            playerId: mp.playerId,
             gameState: mp.gameState,
             turnTimeRemaining: mp.turnTimeRemaining,
             roundResult: mp.roundResult,

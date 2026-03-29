@@ -12,11 +12,10 @@ export default function LandingPage({ onPlayComputer, onPlayOnline }: LandingPag
           <img
             src="/Logo.png"
             alt="Dudo Dice Logo"
-            className="flex-shrink-0"
-            style={{ width: '88px', height: '88px' }}
+            className="flex-shrink-0 w-16 h-16 sm:w-[88px] sm:h-[88px]"
           />
           <div className="flex flex-col">
-            <h1 className="text-5xl font-bold text-white">
+            <h1 className="text-4xl sm:text-5xl font-bold text-white">
               Dudo Dice
             </h1>
             <p className="text-base text-white/80 mt-1">

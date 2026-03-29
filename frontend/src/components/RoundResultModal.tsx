@@ -11,6 +11,10 @@ interface RoundResultModalProps {
   closing?: boolean;
   autoClose?: boolean;
   players?: Array<{ id: string; name: string; isHuman?: boolean }>;
+  /** Human just lost their last die — offer to skip to the end (vs AI) */
+  onSkipToEnd?: () => void;
+  /** Human just lost their last die in multiplayer — offer to leave */
+  onLeaveGame?: () => void;
 }
 
 export default function RoundResultModal({
@@ -22,6 +26,8 @@ export default function RoundResultModal({
   closing = false,
   autoClose = false,
   players = [],
+  onSkipToEnd,
+  onLeaveGame,
 }: RoundResultModalProps) {
   // In multiplayer, auto-close after 3 seconds once reveal is complete
   useEffect(() => {
@@ -109,6 +115,29 @@ export default function RoundResultModal({
               Continue
             </button>
           </div>
+
+          {/* Human eliminated — offer skip/leave actions */}
+          {(onSkipToEnd || onLeaveGame) && (
+            <div className="mt-2 pt-2 border-t border-white/15">
+              <p className="text-xs text-white/60 mb-2 text-center">You&apos;ve been eliminated</p>
+              {onSkipToEnd && (
+                <button
+                  onClick={onSkipToEnd}
+                  className="w-full px-4 py-2 text-white font-bold rounded-xl text-sm btn-3d-accent mb-1.5"
+                >
+                  Skip to End
+                </button>
+              )}
+              {onLeaveGame && (
+                <button
+                  onClick={onLeaveGame}
+                  className="w-full px-4 py-2 btn-glass text-white font-bold rounded-xl text-sm"
+                >
+                  Leave Game
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

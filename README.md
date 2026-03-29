@@ -58,6 +58,39 @@ npm run build
 
 The built files will be in the `dist` directory.
 
+## Testing
+
+Run the full post-change safety suite from the repo root:
+
+```bash
+npm run verify
+```
+
+Run the stricter version once the current frontend lint debt is cleaned up:
+
+```bash
+npm run verify:strict
+```
+
+Useful targeted commands:
+
+```bash
+npm run test
+npm run test:shared
+npm run test:server
+npm run test:frontend
+npm run lint:frontend
+npm run verify:strict
+```
+
+What gets covered automatically:
+
+- Shared Perudo rules and engine behavior
+- AI bidding and challenge decisions
+- Frontend probability and profile-storage helpers
+- Room and room-manager behavior
+- Socket.IO multiplayer flows including room creation, room listing, joining, quick match, and game start
+
 ## Game Rules
 
 ### Basic Gameplay

@@ -4,8 +4,8 @@ import { PLAYER_COLOR_MAP, PLAYER_COLORS } from '@dudo-dice/shared';
 interface WaitingRoomProps {
   roomCode: string;
   players: RoomPlayerInfo[];
-  hostId: string;
-  mySessionId: string;
+  hostId: string | null;
+  myPlayerId: string | null;
   settings: {
     maxPlayers: number;
     startingDice: number;
@@ -20,7 +20,7 @@ export default function WaitingRoom({
   roomCode,
   players,
   hostId,
-  mySessionId,
+  myPlayerId,
   settings,
   onStartGame,
   onLeave,
@@ -94,7 +94,7 @@ export default function WaitingRoom({
                   </div>
                   <span className="text-white font-semibold text-sm flex-1">
                     {p.name}
-                    {p.id === mySessionId && <span className="text-white/40 ml-1">(you)</span>}
+                    {p.id === myPlayerId && <span className="text-white/40 ml-1">(you)</span>}
                   </span>
                   {p.id === hostId && (
                     <span className="text-xs text-yellow-400 font-bold">HOST</span>
