@@ -156,7 +156,7 @@ export default function LobbyScreen({
 
           {/* Create tab */}
           {activeTab === 'create' && (
-            <div className="-m-5 overflow-hidden rounded-2xl">
+            <div className="-m-5 overflow-visible rounded-2xl">
               {/* Header */}
               <div className="bg-white/10 border-b border-white/20 px-5 py-4 flex justify-between items-center">
                 <h2 className="text-lg font-bold text-white">Create Room</h2>
@@ -231,7 +231,7 @@ export default function LobbyScreen({
                         <div className="w-5 h-5 rounded-full bg-white/20 group-hover:bg-white/30 text-white text-xs font-bold flex items-center justify-center transition-colors cursor-help">
                           i
                         </div>
-                        <div className="absolute left-1/2 -translate-x-1/2 top-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                        <div className="absolute left-0 top-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                           <p className="text-xs text-white/90 bg-indigo-900 border border-white/20 rounded-lg p-2 shadow-lg">
                             When a player is down to their last die, that round becomes a Palifico round. Ones are not wild and all bids must use the same face value as the first bid.
                           </p>
@@ -262,7 +262,7 @@ export default function LobbyScreen({
                         <div className="w-5 h-5 rounded-full bg-white/20 group-hover:bg-white/30 text-white text-xs font-bold flex items-center justify-center transition-colors cursor-help">
                           i
                         </div>
-                        <div className="absolute left-1/2 -translate-x-1/2 top-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                        <div className="absolute left-0 top-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                           <p className="text-xs text-white/90 bg-indigo-900 border border-white/20 rounded-lg p-2 shadow-lg">
                             Instead of raising the bid or calling Dudo, call Calza to claim the bid is exactly right. If correct, gain a die back. If wrong, lose a die.
                           </p>

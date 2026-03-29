@@ -150,7 +150,7 @@ export default function HomeScreen({ onStartGame, onShowProfile, onBack }: HomeS
                   <div className="w-5 h-5 rounded-full bg-white/20 group-hover:bg-white/30 text-white text-xs font-bold flex items-center justify-center transition-colors cursor-help">
                     i
                   </div>
-                  <div className="absolute left-1/2 -translate-x-1/2 bottom-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                  <div className="absolute left-0 bottom-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                     <p className="text-xs text-white/90 bg-indigo-900 border border-white/20 rounded-lg p-2 shadow-lg">
                       When enabled, you'll see insights and probability analysis after each round to help improve your strategy.
                     </p>
@@ -196,7 +196,7 @@ export default function HomeScreen({ onStartGame, onShowProfile, onBack }: HomeS
             onClick={() => setShowAdvancedSettings(false)}
           >
             <div
-              className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl w-full max-w-sm p-5 animate-modal-enter"
+              className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl w-full max-w-sm p-5 animate-modal-enter overflow-visible"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-5">
@@ -220,7 +220,7 @@ export default function HomeScreen({ onStartGame, onShowProfile, onBack }: HomeS
                       <div className="w-5 h-5 rounded-full bg-white/20 group-hover:bg-white/30 text-white text-xs font-bold flex items-center justify-center transition-colors cursor-help">
                         i
                       </div>
-                      <div className="absolute left-1/2 -translate-x-1/2 top-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                      <div className="absolute left-0 top-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                         <p className="text-xs text-white/90 bg-indigo-900 border border-white/20 rounded-lg p-2 shadow-lg">
                           When a player is down to their last die, that round becomes a Palifico round. Ones are not wild and all bids must use the same face value as the first bid.
                         </p>
@@ -256,7 +256,7 @@ export default function HomeScreen({ onStartGame, onShowProfile, onBack }: HomeS
                       <div className="w-5 h-5 rounded-full bg-white/20 group-hover:bg-white/30 text-white text-xs font-bold flex items-center justify-center transition-colors cursor-help">
                         i
                       </div>
-                      <div className="absolute left-1/2 -translate-x-1/2 top-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                      <div className="absolute left-0 top-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                         <p className="text-xs text-white/90 bg-indigo-900 border border-white/20 rounded-lg p-2 shadow-lg">
                           Instead of raising the bid or calling Dudo, call Calza to claim the bid is exactly right. If correct, gain a die back. If wrong, lose a die.
                         </p>
