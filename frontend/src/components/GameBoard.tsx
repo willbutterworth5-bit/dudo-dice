@@ -82,22 +82,25 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   const [showGameAnalysis, setShowGameAnalysis] = useState(false);
   const [dudoFadingOut, setDudoFadingOut] = useState(false);
   const [boardShaking, setBoardShaking] = useState(false);
+  const animationTimeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [modalClosing, setModalClosing] = useState(false);
   const [isCalzaRound, setIsCalzaRound] = useState(false);
 
   // Responsive board scaling for mobile
-  // On mobile, reserve space for top bar (~40px), player legend (~30px), bid input (~200px), and margins
+  // Only constrain board size on narrow screens; desktop always gets full 450px
   const BOARD_BASE = 450;
   const [boardSize, setBoardSize] = useState(() => {
     if (typeof window === 'undefined') return BOARD_BASE;
+    const isMobile = window.innerWidth < 640; // sm breakpoint
     const widthBased = window.innerWidth - 48; // 24px padding each side for dice overhang
-    const heightBased = window.innerHeight - 300; // reserve 300px for UI above/below board
+    const heightBased = isMobile ? window.innerHeight - 300 : BOARD_BASE; // only height-constrain on mobile
     return Math.min(BOARD_BASE, widthBased, heightBased);
   });
   useEffect(() => {
     const updateSize = () => {
+      const isMobile = window.innerWidth < 640;
       const widthBased = window.innerWidth - 48;
-      const heightBased = window.innerHeight - 300;
+      const heightBased = isMobile ? window.innerHeight - 300 : BOARD_BASE;
       setBoardSize(Math.min(BOARD_BASE, widthBased, heightBased));
     };
     window.addEventListener('resize', updateSize);
@@ -105,6 +108,21 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     return () => window.removeEventListener('resize', updateSize);
   }, []);
   const boardScale = Math.max(0.55, boardSize / BOARD_BASE);
+
+  // Track timeouts for cleanup on unmount
+  const trackTimeout = useCallback((fn: () => void, delay: number) => {
+    const id = setTimeout(fn, delay);
+    animationTimeouts.current.push(id);
+    return id;
+  }, []);
+
+  // Cleanup all animation timeouts on unmount
+  useEffect(() => {
+    return () => {
+      animationTimeouts.current.forEach(id => clearTimeout(id));
+      animationTimeouts.current = [];
+    };
+  }, []);
 
   // Sequential reveal function - defined early to avoid hoisting issues
   const startSequentialReveal = useCallback((result: RoundResult, state: GameState, onComplete?: () => void) => {
@@ -191,7 +209,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
             revealed: currentRevealed,
             matchingDice: currentMatching,
           });
-          setTimeout(() => {
+          trackTimeout(() => {
             setRevealComplete(true);
             if (onComplete) onComplete();
           }, 300);
@@ -226,7 +244,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           matchingDice: { ...currentMatching },
         });
 
-        setTimeout(() => {
+        trackTimeout(() => {
           revealNextDie(diePositionIdx + 1, currentRevealed, currentMatching);
         }, 450);
       } catch (error) {
@@ -236,10 +254,10 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     };
 
     // Start revealing first die after a short initial delay
-    setTimeout(() => {
+    trackTimeout(() => {
       revealNextDie(0, revealed, matchingDice);
     }, 200);
-  }, [isMultiplayer, multiplayerMode?.sessionId]);
+  }, [isMultiplayer, multiplayerMode?.sessionId, trackTimeout]);
 
   // Shared challenge animation sequence used by both AI and human challenges
   const startChallengeAnimation = useCallback((result: RoundResult, state: GameState, isCalza = false) => {
@@ -252,21 +270,25 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     setIsCalzaRound(isCalza);
     setIsTallying(false);
 
+    // Clear any pending animation timeouts from previous rounds
+    animationTimeouts.current.forEach(id => clearTimeout(id));
+    animationTimeouts.current = [];
+
     // Shake the board on Dudo call
     setBoardShaking(true);
-    setTimeout(() => setBoardShaking(false), 600);
+    trackTimeout(() => setBoardShaking(false), 600);
 
     // Brief dramatic pause: flash the challenge moment, then crossfade into the reveal.
-    setTimeout(() => {
+    trackTimeout(() => {
       // Begin crossfade: fade out DUDO/CALZA text before switching to the Found counter
       setDudoFadingOut(true);
-      setTimeout(() => {
+      trackTimeout(() => {
         setInnerCircleChallenge(false);
         setDudoFadingOut(false);
         startSequentialReveal(result, state, () => setShowDice(true));
       }, 300);
     }, 1200);
-  }, [startSequentialReveal]);
+  }, [startSequentialReveal, trackTimeout]);
 
   // Initialize game on mount (local mode only)
   useEffect(() => {
@@ -281,7 +303,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     initializeGame(settings);
     // Trigger dice throw animation on initial game start
     setDiceThrowing(true);
-    setTimeout(() => setDiceThrowing(false), 800);
+    trackTimeout(() => setDiceThrowing(false), 800);
   }, [playerCount, startingDice, palificoEnabled, calzaEnabled, initializeGame, isMultiplayer]);
 
   // Initialize previousRoundNumber when gameState first becomes available
@@ -299,7 +321,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     // Allow it to trigger even if previousRoundNumber is 0 (first round after initialization)
     if (gameState.roundNumber > previousRoundNumber) {
       setDiceThrowing(true);
-      setTimeout(() => {
+      trackTimeout(() => {
         setDiceThrowing(false);
       }, 800); // Match animation duration
       setIsTallying(false);
@@ -916,8 +938,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               
               // Get dice for this player
               const originalDice = (lastRoundResult && revealState)
-                ? (lastRoundResult.allDice?.find(d => d.playerId === player.id)?.dice || player.dice)
-                : player.dice;
+                ? (lastRoundResult.allDice?.find(d => d.playerId === player.id)?.dice ?? player.dice ?? [])
+                : (player.dice ?? []);
               
               // Create sorted dice with mapping to original indices
               const diceWithIndices = originalDice && originalDice.length > 0
@@ -1097,44 +1119,6 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           </div>
         </div>
 
-        {/* Challenge Context Banner — who called who and what the bid was (visible during DUDO flash too) */}
-        {lastRoundResult && !showDice && !modalClosing && (() => {
-          const challPlayer = gameState.players.find(p => p.id === lastRoundResult.challengerId);
-          const bidPlayer   = gameState.players.find(p => p.id === lastRoundResult.bidderId);
-          const challColor  = PLAYER_COLOR_MAP[challPlayer?.color ?? ''] || '#6B7280';
-          const bidColor    = PLAYER_COLOR_MAP[bidPlayer?.color   ?? ''] || '#6B7280';
-          return (
-            <div className="max-w-2xl mx-auto animate-fade-slide-up" style={{ marginTop: '1.25rem' }}>
-              <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl px-4 py-2.5 shadow-2xl">
-                <div className="flex items-center justify-center gap-1.5 flex-wrap text-sm">
-                  {/* Challenger */}
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: challColor }} />
-                    <span className="font-bold text-white">{challPlayer?.name ?? 'Player'}</span>
-                  </div>
-                  {isCalzaRound ? (
-                    <span className="text-white/65">called <span className="font-bold text-yellow-300">CALZA</span> on</span>
-                  ) : (
-                    <span className="text-white/65">called <span className="font-bold text-red-300">DUDO</span> on</span>
-                  )}
-                  {/* Bidder */}
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: bidColor }} />
-                    <span className="font-bold text-white">{bidPlayer?.name ?? 'Player'}<span className="font-normal text-white/65">'s bid of</span></span>
-                  </div>
-                  {/* The bid itself */}
-                  <div className="flex items-center gap-1">
-                    <span className="font-bold text-white">{lastRoundResult.challengedBid.quantity}×</span>
-                    <div className="w-5 h-5 bg-white rounded flex items-center justify-center flex-shrink-0">
-                      <DiceFace value={lastRoundResult.challengedBid.faceValue} size="sm" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-
         {/* Player Legend + Bid Input */}
         <div className="px-3 relative z-10">
           {/* Bid Input Section */}
@@ -1152,9 +1136,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                   style={{
                     background: `linear-gradient(to bottom right, ${color}, ${color}dd)`,
                     boxShadow: isCurrentTurn
-                      ? `0 0 0 2px white, 0 4px 12px ${color}66`
+                      ? `inset 0 0 0 2px white, 0 2px 4px rgba(0,0,0,0.25)`
                       : `0 2px 4px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)`,
-                    transform: isCurrentTurn ? 'scale(1.08)' : 'scale(1)',
                     opacity: isEliminated ? 0.4 : (isCurrentTurn ? 1 : 0.75),
                   }}
                 >
@@ -1163,6 +1146,40 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               );
             })}
           </div>
+            {/* Challenge Context Banner — who called who and what the bid was */}
+            {lastRoundResult && !showDice && !modalClosing && (() => {
+              const challPlayer = gameState.players.find(p => p.id === lastRoundResult.challengerId);
+              const bidPlayer   = gameState.players.find(p => p.id === lastRoundResult.bidderId);
+              const challColor  = PLAYER_COLOR_MAP[challPlayer?.color ?? ''] || '#6B7280';
+              const bidColor    = PLAYER_COLOR_MAP[bidPlayer?.color   ?? ''] || '#6B7280';
+              return (
+                <div className="animate-fade-slide-up mb-1.5">
+                  <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl px-4 py-2.5 shadow-2xl">
+                    <div className="flex items-center justify-center gap-1.5 flex-wrap text-sm">
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: challColor }} />
+                        <span className="font-bold text-white">{challPlayer?.name ?? 'Player'}</span>
+                      </div>
+                      {isCalzaRound ? (
+                        <span className="text-white/65">called <span className="font-bold text-yellow-300">CALZA</span> on</span>
+                      ) : (
+                        <span className="text-white/65">called <span className="font-bold text-red-300">DUDO</span> on</span>
+                      )}
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: bidColor }} />
+                        <span className="font-bold text-white">{bidPlayer?.name ?? 'Player'}<span className="font-normal text-white/65">'s bid of</span></span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="font-bold text-white">{lastRoundResult.challengedBid.quantity}×</span>
+                        <div className="w-5 h-5 bg-white rounded flex items-center justify-center flex-shrink-0">
+                          <DiceFace value={lastRoundResult.challengedBid.faceValue} size="sm" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
             {isMyTurn && gameState.gamePhase === 'bidding' && !lastRoundResult && !showDice && (
               <BidInput
                 currentBid={gameState.currentBid}
@@ -1217,7 +1234,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
             onClose={() => {
               // Start exit animation, then reset state after it completes
               setModalClosing(true);
-              setTimeout(() => {
+              trackTimeout(() => {
                 setShowDice(false);
                 setLastRoundResult(null);
                 setChallengedBidPlayerId(null);

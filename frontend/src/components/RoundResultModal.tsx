@@ -63,7 +63,12 @@ export default function RoundResultModal({
             <div className="bg-white/10 rounded-lg p-2">
               <p className="text-xs text-white/65 mb-1 font-semibold">Actual Count</p>
               {revealComplete ? (
-                <p className="text-xl font-bold text-white">{result.actualCount}</p>
+                <div className="flex items-center justify-center gap-1.5">
+                  <p className="text-xl font-bold text-white">{result.actualCount}×</p>
+                  <div className="w-6 h-6 bg-white rounded flex items-center justify-center shadow-sm">
+                    <DiceFace value={result.challengedBid.faceValue} size="sm" />
+                  </div>
+                </div>
               ) : (
                 <p className="text-xl font-bold text-white/50">---</p>
               )}

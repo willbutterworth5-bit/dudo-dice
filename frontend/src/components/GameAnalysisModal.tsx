@@ -113,7 +113,7 @@ function RoundDetail({ round, players }: { round: RoundResult; players: Player[]
               {round.challengeType === 'calza' ? 'called CALZA on' : 'called DUDO on'}{' '}
             </span>
             <BidDisplay quantity={round.challengedBid.quantity} faceValue={round.challengedBid.faceValue} />
-            <span>· Actual: <span className="font-bold text-white">{round.actualCount}</span></span>
+            <span className="flex items-center gap-1">· Actual: <span className="font-bold text-white">{round.actualCount}×</span><span className="inline-block w-4 h-4 bg-white rounded"><DiceFace value={round.challengedBid.faceValue} size="sm" /></span></span>
           </div>
           {round.challengeType === 'calza' ? (
             round.calzaSuccess ? (

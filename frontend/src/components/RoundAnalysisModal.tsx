@@ -51,6 +51,7 @@ function BidDisplay({ quantity, faceValue }: { quantity: number; faceValue: numb
 }
 
 export default function RoundAnalysisModal({ result, players, onClose }: RoundAnalysisModalProps) {
+  const [highlightedFace, setHighlightedFace] = useState<number | null>(null);
   const humanPlayer = players.find(p => p.isHuman);
   const challengerPlayer = players.find(p => p.id === result.challengerId);
   const humanWasChallenger = humanPlayer?.id === result.challengerId;
@@ -82,41 +83,7 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
         </div>
 
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-indigo">
-
-          {/* Bid timeline */}
-          <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <p className="text-xs font-bold text-white/50 uppercase tracking-wider">Bid Timeline</p>
-              <InfoTooltip text="Every bid made this round in order. The % shows how likely the bid was true from your perspective — using your dice and the total dice still in play at that moment." />
-            </div>
-            <div className="space-y-1.5">
-              {result.bids.map((record, i) => {
-                const player = players.find(p => p.id === record.playerId);
-                const color = player ? (PLAYER_COLOR_MAP[player.color] || '#6B7280') : '#6B7280';
-                const name = player?.isHuman ? 'You' : (player?.name ?? 'Unknown');
-                const prob = probabilityFromRecord(record);
-                const isFinalBid = i === result.bids.length - 1;
-
-                return (
-                  <div
-                    key={i}
-                    className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${
-                      isFinalBid ? 'bg-white/15 border border-white/30 border-dashed' : 'bg-white/8'
-                    }`}
-                  >
-                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-                    <span className="text-xs font-semibold text-white/80 flex-1 truncate">{name}</span>
-                    <BidDisplay quantity={record.bid.quantity} faceValue={record.bid.faceValue} />
-                    <ProbBadge prob={prob} />
-                  </div>
-                );
-              })}
-            </div>
-            {result.bids.length === 0 && (
-              <p className="text-xs text-white/40 italic">No bids recorded</p>
-            )}
-          </div>
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ scrollbarWidth: 'none' }}>
 
           {/* Challenge outcome */}
           {challengedBidProb !== null && (
@@ -142,18 +109,16 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 text-xs text-white/70">
+              <div className="flex items-center gap-1 text-xs text-white/70">
                 <span>Actual count</span>
-                <span className="font-bold text-white">{result.actualCount}</span>
-                {result.challengeType !== 'calza' && (
-                  <>
-                    <span className="text-white/40">·</span>
-                    <span>
-                      Bid probability was <span className="font-bold text-white">{Math.round(challengedBidProb * 100)}%</span>
-                    </span>
-                  </>
-                )}
+                <span className="font-bold text-white">{result.actualCount}×</span>
+                <span className="inline-block w-4 h-4 bg-white rounded"><DiceFace value={result.challengedBid.faceValue} size="sm" /></span>
               </div>
+              {result.challengeType !== 'calza' && (
+                <div className="text-xs text-white/70">
+                  Bid probability was <span className="font-bold text-white">{Math.round(challengedBidProb * 100)}%</span>
+                </div>
+              )}
 
               {result.challengeType === 'calza' ? (
                 result.calzaSuccess ? (
@@ -211,6 +176,40 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
             </div>
           )}
 
+          {/* Bid timeline */}
+          <div className="bg-white/10 rounded-lg p-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <p className="text-xs font-bold text-white/50 uppercase tracking-wider">Bid Timeline</p>
+              <InfoTooltip text="Every bid made this round in order. The % shows how likely the bid was true from your perspective — using your dice and the total dice still in play at that moment." />
+            </div>
+            <div className="space-y-0.5">
+              {result.bids.map((record, i) => {
+                const player = players.find(p => p.id === record.playerId);
+                const color = player ? (PLAYER_COLOR_MAP[player.color] || '#6B7280') : '#6B7280';
+                const name = player?.isHuman ? 'You' : (player?.name ?? 'Unknown');
+                const prob = probabilityFromRecord(record);
+                const isFinalBid = i === result.bids.length - 1;
+
+                return (
+                  <div
+                    key={i}
+                    className={`flex items-center gap-2 px-2 py-1 rounded-lg ${
+                      isFinalBid ? 'bg-white/15 border border-white/30 border-dashed' : 'bg-white/8'
+                    }`}
+                  >
+                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                    <span className="text-xs font-semibold text-white/80 flex-1 truncate">{name}</span>
+                    <BidDisplay quantity={record.bid.quantity} faceValue={record.bid.faceValue} />
+                    <ProbBadge prob={prob} />
+                  </div>
+                );
+              })}
+            </div>
+            {result.bids.length === 0 && (
+              <p className="text-xs text-white/40 italic">No bids recorded</p>
+            )}
+          </div>
+
           {/* Alternative bids (when human challenged and lost) */}
           {humanWasChallenger && humanLost && (
             <div className="bg-white/10 rounded-lg p-3 space-y-2">
@@ -220,12 +219,21 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
               </div>
               {alternatives.length > 0 ? (
                 <div className="space-y-1.5">
-                  {alternatives.map((alt, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <BidDisplay quantity={alt.quantity} faceValue={alt.faceValue} />
-                      <span className="text-xs text-white/50">({alt.actualCount} on the board)</span>
-                    </div>
-                  ))}
+                  {alternatives.map((alt, i) => {
+                    // Minimum valid bid for this face value
+                    const minQty = alt.faceValue === result.challengedBid.faceValue
+                      ? result.challengedBid.quantity + 1
+                      : alt.faceValue > result.challengedBid.faceValue
+                        ? result.challengedBid.quantity
+                        : result.challengedBid.quantity + 1;
+                    const hasRange = alt.actualCount > minQty;
+                    return (
+                      <div key={i} className="flex items-center gap-1.5">
+                        <span className="text-xs text-white">{hasRange ? `up to ${alt.actualCount}×` : `${alt.actualCount}×`}</span>
+                        <div className="w-5 h-5 bg-white rounded flex items-center justify-center flex-shrink-0"><DiceFace value={alt.faceValue} size="sm" /></div>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-xs text-white/50 italic">
@@ -241,27 +249,77 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
               <p className="text-xs font-bold text-white/50 uppercase tracking-wider">Actual Dice</p>
               <InfoTooltip text="The dice each player was actually holding at the end of this round, revealed after the challenge." />
             </div>
-            <div className="space-y-1.5">
-              {result.allDice.map(({ playerId, dice }) => {
-                const player = players.find(p => p.id === playerId);
-                if (!player || dice.length === 0) return null;
-                const color = PLAYER_COLOR_MAP[player.color] || '#6B7280';
-                const name = player.isHuman ? 'You' : player.name;
-                return (
-                  <div key={playerId} className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-                    <span className="text-xs text-white/70 w-16 truncate">{name}</span>
-                    <div className="flex gap-1">
-                      {dice.sort((a, b) => a - b).map((d, di) => (
-                        <div key={di} className="w-5 h-5 bg-white rounded flex items-center justify-center">
-                          <DiceFace value={d} size="sm" />
-                        </div>
-                      ))}
+            {(() => {
+              // Pre-compute total counts for each face value across all dice
+              const allDiceFlat = result.allDice.flatMap(d => d.dice);
+              const faceCounts: Record<number, number> = {};
+              for (const d of allDiceFlat) {
+                faceCounts[d] = (faceCounts[d] || 0) + 1;
+              }
+              const wildsCount = faceCounts[1] || 0;
+
+              // Check if a die should be highlighted based on the selected face
+              const isDieHighlighted = (dieValue: number): boolean => {
+                if (highlightedFace === null) return false;
+                if (dieValue === highlightedFace) return true;
+                // Wilds (1s) count for non-1 faces in non-palifico
+                if (!palificoMode && highlightedFace !== 1 && dieValue === 1) return true;
+                return false;
+              };
+
+              const getTooltipText = (): string => {
+                if (highlightedFace === null) return '';
+                const exact = faceCounts[highlightedFace] || 0;
+                if (palificoMode || highlightedFace === 1) {
+                  return `${exact}× total`;
+                }
+                const total = exact + wildsCount;
+                return `${total}× total (${exact} + ${wildsCount} wild)`;
+              };
+
+              return (
+                <div className="relative">
+                  {/* Floating tooltip — positioned above the section title */}
+                  {highlightedFace !== null && (
+                    <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-black/85 text-white text-[10px] font-bold px-2.5 py-1 rounded-md whitespace-nowrap z-20 pointer-events-none flex items-center gap-1.5">
+                      <span className="inline-block w-4 h-4 bg-white rounded flex-shrink-0"><DiceFace value={highlightedFace} size="sm" /></span>
+                      {getTooltipText()}
                     </div>
+                  )}
+                  <div className="space-y-1.5">
+                    {result.allDice.map(({ playerId, dice }) => {
+                      const player = players.find(p => p.id === playerId);
+                      if (!player || dice.length === 0) return null;
+                      const color = PLAYER_COLOR_MAP[player.color] || '#6B7280';
+                      const name = player.isHuman ? 'You' : player.name;
+                      return (
+                        <div key={playerId} className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                          <span className="text-xs text-white/70 w-16 truncate">{name}</span>
+                          <div className="flex gap-1">
+                            {dice.sort((a, b) => a - b).map((d, di) => (
+                              <div
+                                key={di}
+                                className="w-5 h-5 rounded flex items-center justify-center cursor-pointer transition-shadow duration-150"
+                                style={{
+                                  background: 'white',
+                                  boxShadow: isDieHighlighted(d) ? '0 0 6px 2px rgba(251, 191, 36, 0.8), inset 0 0 0 1.5px #fbbf24' : 'none',
+                                }}
+                                onMouseEnter={() => setHighlightedFace(d)}
+                                onMouseLeave={() => setHighlightedFace(null)}
+                                onClick={() => setHighlightedFace(prev => prev === d ? null : d)}
+                              >
+                                <DiceFace value={d} size="sm" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
 
