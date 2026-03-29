@@ -1,4 +1,4 @@
-import { Player, PLAYER_COLOR_MAP } from '../game/GameState';
+import { Player } from '../game/GameState';
 
 interface GameOverModalProps {
   winner: Player;
@@ -15,15 +15,14 @@ export default function GameOverModal({
   onViewGameAnalysis,
   analysisEnabled = false,
 }: GameOverModalProps) {
-  const winnerColor = PLAYER_COLOR_MAP[winner.color] || '#6B7280';
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border border-white/20">
         <div className="text-center">
           <div
-            className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-4xl font-bold shadow-lg"
-            style={{ backgroundColor: winnerColor }}
+            className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold shadow-lg bg-white/15 border border-white/20"
           >
             🎉
           </div>
