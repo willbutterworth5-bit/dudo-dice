@@ -54,14 +54,84 @@ function BidDisplay({ quantity, faceValue }: { quantity: number; faceValue: numb
   );
 }
 
+function MissedDudosPage({
+  roundHistory,
+  players,
+  onBack,
+}: {
+  roundHistory: RoundResult[];
+  players: Player[];
+  onBack: () => void;
+}) {
+  const human = players.find(p => p.isHuman);
+  const items: { round: number; bidderName: string; bidderColor: string; bid: { quantity: number; faceValue: number }; actualCount: number }[] = [];
+
+  for (const round of roundHistory) {
+    const wasPalifico = round.bids[0]?.palificoMode ?? false;
+    const flatDice = round.allDice.flatMap(pd => pd.dice);
+
+    for (let i = 0; i < round.bids.length; i++) {
+      const record = round.bids[i];
+      if (record.playerId === human?.id) continue;
+
+      const nextBid = round.bids[i + 1];
+      if (!nextBid || nextBid.playerId !== human?.id) continue;
+
+      const actual = flatDice.filter(d => {
+        if (wasPalifico) return d === record.bid.faceValue;
+        return d === record.bid.faceValue || d === 1;
+      }).length;
+
+      if (actual < record.bid.quantity) {
+        const bidder = players.find(p => p.id === record.playerId);
+        items.push({
+          round: round.round,
+          bidderName: bidder?.name ?? 'Unknown',
+          bidderColor: bidder ? PLAYER_COLOR_MAP[bidder.color] || '#6B7280' : '#6B7280',
+          bid: record.bid,
+          actualCount: actual,
+        });
+      }
+    }
+  }
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex items-center gap-2 border-b border-white/20 px-4 py-2">
+        <button onClick={onBack} className="text-sm text-white/60 hover:text-white">&larr; Back</button>
+        <h3 className="text-sm font-bold text-white">Missed DUDOs</h3>
+      </div>
+      <div className="scrollbar-indigo flex-1 overflow-y-auto px-4 py-3">
+        {items.length === 0 ? (
+          <p className="text-center text-xs italic text-white/40">No missed DUDO opportunities.</p>
+        ) : (
+          <div className="space-y-2">
+            {items.map((item, idx) => (
+              <div key={idx} className="rounded-lg bg-amber-500/15 ring-1 ring-amber-400/30 p-2.5">
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-amber-300/70">Round {item.round}</p>
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: item.bidderColor }} />
+                  <span className="text-xs font-semibold text-white/80">{item.bidderName} bid</span>
+                  <BidDisplay quantity={item.bid.quantity} faceValue={item.bid.faceValue} />
+                </div>
+                <p className="mt-1 text-[11px] text-amber-300/80">
+                  Only {item.actualCount}x were on the board — you could have called DUDO.
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function RoundDetail({
   round,
   players,
-  highlightMissedDudos = false,
 }: {
   round: RoundResult;
   players: Player[];
-  highlightMissedDudos?: boolean;
 }) {
   const humanPlayer = players.find(player => player.isHuman);
   const humanWasChallenger = humanPlayer?.id === round.challengerId;
@@ -151,30 +221,14 @@ function RoundDetail({
             const name = player?.isHuman ? 'You' : player?.name ?? 'Unknown';
             const prob = probabilityFromRecord(record);
             const isFinal = index === round.bids.length - 1;
-            const nextBid = round.bids[index + 1];
-            const nextBidderIsHuman = nextBid
-              ? players.find(candidate => candidate.id === nextBid.playerId)?.isHuman
-              : false;
-            const flatDice = round.allDice.flatMap(playerDice => playerDice.dice);
-            const actualCount = flatDice.filter(dieValue => {
-              if (palificoMode) {
-                return dieValue === record.bid.faceValue;
-              }
-              return dieValue === record.bid.faceValue || dieValue === 1;
-            }).length;
-            const bidWasFalse = actualCount < record.bid.quantity;
-            const couldHaveDudo =
-              highlightMissedDudos && !player?.isHuman && bidWasFalse && nextBidderIsHuman;
 
             return (
               <div key={index}>
                 <div
                   className={`flex items-center gap-2 rounded-lg px-2 py-1 ${
-                    couldHaveDudo
-                      ? 'bg-amber-500/20 ring-1 ring-amber-400/40'
-                      : isFinal
-                        ? 'border border-dashed border-white/30 bg-white/15'
-                        : 'bg-white/8'
+                    isFinal
+                      ? 'border border-dashed border-white/30 bg-white/15'
+                      : 'bg-white/8'
                   }`}
                 >
                   <div
@@ -187,11 +241,6 @@ function RoundDetail({
                   <BidDisplay quantity={record.bid.quantity} faceValue={record.bid.faceValue} />
                   <ProbBadge prob={prob} />
                 </div>
-                {couldHaveDudo && (
-                  <p className="mt-0.5 pl-2 text-[10px] text-amber-300/80">
-                    You could have called DUDO here. Only {actualCount} were on the board.
-                  </p>
-                )}
               </div>
             );
           })}
@@ -332,16 +381,11 @@ export default function GameAnalysisModal({
   const [selectedRound, setSelectedRound] = useState(
     roundHistory[roundHistory.length - 1]?.round ?? 1,
   );
-  const [filterMissed, setFilterMissed] = useState(false);
+  const [showMissedPage, setShowMissedPage] = useState(false);
 
   const stats = computeSummaryStats(roundHistory, players);
-  const displayedRounds =
-    filterMissed && stats
-      ? roundHistory.filter(round => stats.missedRounds.includes(round.round))
-      : roundHistory;
-  const selectedResult = displayedRounds.find(round => round.round === selectedRound)
-    ?? roundHistory.find(round => round.round === selectedRound)
-    ?? displayedRounds[0]
+  const selectedResult = roundHistory.find(round => round.round === selectedRound)
+    ?? roundHistory[0]
     ?? null;
 
   return (
@@ -376,69 +420,60 @@ export default function GameAnalysisModal({
             </div>
             <button
               className={`flex-1 rounded-lg p-2 text-center transition-colors ${
-                filterMissed
-                  ? 'bg-amber-500/30 ring-1 ring-amber-400/50'
-                  : 'bg-white/10 hover:bg-white/15'
+                stats.missedOpportunities > 0
+                  ? 'bg-white/10 hover:bg-amber-500/20'
+                  : 'bg-white/10'
               }`}
               onClick={() => {
-                if (stats.missedRounds.length === 0) {
-                  return;
-                }
-
-                const nextFilterMissed = !filterMissed;
-                setFilterMissed(nextFilterMissed);
-
-                if (nextFilterMissed) {
-                  setSelectedRound(stats.missedRounds[0]);
+                if (stats.missedOpportunities > 0) {
+                  setShowMissedPage(true);
                 }
               }}
             >
               <p className="text-lg font-bold text-white">{stats.missedOpportunities}</p>
-              <p className={`text-xs ${filterMissed ? 'text-amber-300' : 'text-white/50'}`}>
+              <p className="text-xs text-white/50">
                 Missed DUDOs
               </p>
             </button>
           </div>
         )}
 
-        <div className="flex-shrink-0 border-b border-white/20 px-4 py-2">
-          {filterMissed && (
-            <p className="mb-1.5 text-xs text-amber-300/70">
-              Showing missed DUDO rounds.
-              <button
-                className="ml-1 underline text-white/60 hover:text-white"
-                onClick={() => setFilterMissed(false)}
-              >
-                Show all
-              </button>
-            </p>
-          )}
-          <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-            {displayedRounds.map(round => (
-              <button
-                key={round.round}
-                onClick={() => setSelectedRound(round.round)}
-                className={`h-8 w-8 flex-shrink-0 rounded-lg text-xs font-bold transition-colors ${
-                  round.round === selectedRound ? 'btn-3d-accent text-white' : 'btn-glass'
-                }`}
-              >
-                {round.round}
-              </button>
-            ))}
-          </div>
-        </div>
+        {showMissedPage ? (
+          <MissedDudosPage
+            roundHistory={roundHistory}
+            players={players}
+            onBack={() => setShowMissedPage(false)}
+          />
+        ) : (
+          <>
+            <div className="flex-shrink-0 border-b border-white/20 px-4 py-2">
+              <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                {roundHistory.map(round => (
+                  <button
+                    key={round.round}
+                    onClick={() => setSelectedRound(round.round)}
+                    className={`h-8 w-8 flex-shrink-0 rounded-lg text-xs font-bold transition-colors ${
+                      round.round === selectedRound ? 'btn-3d-accent text-white' : 'btn-glass'
+                    }`}
+                  >
+                    {round.round}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        <div className="scrollbar-indigo flex-1 overflow-y-auto px-4 py-3">
-          {selectedResult ? (
-            <RoundDetail
-              round={selectedResult}
-              players={players}
-              highlightMissedDudos={filterMissed}
-            />
-          ) : (
-            <p className="text-xs italic text-white/40">No data for this round.</p>
-          )}
-        </div>
+            <div className="scrollbar-indigo flex-1 overflow-y-auto px-4 py-3">
+              {selectedResult ? (
+                <RoundDetail
+                  round={selectedResult}
+                  players={players}
+                />
+              ) : (
+                <p className="text-xs italic text-white/40">No data for this round.</p>
+              )}
+            </div>
+          </>
+        )}
 
         <div className="flex-shrink-0 border-t border-white/20 px-4 py-3">
           <button
