@@ -109,10 +109,10 @@ body {
 
 @keyframes reveal {
   0% {
-    transform: scale(0.5) rotateY(90deg);
-    opacity: 0;
+    transform: scale(0.8) rotateY(90deg);
+    opacity: 0.5;
   }
-  55% {
+  50% {
     transform: scale(1.1) rotateY(0deg);
     opacity: 1;
   }
@@ -127,8 +127,8 @@ body {
 
 @keyframes revealMatch {
   0% {
-    transform: scale(0.5) rotateY(90deg);
-    opacity: 0;
+    transform: scale(0.8) rotateY(90deg);
+    opacity: 0.5;
     filter: brightness(1) drop-shadow(0 0 0px rgba(251, 191, 36, 0));
   }
   50% {
