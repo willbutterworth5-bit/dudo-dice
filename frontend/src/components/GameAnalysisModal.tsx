@@ -96,7 +96,7 @@ function MissedDudosPage({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-2 border-b border-white/20 px-4 py-2">
         <button onClick={onBack} className="text-sm text-white/60 hover:text-white">&larr; Back</button>
         <h3 className="text-sm font-bold text-white">Missed DUDOs</h3>
