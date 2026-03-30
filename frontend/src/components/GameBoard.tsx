@@ -1193,8 +1193,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                   }}
                 >
                   <span className="text-[9px] sm:text-[11px] font-bold text-white text-center truncate px-1 sm:px-2.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
-                    <span className="sm:hidden">{player.name.replace(/^Computer\s/, 'Comp. ')}</span>
-                    <span className="hidden sm:inline">{player.name}</span>
+                    {player.name}
                   </span>
                 </div>
               );
