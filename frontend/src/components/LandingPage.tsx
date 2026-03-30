@@ -1,9 +1,8 @@
-interface LandingPageProps {
-  onPlayComputer: () => void;
-  onPlayOnline: () => void;
-}
+import { useNavigate } from 'react-router-dom';
 
-export default function LandingPage({ onPlayComputer, onPlayOnline }: LandingPageProps) {
+export default function LandingPage() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
       <div className="max-w-md w-full">
@@ -32,7 +31,7 @@ export default function LandingPage({ onPlayComputer, onPlayOnline }: LandingPag
 
           <div className="flex flex-col gap-4">
             <button
-              onClick={onPlayComputer}
+              onClick={() => navigate('/play')}
               className="w-full py-4 text-white font-extrabold text-lg rounded-xl transition-colors btn-3d-accent flex items-center justify-center gap-3"
             >
               <span className="text-2xl">🎲</span>
@@ -40,7 +39,7 @@ export default function LandingPage({ onPlayComputer, onPlayOnline }: LandingPag
             </button>
 
             <button
-              onClick={onPlayOnline}
+              onClick={() => navigate('/online')}
               className="w-full py-4 text-white font-extrabold text-lg rounded-xl transition-colors btn-3d-accent flex items-center justify-center gap-3"
             >
               <span className="text-2xl">☁️</span>

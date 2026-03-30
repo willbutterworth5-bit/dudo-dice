@@ -76,6 +76,7 @@ function persistSeat(seat: StoredSeat | null): void {
 export function useMultiplayerConnection() {
   const socketRef = useRef<Socket | null>(null);
   const seatRef = useRef<StoredSeat | null>(getStoredSeat());
+  const pendingJoinRef = useRef<{ code: string; playerName: string } | null>(null);
 
   const [playerId, setPlayerId] = useState<string | null>(seatRef.current?.playerId ?? null);
   const [isConnected, setIsConnected] = useState(false);
@@ -135,6 +136,13 @@ export function useMultiplayerConnection() {
         socket.emit('register_session', { reconnectToken: seatRef.current.reconnectToken });
       } else {
         setIsReconnecting(false);
+      }
+
+      // Handle deep-link join (e.g. /online/join/:roomCode)
+      if (pendingJoinRef.current) {
+        const { code, playerName } = pendingJoinRef.current;
+        pendingJoinRef.current = null;
+        socket.emit('join_room', { code, playerName });
       }
     });
 
@@ -254,6 +262,17 @@ export function useMultiplayerConnection() {
     socketRef.current?.emit('calza');
   }, []);
 
+  const connectAndJoin = useCallback((code: string, playerName: string) => {
+    pendingJoinRef.current = { code, playerName };
+    if (socketRef.current?.connected) {
+      // Already connected — emit immediately and clear pending
+      socketRef.current.emit('join_room', { code, playerName });
+      pendingJoinRef.current = null;
+    } else {
+      connect();
+    }
+  }, [connect]);
+
   const leaveRoom = useCallback(() => {
     socketRef.current?.emit('leave_room');
     clearSeat();
@@ -282,6 +301,7 @@ export function useMultiplayerConnection() {
     publicRooms,
     winnerId,
     connect,
+    connectAndJoin,
     disconnect,
     createRoom,
     joinRoom,

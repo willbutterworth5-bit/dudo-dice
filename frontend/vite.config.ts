@@ -8,5 +8,6 @@ export default defineConfig({
     port: process.env.PORT ? parseInt(process.env.PORT) : 5173,
     strictPort: false,
     host: true,
+    historyApiFallback: true,
   },
 })

@@ -1,14 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import RulesModal from './RulesModal';
 import { Difficulty } from '../game/AIPlayer';
+import type { GameConfig } from '../types/routes';
 
-interface HomeScreenProps {
-  onStartGame: (playerCount: number, difficulty: Difficulty, startingDice: number, analysisEnabled: boolean, palificoEnabled: boolean, calzaEnabled: boolean) => void;
-  onShowProfile: () => void;
-  onBack: () => void;
-}
-
-export default function HomeScreen({ onStartGame, onShowProfile, onBack }: HomeScreenProps) {
+export default function HomeScreen() {
+  const navigate = useNavigate();
   const [playerCount, setPlayerCount] = useState(6);
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [startingDice, setStartingDice] = useState(5);
@@ -19,14 +16,22 @@ export default function HomeScreen({ onStartGame, onShowProfile, onBack }: HomeS
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
 
   const handleStart = () => {
-    onStartGame(playerCount, difficulty, startingDice, analysisEnabled, palificoEnabled, calzaEnabled);
+    const config: GameConfig = {
+      playerCount,
+      difficulty,
+      startingDice,
+      analysisEnabled,
+      palificoEnabled,
+      calzaEnabled,
+    };
+    navigate('/game', { state: config });
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 relative">
       {/* Back button - fixed top left */}
       <button
-        onClick={onBack}
+        onClick={() => navigate('/')}
         className="fixed text-white text-sm font-semibold z-50 rounded-xl px-2 py-1 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900"
         style={{ left: '0.75rem', top: '0.75rem' }}
       >
@@ -57,7 +62,7 @@ export default function HomeScreen({ onStartGame, onShowProfile, onBack }: HomeS
             <h2 className="text-xl font-bold text-white">Game Setup</h2>
             <div className="flex flex-wrap gap-2 items-center">
               <button
-                onClick={onShowProfile}
+                onClick={() => navigate('/profile')}
                 className="h-9 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"
               >
                 Profile

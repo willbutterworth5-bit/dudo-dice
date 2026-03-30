@@ -1,39 +1,19 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ProfileStorage } from '../utils/profileStorage';
 import RulesModal from './RulesModal';
-import type { PublicRoom } from '../hooks/useMultiplayerConnection';
+import type { useMultiplayerConnection, PublicRoom } from '../hooks/useMultiplayerConnection';
 
 interface LobbyScreenProps {
-  isConnected: boolean;
-  publicRooms: PublicRoom[];
-  error: string | null;
-  onCreateRoom: (settings: {
-    maxPlayers: number;
-    startingDice: number;
-    palificoEnabled: boolean;
-    calzaEnabled: boolean;
-    difficulty: string;
-  }, isPublic: boolean, playerName: string) => void;
-  onJoinRoom: (code: string, playerName: string) => void;
-  onQuickMatch: (playerName: string) => void;
-  onListRooms: () => void;
-  onShowProfile: () => void;
-  onBack: () => void;
+  mp: ReturnType<typeof useMultiplayerConnection>;
 }
 
 type Tab = 'join' | 'create' | 'browse';
 
-export default function LobbyScreen({
-  isConnected,
-  publicRooms,
-  error,
-  onCreateRoom,
-  onJoinRoom,
-  onQuickMatch,
-  onListRooms,
-  onShowProfile,
-  onBack,
-}: LobbyScreenProps) {
+export default function LobbyScreen({ mp }: LobbyScreenProps) {
+  const navigate = useNavigate();
+  const { isConnected, publicRooms, error, connect, createRoom, joinRoom, quickMatch, listRooms } = mp;
+
   const [activeTab, setActiveTab] = useState<Tab>('create');
   const [roomCode, setRoomCode] = useState('');
   const [showRules, setShowRules] = useState(false);
@@ -46,10 +26,15 @@ export default function LobbyScreen({
   const [isPublic, setIsPublic] = useState(true);
 
   useEffect(() => {
+    if (!isConnected) connect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     if (activeTab === 'browse') {
-      onListRooms();
+      listRooms();
     }
-  }, [activeTab, onListRooms]);
+  }, [activeTab, listRooms]);
 
   const getName = () => {
     const profile = ProfileStorage.getProfile();
@@ -58,15 +43,15 @@ export default function LobbyScreen({
 
   const handleJoin = () => {
     if (!roomCode.trim()) return;
-    onJoinRoom(roomCode.trim().toUpperCase(), getName());
+    joinRoom(roomCode.trim().toUpperCase(), getName());
   };
 
   const handleQuickMatch = () => {
-    onQuickMatch(getName());
+    quickMatch(getName());
   };
 
   const handleCreate = () => {
-    onCreateRoom(
+    createRoom(
       { maxPlayers, startingDice, palificoEnabled, calzaEnabled, difficulty: 'medium' },
       isPublic,
       getName()
@@ -77,7 +62,7 @@ export default function LobbyScreen({
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
       {/* Back button - fixed top left */}
       <button
-        onClick={onBack}
+        onClick={() => { mp.disconnect(); navigate('/'); }}
         className="fixed text-white text-sm font-semibold z-50 rounded-xl px-2 py-1 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900"
         style={{ left: '0.75rem', top: '0.75rem' }}
       >
@@ -162,7 +147,7 @@ export default function LobbyScreen({
                 <h2 className="text-lg font-bold text-white">Create Room</h2>
                 <div className="flex gap-2 items-center">
                   <button
-                    onClick={onShowProfile}
+                    onClick={() => navigate('/profile')}
                     className="h-9 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"
                   >
                     Profile
@@ -324,7 +309,7 @@ export default function LobbyScreen({
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-white/70">{publicRooms.length} room{publicRooms.length !== 1 ? 's' : ''} available</span>
-                <button onClick={onListRooms} className="text-sm btn-glass px-3 py-1 rounded-lg font-bold">
+                <button onClick={listRooms} className="text-sm btn-glass px-3 py-1 rounded-lg font-bold">
                   Refresh
                 </button>
               </div>
@@ -334,7 +319,7 @@ export default function LobbyScreen({
                   No open rooms. Create one or try Quick Match!
                 </p>
               ) : (
-                publicRooms.map((room) => (
+                (publicRooms as PublicRoom[]).map((room) => (
                   <div key={room.code} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
                     <div>
                       <span className="font-bold text-white text-sm">{room.code}</span>
@@ -346,7 +331,7 @@ export default function LobbyScreen({
                       </div>
                     </div>
                     <button
-                      onClick={() => onJoinRoom(room.code, getName())}
+                      onClick={() => joinRoom(room.code, getName())}
                       disabled={!isConnected}
                       className="px-4 py-1.5 text-sm font-bold rounded-xl btn-3d-accent disabled:opacity-50"
                     >

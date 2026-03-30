@@ -1,12 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ProfileStorage, imageToBase64, PlayerProfile } from '../utils/profileStorage';
 import { COUNTRIES } from '../utils/countries';
 
-interface ProfileScreenProps {
-  onBack: () => void;
-}
-
-export default function ProfileScreen({ onBack }: ProfileScreenProps) {
+export default function ProfileScreen() {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<PlayerProfile>(ProfileStorage.getProfile());
   const [name, setName] = useState(profile.name);
   const [photo, setPhoto] = useState<string | null>(profile.photo);
@@ -81,7 +79,11 @@ export default function ProfileScreen({ onBack }: ProfileScreenProps) {
       country: country,
     };
     ProfileStorage.saveProfile(updatedProfile);
-    onBack();
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
   };
 
   const filteredCountries = COUNTRIES.filter(c =>
