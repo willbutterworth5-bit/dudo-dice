@@ -1,0 +1,14 @@
+User-agent: *
+Disallow: /game
+Disallow: /online/game
+Disallow: /online/waiting
+
+User-agent: Googlebot
+Allow: /
+Allow: /rules
+
+User-agent: OAI-SearchBot
+Allow: /
+Allow: /rules
+
+Sitemap: https://dudodice.com/sitemap.xml
