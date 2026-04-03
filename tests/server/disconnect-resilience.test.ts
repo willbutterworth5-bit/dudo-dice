@@ -49,9 +49,9 @@ describe('disconnect and cleanup edge cases', () => {
     }
   });
 
-  it('removes empty waiting rooms during cleanup', () => {
+  it('removes empty waiting rooms during cleanup', async () => {
     const manager = new RoomManager();
-    const room = manager.createRoom(
+    const room = await manager.createRoom(
       {
         maxPlayers: 6,
         startingDice: 5,
@@ -66,9 +66,9 @@ describe('disconnect and cleanup edge cases', () => {
     assert.ok(host);
     room.removePlayer(host.id);
 
-    (manager as any).cleanupStaleRooms();
+    await (manager as any).cleanupStaleRooms();
 
-    assert.equal(manager.getRoom(room.code), undefined);
-    manager.destroy();
+    assert.equal(await manager.getRoom(room.code), undefined);
+    await manager.destroy();
   });
 });

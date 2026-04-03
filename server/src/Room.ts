@@ -317,7 +317,7 @@ export class Room {
           this.challenge(currentPlayer.id);
         }
       }
-    }, 1500 + Math.random() * 1000);
+    }, 1500 + Math.floor(Math.random() * 1000));
   }
 
   cleanup(): void {

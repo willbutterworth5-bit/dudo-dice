@@ -1,29 +1,33 @@
+import { randomInt } from 'node:crypto';
 import { Room, RoomSettings } from './Room.js';
+import type { RoomStore } from './store/RoomStore.js';
+import { MemoryRoomStore } from './store/MemoryRoomStore.js';
 
 const ROOM_CLEANUP_INTERVAL_MS = 60_000; // Check for stale rooms every minute
 const STALE_ROOM_AGE_MS = 30 * 60_000;   // 30 minutes with no connected players
 
 export class RoomManager {
-  private rooms = new Map<string, Room>();
+  private store: RoomStore;
   private cleanupInterval: ReturnType<typeof setInterval>;
 
-  constructor() {
+  constructor(store?: RoomStore) {
+    this.store = store ?? new MemoryRoomStore();
     this.cleanupInterval = setInterval(() => this.cleanupStaleRooms(), ROOM_CLEANUP_INTERVAL_MS);
   }
 
-  createRoom(settings: RoomSettings, isPublic: boolean): Room {
-    const code = this.generateCode();
+  async createRoom(settings: RoomSettings, isPublic: boolean): Promise<Room> {
+    const code = await this.generateCode();
     const room = new Room(code, settings, isPublic);
-    this.rooms.set(code, room);
+    await this.store.set(code, room);
     return room;
   }
 
-  getRoom(code: string): Room | undefined {
-    return this.rooms.get(code.toUpperCase());
+  async getRoom(code: string): Promise<Room | undefined> {
+    return this.store.get(code.toUpperCase());
   }
 
-  getRoomByPlayer(sessionId: string): Room | undefined {
-    for (const room of this.rooms.values()) {
+  async getRoomByPlayer(sessionId: string): Promise<Room | undefined> {
+    for (const room of await this.store.values()) {
       if (room.players.find(p => p.id === sessionId)) {
         return room;
       }
@@ -31,8 +35,8 @@ export class RoomManager {
     return undefined;
   }
 
-  findRoomByReconnectToken(reconnectToken: string): { room: Room; playerId: string } | undefined {
-    for (const room of this.rooms.values()) {
+  async findRoomByReconnectToken(reconnectToken: string): Promise<{ room: Room; playerId: string } | undefined> {
+    for (const room of await this.store.values()) {
       const player = room.getPlayerByReconnectToken(reconnectToken);
       if (player) {
         return { room, playerId: player.id };
@@ -41,15 +45,15 @@ export class RoomManager {
     return undefined;
   }
 
-  getPublicRooms(): Array<{
+  async getPublicRooms(): Promise<Array<{
     code: string;
     playerCount: number;
     maxPlayers: number;
     settings: RoomSettings;
     hostName: string;
-  }> {
+  }>> {
     const result = [];
-    for (const room of this.rooms.values()) {
+    for (const room of await this.store.values()) {
       if (room.isPublic && room.phase === 'waiting' && room.players.length < room.settings.maxPlayers) {
         const host = room.players.find(p => p.id === room.hostId);
         result.push({
@@ -64,10 +68,9 @@ export class RoomManager {
     return result;
   }
 
-  findQuickMatchRoom(): Room | undefined {
-    // Find an open public room with the most players (closer to starting)
+  async findQuickMatchRoom(): Promise<Room | undefined> {
     let best: Room | undefined;
-    for (const room of this.rooms.values()) {
+    for (const room of await this.store.values()) {
       if (room.isPublic && room.phase === 'waiting' && room.players.length < room.settings.maxPlayers) {
         if (!best || room.players.length > best.players.length) {
           best = room;
@@ -77,37 +80,37 @@ export class RoomManager {
     return best;
   }
 
-  removeRoom(code: string): void {
-    const room = this.rooms.get(code);
+  async removeRoom(code: string): Promise<void> {
+    const room = await this.store.get(code);
     if (room) {
       room.cleanup();
-      this.rooms.delete(code);
+      await this.store.delete(code);
     }
   }
 
-  private generateCode(): string {
+  private async generateCode(): Promise<string> {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // No I or O (confusing with 1/0)
     let code: string;
     do {
       code = '';
       for (let i = 0; i < 4; i++) {
-        code += chars[Math.floor(Math.random() * chars.length)];
+        code += chars[randomInt(chars.length)];
       }
-    } while (this.rooms.has(code));
+    } while (await this.store.has(code));
     return code;
   }
 
-  private cleanupStaleRooms(): void {
+  private async cleanupStaleRooms(): Promise<void> {
     const now = Date.now();
-    for (const [code, room] of this.rooms) {
-      // Remove finished rooms after they've been sitting
+    const toDelete: string[] = [];
+
+    for (const room of await this.store.values()) {
       if (room.phase === 'finished') {
         room.cleanup();
-        this.rooms.delete(code);
+        toDelete.push(room.code);
         continue;
       }
 
-      // Remove rooms where all players disconnected long ago
       const allDisconnected = room.players.every(p => !p.isConnected);
       if (allDisconnected && room.players.length > 0) {
         const oldestDisconnect = Math.min(
@@ -115,23 +118,25 @@ export class RoomManager {
         );
         if (now - oldestDisconnect > STALE_ROOM_AGE_MS) {
           room.cleanup();
-          this.rooms.delete(code);
+          toDelete.push(room.code);
         }
       }
 
-      // Remove empty waiting rooms after 5 minutes
       if (room.phase === 'waiting' && room.players.length === 0) {
         room.cleanup();
-        this.rooms.delete(code);
+        toDelete.push(room.code);
       }
+    }
+
+    for (const code of toDelete) {
+      await this.store.delete(code);
     }
   }
 
-  destroy(): void {
+  async destroy(): Promise<void> {
     clearInterval(this.cleanupInterval);
-    for (const room of this.rooms.values()) {
+    for (const room of await this.store.values()) {
       room.cleanup();
     }
-    this.rooms.clear();
   }
 }

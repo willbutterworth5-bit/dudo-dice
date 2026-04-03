@@ -25,8 +25,9 @@ export async function createHarness(): Promise<Harness> {
 
   setupSocketHandlers(io, roomManager);
 
-  app.get('/api/health', (_req, res) => {
-    res.json({ status: 'ok', rooms: roomManager.getPublicRooms().length });
+  app.get('/api/health', async (_req, res) => {
+    const rooms = await roomManager.getPublicRooms();
+    res.json({ status: 'ok', rooms: rooms.length });
   });
 
   await new Promise<void>((resolve) => {
@@ -43,7 +44,7 @@ export async function createHarness(): Promise<Harness> {
     io,
     roomManager,
     close: async () => {
-      roomManager.destroy();
+      await roomManager.destroy();
       io.close();
       await new Promise<void>((resolve) => httpServer.close(() => resolve()));
     },

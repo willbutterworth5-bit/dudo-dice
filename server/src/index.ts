@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { RoomManager } from './RoomManager.js';
 import { setupSocketHandlers } from './SocketHandlers.js';
+import { MemoryRoomStore } from './store/MemoryRoomStore.js';
+import { RedisRoomStore } from './store/RedisRoomStore.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -28,7 +30,28 @@ const io = new Server(httpServer, {
   },
 });
 
-const roomManager = new RoomManager();
+// --- Redis adapter (env-gated) ---
+// Requires: npm install ioredis @socket.io/redis-adapter
+// Only activated when REDIS_URL is set AND packages are installed.
+if (process.env.REDIS_URL) {
+  try {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const adapterMod: any = await import('@socket.io/redis-adapter' as any);
+    const redisMod: any = await import('ioredis' as any);
+    const Redis = redisMod.default ?? redisMod;
+    const pubClient = new Redis(process.env.REDIS_URL);
+    const subClient = pubClient.duplicate();
+    io.adapter(adapterMod.createAdapter(pubClient, subClient));
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+    console.log('✅ Socket.io Redis adapter enabled');
+  } catch (err) {
+    console.warn('⚠️  Redis adapter packages not installed, falling back to in-memory:', (err as Error).message);
+  }
+}
+
+// --- Room store (Redis-backed when REDIS_URL set) ---
+const store = process.env.REDIS_URL ? new RedisRoomStore() : new MemoryRoomStore();
+const roomManager = new RoomManager(store);
 
 // Setup socket handlers
 setupSocketHandlers(io, roomManager);
@@ -45,8 +68,9 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Health check
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', rooms: roomManager.getPublicRooms().length });
+app.get('/api/health', async (_req, res) => {
+  const rooms = await roomManager.getPublicRooms();
+  res.json({ status: 'ok', rooms: rooms.length });
 });
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
@@ -55,8 +79,8 @@ httpServer.listen(PORT, () => {
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down...');
-  roomManager.destroy();
+  await roomManager.destroy();
   httpServer.close();
 });

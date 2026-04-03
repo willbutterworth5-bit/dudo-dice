@@ -54,7 +54,7 @@ describe('multiplayer stress', () => {
       })
     );
 
-    const room = harness.roomManager.getRoom(created.roomCode);
+    const room = await harness.roomManager.getRoom(created.roomCode);
     assert.equal(room?.players.length, 6);
 
     const gameStatePromises = allClients.map((client) => waitForEvent<{ state: { players: unknown[] } }>(client, 'game_state'));

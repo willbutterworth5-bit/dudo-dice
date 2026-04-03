@@ -3,6 +3,29 @@ import { BidValidator } from './BidValidator.js';
 import { DiceCounter } from './DiceCounter.js';
 import { AIPlayer } from './AIPlayer.js';
 
+/**
+ * Cryptographically secure die roll (1-6).
+ * Uses Web Crypto API (available in Node.js >=19 and all modern browsers).
+ * Falls back to Math.random for older environments (single-player only).
+ */
+function rollDie(): number {
+  if (typeof globalThis.crypto?.getRandomValues === 'function') {
+    const arr = new Uint32Array(1);
+    globalThis.crypto.getRandomValues(arr);
+    return (arr[0] % 6) + 1;
+  }
+  return Math.floor(Math.random() * 6) + 1;
+}
+
+function secureRandomIndex(length: number): number {
+  if (typeof globalThis.crypto?.getRandomValues === 'function') {
+    const arr = new Uint32Array(1);
+    globalThis.crypto.getRandomValues(arr);
+    return arr[0] % length;
+  }
+  return Math.floor(Math.random() * length);
+}
+
 export interface PlayerConfig {
   id: string;
   name: string;
@@ -67,7 +90,7 @@ export class GameEngine {
       }
     }
 
-    const startingPlayerIndex = Math.floor(Math.random() * players.length);
+    const startingPlayerIndex = secureRandomIndex(players.length);
 
     return {
       players,
@@ -90,7 +113,7 @@ export class GameEngine {
   private rollDice(count: number): number[] {
     const dice: number[] = [];
     for (let i = 0; i < count; i++) {
-      dice.push(Math.floor(Math.random() * 6) + 1);
+      dice.push(rollDie());
     }
     return dice;
   }
