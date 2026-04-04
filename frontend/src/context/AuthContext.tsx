@@ -72,10 +72,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = useCallback(async () => {
     if (!supabase) return;
-    await supabase.auth.signInWithOAuth({
+    const { data } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/profile' },
+      options: { redirectTo: window.location.origin + '/profile', skipBrowserRedirect: true },
     });
+    if (data.url) window.location.replace(data.url);
   }, []);
 
   const signInWithEmail = useCallback(async (email: string, password: string): Promise<string | null> => {
