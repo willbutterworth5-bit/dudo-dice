@@ -7,6 +7,7 @@ import ProfileScreen from './components/ProfileScreen'
 import LobbyScreen from './components/LobbyScreen'
 import WaitingRoom from './components/WaitingRoom'
 import JoinRedirect from './components/JoinRedirect'
+import RulesPage from './components/RulesPage'
 import { GameProvider } from './context/GameContext'
 import { useMultiplayerConnection } from './hooks/useMultiplayerConnection'
 import type { GameConfig } from './types/routes'
@@ -144,6 +145,7 @@ function App() {
         <Route path="/online/waiting" element={<OnlineWaiting mp={mp} />} />
         <Route path="/online/game" element={<OnlineGame mp={mp} />} />
         <Route path="/online/join/:roomCode" element={<JoinRedirect mp={mp} />} />
+        <Route path="/rules" element={<RulesPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 

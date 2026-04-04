@@ -149,71 +149,63 @@ export default function ProfileScreen() {
           <div className="mb-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
               {/* Photo Upload */}
-              <div className="flex flex-col">
-                <label className="block text-base font-medium text-white mb-2">
+              <div className="flex flex-col items-center">
+                <label className="block text-base font-medium text-white mb-2 self-start">
                   Profile Photo
                 </label>
-                <div className="flex items-center gap-3">
-                  {/* Photo + rating stacked */}
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="relative">
-                      {photo ? (
-                        <>
-                          <img
-                            src={photo}
-                            alt="Profile"
-                            className="w-24 h-24 rounded-full object-cover border-2 border-border-light shadow-sm"
-                          />
-                          <button
-                            onClick={handleRemovePhoto}
-                            className="absolute -top-2 -right-2 bg-accent-danger hover:bg-accent-danger-hover text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-sm"
-                          >
-                            ×
-                          </button>
-                        </>
-                      ) : (
-                        <div className="w-24 h-24 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center">
-                          <span className="text-white/70 text-3xl">👤</span>
-                        </div>
-                      )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoSelect}
+                  className="hidden"
+                  id="photo-upload"
+                />
+                {/* Clickable photo circle */}
+                <label htmlFor="photo-upload" className="cursor-pointer block relative group">
+                  {photo ? (
+                    <>
+                      <img
+                        src={photo}
+                        alt="Profile"
+                        className="w-32 h-32 rounded-full object-cover border-2 border-white/30 shadow-md"
+                      />
+                      {/* Hover overlay */}
+                      <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-white text-2xl">📷</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); handleRemovePhoto(); }}
+                        className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow"
+                      >
+                        ×
+                      </button>
+                    </>
+                  ) : (
+                    <div className="w-32 h-32 rounded-full bg-white/15 border-2 border-dashed border-white/40 flex flex-col items-center justify-center gap-1 group-hover:bg-white/20 transition-colors">
+                      <span className="text-white/60 text-3xl">📷</span>
+                      <span className="text-white/50 text-xs font-medium">Upload</span>
                     </div>
-                    {/* Subtle ranked rating */}
-                    <div className="flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">{profile.rankedRating ?? 1500}</span>
-                      <span className="text-white/40 text-xs ml-1">Elo</span>
-                      <span className="relative group inline-flex items-center ml-1">
-                        <span className="w-3.5 h-3.5 rounded-full bg-white/20 text-white/60 text-[9px] font-bold flex items-center justify-center cursor-help">i</span>
-                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-44 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none">
-                          <span className="block text-xs text-white/90 bg-indigo-900 border border-white/20 rounded-lg p-2 shadow-lg text-left">
-                            Your Elo rating from ranked online matches. Starts at 1500.
-                          </span>
-                        </span>
+                  )}
+                </label>
+                {/* Elo rating below photo */}
+                <div className="flex items-center justify-center mt-2">
+                  <span className="text-white font-bold text-base">{profile.rankedRating ?? 1500}</span>
+                  <span className="text-white/40 text-sm ml-1">Elo</span>
+                  <span className="relative group inline-flex items-center ml-1">
+                    <span className="w-3.5 h-3.5 rounded-full bg-white/20 text-white/60 text-[9px] font-bold flex items-center justify-center cursor-help">i</span>
+                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-44 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none">
+                      <span className="block text-xs text-white/90 bg-indigo-900 border border-white/20 rounded-lg p-2 shadow-lg text-left">
+                        Your Elo rating from ranked online matches. Starts at 1500.
                       </span>
-                      {(profile.lastRatingChange ?? 0) !== 0 && (
-                        <span className={`text-xs font-semibold ml-1 ${(profile.lastRatingChange ?? 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {(profile.lastRatingChange ?? 0) > 0 ? '+' : ''}{profile.lastRatingChange}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoSelect}
-                      className="hidden"
-                      id="photo-upload"
-                    />
-                    <label
-                      htmlFor="photo-upload"
-                      className="cursor-pointer inline-block px-4 py-2 bg-accent hover:bg-accent-hover text-white font-medium rounded-lg transition-colors text-sm btn-3d-accent"
-                    >
-                      {photo ? 'Change' : 'Upload'}
-                    </label>
-                    <p className="text-xs text-white/65 mt-1">Max 2MB</p>
-                  </div>
+                    </span>
+                  </span>
+                  {(profile.lastRatingChange ?? 0) !== 0 && (
+                    <span className={`text-sm font-semibold ml-1 ${(profile.lastRatingChange ?? 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {(profile.lastRatingChange ?? 0) > 0 ? '+' : ''}{profile.lastRatingChange}
+                    </span>
+                  )}
                 </div>
               </div>
 
