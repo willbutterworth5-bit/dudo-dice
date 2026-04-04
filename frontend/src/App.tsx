@@ -65,6 +65,8 @@ function OnlineGame({ mp }: { mp: ReturnType<typeof useMultiplayerConnection> })
           winnerId: mp.winnerId,
           isReconnecting: mp.isReconnecting,
           roomPlayers: mp.roomUpdate?.players ?? [],
+          ratingUpdate: mp.ratingUpdate,
+          isRanked: mp.isRanked,
           onMakeBid: mp.makeBid,
           onChallenge: mp.challenge,
           onCalza: mp.calza,
@@ -89,7 +91,10 @@ function OnlineWaiting({ mp }: { mp: ReturnType<typeof useMultiplayerConnection>
       hostId={mp.roomUpdate.hostId}
       myPlayerId={mp.playerId}
       settings={mp.roomUpdate.settings}
+      startWithBotsVotes={mp.roomUpdate.startWithBotsVotes ?? []}
+      isRanked={mp.roomUpdate.isRanked ?? false}
       onStartGame={mp.startGame}
+      onVoteStartWithBots={mp.voteStartWithBots}
       onLeave={() => {
         mp.leaveRoom()
         navigate('/online')

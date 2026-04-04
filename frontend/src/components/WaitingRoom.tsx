@@ -12,7 +12,10 @@ interface WaitingRoomProps {
     palificoEnabled: boolean;
     calzaEnabled: boolean;
   };
+  startWithBotsVotes: string[];
+  isRanked: boolean;
   onStartGame: () => void;
+  onVoteStartWithBots: () => void;
   onLeave: () => void;
 }
 
@@ -22,10 +25,17 @@ export default function WaitingRoom({
   hostId,
   myPlayerId,
   settings,
+  startWithBotsVotes,
+  isRanked,
   onStartGame,
+  onVoteStartWithBots,
   onLeave,
 }: WaitingRoomProps) {
+  const humanPlayers = players.filter(p => !p.isAI);
   const canStart = players.length >= 2;
+  const isHost = myPlayerId === hostId;
+  const hasVotedBots = myPlayerId ? startWithBotsVotes.includes(myPlayerId) : false;
+  const hasEmptySlots = players.length < settings.maxPlayers;
 
   const copyCode = () => {
     navigator.clipboard.writeText(roomCode);
@@ -73,6 +83,17 @@ export default function WaitingRoom({
             {settings.calzaEnabled && <span>✋ Calza</span>}
           </div>
 
+          {/* Ranked / Casual banner */}
+          <div className={`text-center text-xs font-semibold rounded-lg py-1.5 mb-4 ${
+            isRanked
+              ? 'bg-yellow-500/15 text-yellow-300 border border-yellow-500/30'
+              : 'bg-white/5 text-white/50 border border-white/10'
+          }`}>
+            {isRanked
+              ? 'Ranked Match — Rating changes will apply'
+              : 'Casual Match — 3+ players needed for ranked'}
+          </div>
+
           {/* Player list */}
           <div className="space-y-2 mb-5">
             <p className="text-sm font-semibold text-white">
@@ -96,6 +117,11 @@ export default function WaitingRoom({
                     {p.name}
                     {p.id === myPlayerId && <span className="text-white/40 ml-1">(you)</span>}
                   </span>
+                  {p.rating != null && !p.isAI && (
+                    <span className="text-xs text-white/60 bg-white/10 rounded px-1.5 py-0.5 font-mono">
+                      {p.rating}{p.provisional ? '?' : ''}
+                    </span>
+                  )}
                   {p.id === hostId && (
                     <span className="text-xs text-yellow-400 font-bold">HOST</span>
                   )}
@@ -115,13 +141,45 @@ export default function WaitingRoom({
           </div>
 
           {/* Actions */}
-          <button
-            onClick={onStartGame}
-            disabled={!canStart}
-            className="w-full py-2.5 text-white font-extrabold rounded-xl btn-3d-accent disabled:opacity-50"
-          >
-            {canStart ? 'Start Game' : 'Need at least 2 players'}
-          </button>
+          <div className="space-y-2">
+            {/* Host start game — only shown when room is full or when host wants to start without bots */}
+            {isHost && (
+              <button
+                onClick={onStartGame}
+                disabled={!canStart}
+                className="w-full py-2.5 text-white font-extrabold rounded-xl btn-3d-accent disabled:opacity-50"
+              >
+                {canStart ? 'Start Game' : 'Need at least 2 players'}
+              </button>
+            )}
+
+            {/* Start with Bots — shown to all players when there are empty slots */}
+            {hasEmptySlots && (
+              <button
+                onClick={onVoteStartWithBots}
+                disabled={hasVotedBots || !canStart}
+                className="w-full py-2.5 text-white font-bold rounded-xl btn-glass disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {hasVotedBots ? (
+                  <>
+                    <span>Waiting for others</span>
+                    <span className="text-white/60 text-sm font-normal">
+                      {startWithBotsVotes.length}/{humanPlayers.length} ready
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span>🤖 Start with Bots</span>
+                    {startWithBotsVotes.length > 0 && (
+                      <span className="text-white/60 text-sm font-normal">
+                        {startWithBotsVotes.length}/{humanPlayers.length}
+                      </span>
+                    )}
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
       </div>

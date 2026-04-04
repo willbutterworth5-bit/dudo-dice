@@ -1,5 +1,21 @@
 import { randomUUID } from 'node:crypto';
 import { GameEngine, GameState, Bid, RoundResult, AIPlayer, PlayerConfig, Difficulty } from '@dudo-dice/shared';
+import type { RatingStore } from './RatingStore.js';
+import { calculateElo } from './Elo.js';
+import type { EloResult } from './Elo.js';
+
+const BOT_NAMES = [
+  'DudoBot', 'DiceAI', 'RollX9', 'CupUnit', 'SpotXAI', 'DudoX1', 'DiceRX',
+  'RollBot', 'Cup9000', 'SpotCore', 'DudoAI', 'DiceQ7', 'RollXAI', 'CupX22',
+  'SpotBot', 'DudoRX', 'DiceN1', 'Roll900', 'CupAI', 'SpotX9', 'DudoX9',
+  'DiceFX', 'RollX5', 'CupRobo', 'SpotAI', 'Dudo7', 'DiceX2', 'RollN3',
+];
+
+function pickBotNames(count: number, taken: string[]): string[] {
+  const available = BOT_NAMES.filter(n => !taken.includes(n));
+  const shuffled = [...available].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
 
 export interface RoomSettings {
   maxPlayers: number;
@@ -17,12 +33,15 @@ export interface RoomPlayer {
   isConnected: boolean;
   isAI: boolean;
   disconnectedAt: number | null;
+  persistentId: string;     // stable ID for rating tracking (from client localStorage)
+  forfeited: boolean;       // true if disconnected and didn't return in time
 }
 
 export type RoomPhase = 'waiting' | 'playing' | 'finished';
 
 const TURN_TIMEOUT_MS = 20_000;
 const RECONNECT_GRACE_MS = 120_000;
+const RANKED_FORFEIT_MS = 60_000;
 const ROUND_ADVANCE_DELAY_MS = 3_000;
 
 export class Room {
@@ -32,6 +51,16 @@ export class Room {
   settings: RoomSettings;
   players: RoomPlayer[] = [];
   phase: RoomPhase = 'waiting';
+  startWithBotsVotes: Set<string> = new Set();
+
+  // Ranked match tracking
+  eliminationOrder: string[] = [];
+  humanCountAtStart = 0;
+  isRanked = false;
+  matchFinalized = false;
+
+  // Callbacks for rating updates
+  onRatingUpdate: ((results: EloResult[], placements: Map<string, number>) => void) | null = null;
 
   private engine: GameEngine | null = null;
   private aiPlayer: AIPlayer | null = null;
@@ -55,7 +84,7 @@ export class Room {
     this.aiPlayer = new AIPlayer(settings.difficulty);
   }
 
-  addPlayer(socketId: string, name: string): RoomPlayer | null {
+  addPlayer(socketId: string, name: string, persistentId?: string): RoomPlayer | null {
     if (this.phase !== 'waiting') return null;
     if (this.players.length >= this.settings.maxPlayers) return null;
 
@@ -67,6 +96,8 @@ export class Room {
       isConnected: true,
       isAI: false,
       disconnectedAt: null,
+      persistentId: persistentId || randomUUID(),
+      forfeited: false,
     };
 
     this.players.push(player);
@@ -79,6 +110,7 @@ export class Room {
 
   removePlayer(playerId: string): void {
     this.players = this.players.filter((player) => player.id !== playerId);
+    this.startWithBotsVotes.delete(playerId);
     if (this.hostId === playerId) {
       this.hostId = this.players[0]?.id ?? null;
     }
@@ -119,16 +151,61 @@ export class Room {
     player.isConnected = false;
     player.disconnectedAt = Date.now();
 
-    const graceSeconds = Math.round(RECONNECT_GRACE_MS / 1000);
+    // Ranked matches use shorter grace period (60s vs 120s)
+    const graceMs = this.isRanked ? RANKED_FORFEIT_MS : RECONNECT_GRACE_MS;
+    const graceSeconds = Math.round(graceMs / 1000);
     this.onPlayerDisconnected?.(playerId, graceSeconds);
 
     setTimeout(() => {
       if (!player.isConnected && this.phase === 'playing') {
         player.isAI = true;
+        // Mark as forfeited for ranked rating penalty
+        if (this.isRanked && !player.forfeited) {
+          player.forfeited = true;
+        }
         this.onAITakeover?.(playerId, player.name);
         this.checkAITurn();
       }
-    }, RECONNECT_GRACE_MS);
+    }, graceMs);
+  }
+
+  /** Vote to start with bots filling empty slots. Returns true if all human players have now voted. */
+  voteStartWithBots(playerId: string): boolean {
+    const player = this.players.find(p => p.id === playerId && !p.isAI);
+    if (!player || this.phase !== 'waiting') return false;
+    this.startWithBotsVotes.add(playerId);
+    const humanPlayers = this.players.filter(p => !p.isAI);
+    return humanPlayers.length >= 1 && humanPlayers.every(p => this.startWithBotsVotes.has(p.id));
+  }
+
+  getStartWithBotsVotes(): string[] {
+    return [...this.startWithBotsVotes];
+  }
+
+  /** Fill empty slots with AI bots and start the game. */
+  startWithBots(): boolean {
+    if (this.phase !== 'waiting') return false;
+    const humanCount = this.players.filter(p => !p.isAI).length;
+    if (humanCount < 1) return false;
+
+    const botsNeeded = this.settings.maxPlayers - this.players.length;
+    const takenNames = this.players.map(p => p.name);
+    const botNames = pickBotNames(botsNeeded, takenNames);
+    for (let i = 0; i < botsNeeded; i++) {
+      this.players.push({
+        id: randomUUID(),
+        reconnectToken: '',
+        socketId: '',
+        name: botNames[i] ?? `Bot ${i + 1}`,
+        isConnected: true,
+        isAI: true,
+        disconnectedAt: null,
+        persistentId: '',
+        forfeited: false,
+      });
+    }
+
+    return this.startGame();
   }
 
   startGame(): boolean {
@@ -138,7 +215,7 @@ export class Room {
     const playerConfigs: PlayerConfig[] = this.players.map((player) => ({
       id: player.id,
       name: player.name,
-      isHuman: true,
+      isHuman: !player.isAI,
     }));
 
     this.engine = new GameEngine(
@@ -152,8 +229,15 @@ export class Room {
       playerConfigs
     );
 
+    // Ranked match detection: 3+ human players required
+    this.humanCountAtStart = this.players.filter(p => !p.isAI).length;
+    this.isRanked = this.humanCountAtStart >= 3;
+    this.eliminationOrder = [];
+    this.matchFinalized = false;
+
     this.phase = 'playing';
     this.startTurnTimer();
+    this.checkAITurn();
     return true;
   }
 
@@ -232,6 +316,13 @@ export class Room {
 
   private handlePostRound(): void {
     const state = this.engine!.getState();
+
+    // Track newly eliminated players (diceCount === 0, not yet in eliminationOrder)
+    for (const player of state.players) {
+      if (player.diceCount === 0 && !this.eliminationOrder.includes(player.id)) {
+        this.eliminationOrder.push(player.id);
+      }
+    }
 
     if (state.gamePhase === 'gameOver') {
       this.phase = 'finished';
@@ -318,6 +409,102 @@ export class Room {
         }
       }
     }, 1500 + Math.floor(Math.random() * 1000));
+  }
+
+  /**
+   * Compute final placements from elimination order.
+   * Winner = 1st, last eliminated = 2nd, etc.
+   * Forfeited players are forced to last place among humans.
+   */
+  computePlacements(): Map<string, number> {
+    const state = this.engine?.getState();
+    const placements = new Map<string, number>();
+    if (!state) return placements;
+
+    // Winner is the player still standing
+    const winner = state.players.find(p => p.diceCount > 0);
+    const humanPlayers = this.players.filter(p => !p.isAI || p.forfeited);
+
+    // Build placement list: winner first, then reverse elimination order
+    // Forfeited players go to last place regardless of when they were actually eliminated
+    const nonForfeited: string[] = [];
+    const forfeited: string[] = [];
+
+    for (const hp of humanPlayers) {
+      if (hp.forfeited) {
+        forfeited.push(hp.id);
+      } else {
+        nonForfeited.push(hp.id);
+      }
+    }
+
+    // Order non-forfeited: winner first, then reverse elimination order
+    const ordered: string[] = [];
+    if (winner && nonForfeited.includes(winner.id)) {
+      ordered.push(winner.id);
+    }
+    // Reverse elimination order: last eliminated = best placement (after winner)
+    const eliminatedNonForfeited = [...this.eliminationOrder]
+      .reverse()
+      .filter(id => nonForfeited.includes(id) && id !== winner?.id);
+    ordered.push(...eliminatedNonForfeited);
+
+    // Forfeited players go last
+    ordered.push(...forfeited);
+
+    // Assign placements (1-indexed)
+    for (let i = 0; i < ordered.length; i++) {
+      placements.set(ordered[i], i + 1);
+    }
+
+    return placements;
+  }
+
+  /**
+   * Finalize match and compute Elo rating changes.
+   * Called once when game ends. Idempotent via matchFinalized flag.
+   */
+  finalizeMatch(ratingStore: RatingStore): EloResult[] {
+    if (this.matchFinalized) return [];
+    this.matchFinalized = true;
+
+    if (!this.isRanked) return [];
+
+    const placements = this.computePlacements();
+    if (placements.size < 2) return [];
+
+    // Build EloPlayer array from human players only
+    const eloPlayers = this.players
+      .filter(p => !p.isAI || p.forfeited) // include forfeited (originally human)
+      .filter(p => p.persistentId && placements.has(p.id))
+      .map(p => {
+        const rating = ratingStore.getOrCreate(p.persistentId);
+        return {
+          id: p.id,
+          rating: rating.rating,
+          gamesPlayed: rating.gamesPlayed,
+        };
+      });
+
+    const results = calculateElo(eloPlayers, placements);
+
+    // Apply rating updates
+    const winner = [...placements.entries()].find(([, place]) => place === 1)?.[0];
+    for (const result of results) {
+      const roomPlayer = this.players.find(rp => rp.id === result.playerId);
+      if (!roomPlayer?.persistentId) continue;
+      ratingStore.update(
+        roomPlayer.persistentId,
+        result.delta,
+        result.playerId === winner,
+        roomPlayer.forfeited,
+      );
+    }
+
+    // Notify via callback
+    this.onRatingUpdate?.(results, placements);
+
+    return results;
   }
 
   cleanup(): void {

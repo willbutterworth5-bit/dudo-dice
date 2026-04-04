@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useGameContext } from '../hooks/useGameContext';
 import { AIPlayer, Difficulty } from '../game/AIPlayer';
-import { Bid, GameSettings, GameState, Player, RoundResult, PLAYER_COLOR_MAP } from '../game/GameState';
+import { Bid, GameSettings, GameState, RoundResult, PLAYER_COLOR_MAP } from '../game/GameState';
 import { ProfileStorage } from '../utils/profileStorage';
+import AchievementToast from './AchievementToast';
 import DiceFace from './DiceFace';
 import BidInput from './BidInput';
 import GameOverModal from './GameOverModal';
@@ -11,7 +12,7 @@ import PalificoInfoModal from './PalificoInfoModal';
 import GameLogPanel from './GameLogPanel';
 import RoundAnalysisModal from './RoundAnalysisModal';
 import GameAnalysisModal from './GameAnalysisModal';
-import type { RoomPlayerInfo } from '../hooks/useMultiplayerConnection';
+import type { RoomPlayerInfo, RatingUpdate } from '../hooks/useMultiplayerConnection';
 import {
   BOARD_BASE,
   buildSectorPlayerIndexes,
@@ -21,6 +22,7 @@ import {
   isMyPlayer as isMyPlayerForBoard,
 } from './game-board/layout';
 import {
+  buildSequentialRevealOrder,
   countMatchingDice,
   getRevealedDiceForPlayer,
   type RevealState,
@@ -34,6 +36,8 @@ export interface MultiplayerMode {
   winnerId: string | null;
   isReconnecting: boolean;
   roomPlayers: RoomPlayerInfo[];
+  ratingUpdate: RatingUpdate | null;
+  isRanked: boolean;
   onMakeBid: (quantity: number, faceValue: number) => void;
   onChallenge: () => void;
   onCalza: () => void;
@@ -85,6 +89,13 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   const [innerCircleChallenge, setInnerCircleChallenge] = useState(false);
   const [challengedBidPlayerId, setChallengedBidPlayerId] = useState<string | null>(null);
   const aiTurnInProgress = useRef(false);
+
+  // Achievement tracking (vs-computer only)
+  const successfulDudosThisGame = useRef(0);
+  const calzaSucceededThisGame = useRef(false);
+  const humanDiceAtGameStart = useRef(startingDice);
+  const [pendingAchievements, setPendingAchievements] = useState<string[]>([]);
+
   const [showGameLog, setShowGameLog] = useState(false);
   const [showRoundAnalysis, setShowRoundAnalysis] = useState(false);
   const [showGameAnalysis, setShowGameAnalysis] = useState(false);
@@ -136,54 +147,12 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     const revealed: { [key: string]: number[] } = {};
     const matchingDice: { [key: string]: number[] } = {};
 
-    // Mirror the sector mapping from the render — local player always at sector 3 (bottom)
-    const humanIdxInner = isMultiplayer
-      ? state.players.findIndex((p: Player) => p.id === multiplayerMode?.playerId)
-      : state.players.findIndex((p: Player) => p.isHuman);
-    const playerCountInner = state.players.length;
-    const sectorToPlayerIdxInner: (number | null)[] = [null, null, null, humanIdxInner, null, null];
-    for (let i = 0; i < Math.min(humanIdxInner, 3); i++) {
-      sectorToPlayerIdxInner[2 - i] = ((humanIdxInner - 1 - i) + playerCountInner) % playerCountInner;
-    }
-    for (let i = 0; i < Math.min(playerCountInner - 1 - humanIdxInner, 2); i++) {
-      sectorToPlayerIdxInner[4 + i] = humanIdxInner + 1 + i;
-    }
-    const sectorPlayers = sectorToPlayerIdxInner.map((idx: number | null) =>
-      idx !== null ? state.players[idx] : null
+    const orderedDicePositions = buildSequentialRevealOrder(
+      result,
+      state,
+      isMultiplayer,
+      multiplayerMode?.playerId ?? null,
     );
-
-    // Build the reveal order by walking sectors clockwise starting from sector 4
-    // (the sector immediately to the human's left), going 4→5→0→1→2→3.
-    // Within each sector, dice are in value-sorted order (ascending), which
-    // matches exactly how they are visually positioned on the board.
-    const clockwiseSectors = [4, 5, 0, 1, 2, 3];
-    const orderedDicePositions: Array<{
-      playerId: string;
-      playerSectorIdx: number;
-      originalDieIdx: number;
-      dieValue: number;
-    }> = [];
-
-    for (const sectorIdx of clockwiseSectors) {
-      const player = sectorPlayers[sectorIdx];
-      if (!player) continue;
-
-      const playerDiceEntry = result.allDice.find((d: { playerId: string; dice: number[] }) => d.playerId === player.id);
-      if (!playerDiceEntry || !playerDiceEntry.dice || playerDiceEntry.dice.length === 0) continue;
-
-      const diceWithIndices = playerDiceEntry.dice
-        .map((value: number, originalIdx: number) => ({ value, originalIdx }))
-        .sort((a: { value: number; originalIdx: number }, b: { value: number; originalIdx: number }) => a.value - b.value);
-
-      for (const diceItem of diceWithIndices) {
-        orderedDicePositions.push({
-          playerId: player.id,
-          playerSectorIdx: sectorIdx,
-          originalDieIdx: diceItem.originalIdx,
-          dieValue: diceItem.value,
-        });
-      }
-    }
 
     // Determine palifico mode from the bid history of this round (not the new round's state,
     // which has already reset). Ones are only wild when palifico was NOT active.
@@ -374,9 +343,9 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     if (!gameState || !gameEngine) return;
     if (gameState.gamePhase === 'gameOver') return;
     if (aiTurnInProgress.current) return;
-    // Don't run AI turns if we're showing a round result, tallying, or during challenge sequence
-    if (lastRoundResult && showDice) return;
-    if (isTallying || innerCircleChallenge) return;
+    // Don't run AI turns while any round result is active (reveal animation or result modal)
+    if (lastRoundResult) return;
+    if (innerCircleChallenge) return;
 
     const currentPlayer = gameState.players[gameState.currentPlayerIndex];
     if (!currentPlayer || currentPlayer.isHuman) return;
@@ -456,7 +425,15 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
       };
 
     handleAITurn();
-  }, [gameState, gameEngine, aiPlayer, localMakeBid, localChallengeBid, localCallCalza, startChallengeAnimation, lastRoundResult, showDice, updateGameState, isTallying, innerCircleChallenge, isMultiplayer]);
+  }, [gameState, gameEngine, aiPlayer, localMakeBid, localChallengeBid, localCallCalza, startChallengeAnimation, lastRoundResult, updateGameState, innerCircleChallenge, isMultiplayer]);
+
+  // Unlock achievements and queue toasts. Returns newly unlocked IDs.
+  const unlockAchievements = useCallback((ids: string[]) => {
+    const newlyUnlocked = ids.filter(id => ProfileStorage.unlockAchievement(id));
+    if (newlyUnlocked.length > 0) {
+      setPendingAchievements(prev => [...prev, ...newlyUnlocked]);
+    }
+  }, []);
 
   const handleHumanBid = useCallback(async (bid: Bid) => {
     if (isMultiplayer && multiplayerMode) {
@@ -501,14 +478,24 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
       const result = localChallengeBid(currentPlayer.id);
       if (result) {
         const freshState = gameEngine.getState();
-        ProfileStorage.recordDudoCall(result.winnerId === result.challengerId);
+        const successful = result.winnerId === result.challengerId;
+        ProfileStorage.recordDudoCall(successful);
+        if (successful) {
+          successfulDudosThisGame.current++;
+          const profile = ProfileStorage.getProfile();
+          const toUnlock: string[] = [];
+          if (!profile.achievements.includes('first_dudo') && profile.vsComputerStats.successfulDudoCalls >= 1) toUnlock.push('first_dudo');
+          if (!profile.achievements.includes('sharp_shooter') && successfulDudosThisGame.current >= 5) toUnlock.push('sharp_shooter');
+          if (!profile.achievements.includes('dudo_master') && profile.vsComputerStats.successfulDudoCalls >= 25) toUnlock.push('dudo_master');
+          unlockAchievements(toUnlock);
+        }
         startChallengeAnimation(result, freshState, false);
         updateGameState();
       }
     } catch (error) {
       console.error('Error challenging bid:', error);
     }
-  }, [gameEngine, gameState, localChallengeBid, startChallengeAnimation, updateGameState, isMultiplayer, multiplayerMode]);
+  }, [gameEngine, gameState, localChallengeBid, startChallengeAnimation, updateGameState, isMultiplayer, multiplayerMode, unlockAchievements]);
 
   const handleHumanCalza = useCallback(() => {
     if (isMultiplayer && multiplayerMode) {
@@ -528,13 +515,17 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
       const result = localCallCalza(currentPlayer.id);
       if (result) {
         const freshState = gameEngine.getState();
+        if (result.calzaSuccess) {
+          calzaSucceededThisGame.current = true;
+          unlockAchievements(['calza']);
+        }
         startChallengeAnimation(result, freshState, true);
         updateGameState();
       }
     } catch (error) {
       console.error('Error calling calza:', error);
     }
-  }, [gameEngine, gameState, localCallCalza, startChallengeAnimation, updateGameState, isMultiplayer, multiplayerMode]);
+  }, [gameEngine, gameState, localCallCalza, startChallengeAnimation, updateGameState, isMultiplayer, multiplayerMode, unlockAchievements]);
 
   if (!gameState || (!isMultiplayer && !gameEngine)) {
     return (
@@ -1351,11 +1342,42 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           <GameOverModal
             winner={winner}
             analysisEnabled={isMultiplayer ? false : analysisEnabled}
+            ratingUpdate={multiplayerMode?.ratingUpdate}
+            isRanked={multiplayerMode?.isRanked}
             onViewGameAnalysis={() => setShowGameAnalysis(true)}
             onNewGame={isMultiplayer ? undefined : () => {
               const humanPlayer = gameState.players.find(p => p.isHuman);
-              const humanWon = humanPlayer && winner.id === humanPlayer.id;
-              ProfileStorage.recordGame(!!humanWon);
+              const humanWon = !!(humanPlayer && winner.id === humanPlayer.id);
+              ProfileStorage.recordGame(humanWon);
+
+              // Achievement checks at game-over
+              const profile = ProfileStorage.getProfile();
+              // Update consecutive wins streak
+              if (humanWon) {
+                profile.consecutiveWins = (profile.consecutiveWins ?? 0) + 1;
+              } else {
+                profile.consecutiveWins = 0;
+              }
+              ProfileStorage.saveProfile(profile);
+
+              const humanDiceNow = humanWon ? (humanPlayer?.diceCount ?? 0) : 0;
+              const toUnlock: string[] = [];
+              const unlocked = profile.achievements;
+              const s = profile.vsComputerStats;
+              if (!unlocked.includes('first_game') && s.gamesPlayed >= 1) toUnlock.push('first_game');
+              if (!unlocked.includes('first_win') && humanWon && s.gamesWon >= 1) toUnlock.push('first_win');
+              if (!unlocked.includes('survivor') && humanWon && humanDiceNow === 1) toUnlock.push('survivor');
+              if (!unlocked.includes('untouchable') && humanWon && humanDiceNow === humanDiceAtGameStart.current) toUnlock.push('untouchable');
+              if (!unlocked.includes('hard_mode') && humanWon && difficulty === 'hard') toUnlock.push('hard_mode');
+              if (!unlocked.includes('on_a_roll') && profile.consecutiveWins >= 3) toUnlock.push('on_a_roll');
+              if (!unlocked.includes('champion') && s.gamesWon >= 10) toUnlock.push('champion');
+              if (!unlocked.includes('veteran') && s.gamesPlayed >= 50) toUnlock.push('veteran');
+              unlockAchievements(toUnlock);
+
+              // Reset transient refs
+              successfulDudosThisGame.current = 0;
+              calzaSucceededThisGame.current = false;
+              humanDiceAtGameStart.current = startingDice;
 
               const settings: GameSettings = {
                 playerCount,
@@ -1370,8 +1392,31 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
             onQuit={() => {
               if (!isMultiplayer) {
                 const humanPlayer = gameState.players.find(p => p.isHuman);
-                const humanWon = humanPlayer && winner.id === humanPlayer.id;
-                ProfileStorage.recordGame(!!humanWon);
+                const humanWon = !!(humanPlayer && winner.id === humanPlayer.id);
+                ProfileStorage.recordGame(humanWon);
+
+                // Achievement checks at game-over
+                const profile = ProfileStorage.getProfile();
+                if (humanWon) {
+                  profile.consecutiveWins = (profile.consecutiveWins ?? 0) + 1;
+                } else {
+                  profile.consecutiveWins = 0;
+                }
+                ProfileStorage.saveProfile(profile);
+
+                const humanDiceNow = humanWon ? (humanPlayer?.diceCount ?? 0) : 0;
+                const toUnlock: string[] = [];
+                const unlocked = profile.achievements;
+                const s = profile.vsComputerStats;
+                if (!unlocked.includes('first_game') && s.gamesPlayed >= 1) toUnlock.push('first_game');
+                if (!unlocked.includes('first_win') && humanWon && s.gamesWon >= 1) toUnlock.push('first_win');
+                if (!unlocked.includes('survivor') && humanWon && humanDiceNow === 1) toUnlock.push('survivor');
+                if (!unlocked.includes('untouchable') && humanWon && humanDiceNow === humanDiceAtGameStart.current) toUnlock.push('untouchable');
+                if (!unlocked.includes('hard_mode') && humanWon && difficulty === 'hard') toUnlock.push('hard_mode');
+                if (!unlocked.includes('on_a_roll') && profile.consecutiveWins >= 3) toUnlock.push('on_a_roll');
+                if (!unlocked.includes('champion') && s.gamesWon >= 10) toUnlock.push('champion');
+                if (!unlocked.includes('veteran') && s.gamesPlayed >= 50) toUnlock.push('veteran');
+                unlockAchievements(toUnlock);
               }
               onBackToHome();
             }}
@@ -1396,6 +1441,12 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           roundHistory={gameState.roundHistory}
           roundNumber={gameState.roundNumber}
           analysisEnabled={analysisEnabled}
+        />
+
+        {/* Achievement Toast */}
+        <AchievementToast
+          ids={pendingAchievements}
+          onDismiss={(id) => setPendingAchievements(prev => prev.filter(x => x !== id))}
         />
       </div>
     </div>

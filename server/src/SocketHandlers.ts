@@ -1,5 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { RoomManager } from './RoomManager.js';
+import { RatingStore } from './RatingStore.js';
 import type { SocketContext } from './handlers/types.js';
 import { registerSessionHandlers } from './handlers/SessionHandlers.js';
 import { registerLobbyHandlers } from './handlers/LobbyHandlers.js';
@@ -20,7 +21,7 @@ function createRateLimiter() {
   };
 }
 
-export function setupSocketHandlers(io: Server, roomManager: RoomManager): void {
+export function setupSocketHandlers(io: Server, roomManager: RoomManager, ratingStore: RatingStore): void {
   io.on('connection', (socket: Socket) => {
     const allowAttempt = createRateLimiter();
 
@@ -28,6 +29,7 @@ export function setupSocketHandlers(io: Server, roomManager: RoomManager): void 
       io,
       socket,
       roomManager,
+      ratingStore,
       boundPlayerId: { value: null },
       rejectRateLimited: (bucket: string): boolean => {
         if (allowAttempt(bucket)) return false;

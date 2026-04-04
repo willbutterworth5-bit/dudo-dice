@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { RoomManager } from './RoomManager.js';
+import { RatingStore } from './RatingStore.js';
 import { setupSocketHandlers } from './SocketHandlers.js';
 import { MemoryRoomStore } from './store/MemoryRoomStore.js';
 import { RedisRoomStore } from './store/RedisRoomStore.js';
@@ -12,6 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+app.use(express.json());
 const httpServer = createServer(app);
 
 const allowedOrigins = process.env.NODE_ENV === 'production'
@@ -52,9 +54,10 @@ if (process.env.REDIS_URL) {
 // --- Room store (Redis-backed when REDIS_URL set) ---
 const store = process.env.REDIS_URL ? new RedisRoomStore() : new MemoryRoomStore();
 const roomManager = new RoomManager(store);
+const ratingStore = new RatingStore();
 
 // Setup socket handlers
-setupSocketHandlers(io, roomManager);
+setupSocketHandlers(io, roomManager, ratingStore);
 
 // In production, serve the frontend build
 if (process.env.NODE_ENV === 'production') {
@@ -66,6 +69,25 @@ if (process.env.NODE_ENV === 'production') {
     res.sendFile(join(frontendPath, 'index.html'));
   });
 }
+
+// Feedback endpoint
+const feedbackLog: { message: string; category: string; email?: string; timestamp: string }[] = [];
+app.post('/api/feedback', (req, res) => {
+  const { message, category, email } = req.body as { message?: string; category?: string; email?: string };
+  if (!message || typeof message !== 'string' || !message.trim()) {
+    res.status(400).json({ error: 'Message is required' });
+    return;
+  }
+  const entry = {
+    message: message.trim(),
+    category: (typeof category === 'string' && category.trim()) ? category.trim() : 'general',
+    email: (typeof email === 'string' && email.trim()) ? email.trim() : undefined,
+    timestamp: new Date().toISOString(),
+  };
+  feedbackLog.push(entry);
+  console.log('📝 Feedback received:', JSON.stringify(entry));
+  res.json({ ok: true });
+});
 
 // Health check
 app.get('/api/health', async (_req, res) => {

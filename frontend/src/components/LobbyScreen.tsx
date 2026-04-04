@@ -323,7 +323,14 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
                   <div key={room.code} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
                     <div>
                       <span className="font-bold text-white text-sm">{room.code}</span>
-                      <span className="text-white/50 text-xs ml-2">by {room.hostName}</span>
+                      <span className="text-white/50 text-xs ml-2">
+                        by {room.hostName}
+                        {room.hostRating != null && (
+                          <span className="ml-1 text-white/40 font-mono">
+                            ({room.hostRating}{room.hostProvisional ? '?' : ''})
+                          </span>
+                        )}
+                      </span>
                       <div className="text-xs text-white/40 mt-0.5">
                         {room.playerCount}/{room.maxPlayers} players · {room.settings.startingDice} dice
                         {room.settings.palificoEnabled && ' · Palifico'}

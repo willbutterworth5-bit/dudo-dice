@@ -51,6 +51,7 @@ export class RoomManager {
     maxPlayers: number;
     settings: RoomSettings;
     hostName: string;
+    hostPersistentId?: string;
   }>> {
     const result = [];
     for (const room of await this.store.values()) {
@@ -62,6 +63,7 @@ export class RoomManager {
           maxPlayers: room.settings.maxPlayers,
           settings: room.settings,
           hostName: host?.name ?? 'Unknown',
+          hostPersistentId: host?.persistentId,
         });
       }
     }

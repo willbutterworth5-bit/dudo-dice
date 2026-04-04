@@ -1,12 +1,15 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import type { GameState, RoundResult } from '@dudo-dice/shared';
+import { ProfileStorage } from '../utils/profileStorage';
 
 export interface RoomPlayerInfo {
   id: string;
   name: string;
   isConnected: boolean;
   isAI: boolean;
+  rating: number | null;
+  provisional: boolean | null;
 }
 
 export interface RoomUpdate {
@@ -21,6 +24,17 @@ export interface RoomUpdate {
     difficulty: string;
   };
   phase: 'waiting' | 'playing' | 'finished';
+  startWithBotsVotes: string[];
+  isRanked: boolean;
+}
+
+export interface RatingUpdate {
+  playerId: string;
+  oldRating: number;
+  newRating: number;
+  delta: number;
+  placement: number;
+  isRanked: boolean;
 }
 
 export interface PublicRoom {
@@ -34,6 +48,8 @@ export interface PublicRoom {
     calzaEnabled: boolean;
   };
   hostName: string;
+  hostRating?: number | null;
+  hostProvisional?: boolean | null;
 }
 
 type StoredSeat = {
@@ -88,6 +104,8 @@ export function useMultiplayerConnection() {
   const [publicRooms, setPublicRooms] = useState<PublicRoom[]>([]);
   const [winnerId, setWinnerId] = useState<string | null>(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
+  const [ratingUpdate, setRatingUpdate] = useState<RatingUpdate | null>(null);
+  const [isRanked, setIsRanked] = useState(false);
 
   const turnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -142,7 +160,7 @@ export function useMultiplayerConnection() {
       if (pendingJoinRef.current) {
         const { code, playerName } = pendingJoinRef.current;
         pendingJoinRef.current = null;
-        socket.emit('join_room', { code, playerName });
+        socket.emit('join_room', { code, playerName, persistentId: ProfileStorage.getPersistentPlayerId() });
       }
     });
 
@@ -151,9 +169,16 @@ export function useMultiplayerConnection() {
       setIsReconnecting(!!seatRef.current?.reconnectToken);
     });
 
-    socket.on('session_bound', (data: StoredSeat) => {
+    socket.on('session_bound', (data: StoredSeat & { persistentId?: string }) => {
       bindSeat(data);
       setIsReconnecting(false);
+      if (data.persistentId) {
+        const profile = ProfileStorage.getProfile();
+        if (profile.persistentPlayerId !== data.persistentId) {
+          profile.persistentPlayerId = data.persistentId;
+          ProfileStorage.saveProfile(profile);
+        }
+      }
     });
 
     socket.on('room_created', () => {
@@ -164,10 +189,11 @@ export function useMultiplayerConnection() {
       setRoomUpdate(data);
     });
 
-    socket.on('game_state', (data: { state: GameState; turnTimeRemaining: number }) => {
+    socket.on('game_state', (data: { state: GameState; turnTimeRemaining: number; isRanked?: boolean }) => {
       setGameState(data.state);
       setRoundResult(null);
       startTurnCountdown(data.turnTimeRemaining);
+      if (data.isRanked !== undefined) setIsRanked(data.isRanked);
     });
 
     socket.on('round_result', (data: { result: RoundResult }) => {
@@ -181,6 +207,13 @@ export function useMultiplayerConnection() {
 
     socket.on('game_over', (data: { winnerId: string }) => {
       setWinnerId(data.winnerId);
+    });
+
+    socket.on('rating_update', (data: RatingUpdate) => {
+      setRatingUpdate(data);
+      // Sync to local profile
+      const won = data.placement === 1;
+      ProfileStorage.updateRankedRating(data.newRating, data.delta, won, false);
     });
 
     socket.on('room_list', (data: { rooms: PublicRoom[] }) => {
@@ -212,6 +245,8 @@ export function useMultiplayerConnection() {
     setGameState(null);
     setRoundResult(null);
     setWinnerId(null);
+    setRatingUpdate(null);
+    setIsRanked(false);
     if (turnTimerRef.current) clearInterval(turnTimerRef.current);
   }, [clearSeat]);
 
@@ -226,6 +261,7 @@ export function useMultiplayerConnection() {
       settings,
       isPublic,
       playerName,
+      persistentId: ProfileStorage.getPersistentPlayerId(),
     });
   }, []);
 
@@ -233,12 +269,14 @@ export function useMultiplayerConnection() {
     socketRef.current?.emit('join_room', {
       code,
       playerName,
+      persistentId: ProfileStorage.getPersistentPlayerId(),
     });
   }, []);
 
   const quickMatch = useCallback((playerName: string) => {
     socketRef.current?.emit('quick_match', {
       playerName,
+      persistentId: ProfileStorage.getPersistentPlayerId(),
     });
   }, []);
 
@@ -248,6 +286,10 @@ export function useMultiplayerConnection() {
 
   const startGame = useCallback(() => {
     socketRef.current?.emit('start_game');
+  }, []);
+
+  const voteStartWithBots = useCallback(() => {
+    socketRef.current?.emit('vote_start_with_bots');
   }, []);
 
   const makeBid = useCallback((quantity: number, faceValue: number) => {
@@ -265,8 +307,7 @@ export function useMultiplayerConnection() {
   const connectAndJoin = useCallback((code: string, playerName: string) => {
     pendingJoinRef.current = { code, playerName };
     if (socketRef.current?.connected) {
-      // Already connected — emit immediately and clear pending
-      socketRef.current.emit('join_room', { code, playerName });
+      socketRef.current.emit('join_room', { code, playerName, persistentId: ProfileStorage.getPersistentPlayerId() });
       pendingJoinRef.current = null;
     } else {
       connect();
@@ -300,6 +341,8 @@ export function useMultiplayerConnection() {
     error,
     publicRooms,
     winnerId,
+    ratingUpdate,
+    isRanked,
     connect,
     connectAndJoin,
     disconnect,
@@ -308,6 +351,7 @@ export function useMultiplayerConnection() {
     quickMatch,
     listRooms,
     startGame,
+    voteStartWithBots,
     makeBid,
     challenge,
     calza,

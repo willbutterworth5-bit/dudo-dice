@@ -1,5 +1,5 @@
 import type { SocketContext } from './types.js';
-import { getBoundRoom, emitRoomUpdate } from './utils.js';
+import { getBoundRoom, broadcastGameStart } from './utils.js';
 
 export function registerGameHandlers(ctx: SocketContext): void {
   const { io, socket } = ctx;
@@ -14,18 +14,7 @@ export function registerGameHandlers(ctx: SocketContext): void {
       return;
     }
 
-    for (const player of room.players) {
-      const playerSocket = io.sockets.sockets.get(player.socketId);
-      if (playerSocket) {
-        const sanitised = room.getSanitisedStateForPlayer(player.id);
-        playerSocket.emit('game_state', {
-          state: sanitised,
-          turnTimeRemaining: room.getTurnTimeRemaining(),
-        });
-      }
-    }
-
-    emitRoomUpdate(io, room);
+    broadcastGameStart(io, room);
   });
 
   socket.on('make_bid', async (data: { quantity: number; faceValue: number }) => {
