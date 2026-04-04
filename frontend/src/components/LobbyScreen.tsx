@@ -70,29 +70,13 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
       </button>
       <div className="max-w-lg w-full">
         {/* Header */}
-        <div className="flex items-center justify-between gap-4 mb-5">
-          <div className="flex items-center gap-4">
-            <img src="/Logo.png" alt="Dudo Dice Logo" className="flex-shrink-0" style={{ width: '56px', height: '56px' }} />
-            <div className="flex flex-col">
-              <h1 className="text-3xl font-bold text-white">Play Online</h1>
-              <p className="text-sm text-white/70">
-                {isConnected ? '🟢 Connected' : '🔴 Connecting...'}
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2 items-center">
-            <button
-              onClick={() => navigate('/profile')}
-              className="h-9 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"
-            >
-              Profile
-            </button>
-            <button
-              onClick={() => setShowRules(true)}
-              className="h-9 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"
-            >
-              Rules
-            </button>
+        <div className="flex items-center justify-center gap-4 mb-5 pl-16">
+          <img src="/Logo.png" alt="Dudo Dice Logo" className="flex-shrink-0" style={{ width: '56px', height: '56px' }} />
+          <div className="flex flex-col">
+            <h1 className="text-3xl font-bold text-white">Play Online</h1>
+            <p className="text-sm text-white/70">
+              {isConnected ? '🟢 Connected' : '🔴 Connecting...'}
+            </p>
           </div>
         </div>
 
@@ -159,8 +143,22 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
           {activeTab === 'create' && (
             <div className="-m-5 overflow-visible rounded-2xl">
               {/* Header */}
-              <div className="bg-white/10 border-b border-white/20 px-5 py-4 rounded-t-2xl">
+              <div className="bg-white/10 border-b border-white/20 px-5 py-4 rounded-t-2xl flex justify-between items-center">
                 <h2 className="text-lg font-bold text-white">Create Room</h2>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => navigate('/profile')}
+                    className="h-8 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"
+                  >
+                    Profile
+                  </button>
+                  <button
+                    onClick={() => setShowRules(true)}
+                    className="h-8 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"
+                  >
+                    Rules
+                  </button>
+                </div>
               </div>
 
               {/* Body */}
