@@ -3,9 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { ProfileStorage, imageToBase64, PlayerProfile, PlayerStats } from '../utils/profileStorage';
 import { ACHIEVEMENTS } from '../utils/achievements';
 import { COUNTRIES } from '../utils/countries';
+import { useAuth } from '../context/AuthContext';
+import AuthModal from './AuthModal';
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [profile, setProfile] = useState<PlayerProfile>(ProfileStorage.getProfile());
   const [name, setName] = useState(profile.name);
   const [photo, setPhoto] = useState<string | null>(profile.photo);
@@ -144,7 +148,25 @@ export default function ProfileScreen() {
 
         {/* Profile Settings Card */}
         <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl shadow-2xl p-4 sm:p-8 mb-6">
-          <h2 className="text-2xl font-semibold text-white mb-6">Profile Settings</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-white">Profile Settings</h2>
+            {user ? (
+              <div className="flex items-center gap-2 text-right">
+                <div>
+                  <p className="text-white/60 text-xs truncate max-w-[160px]">{user.email}</p>
+                  <button onClick={signOut} className="text-white/40 hover:text-white/70 text-xs underline transition-colors">Sign out</button>
+                </div>
+                <div className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" title="Synced to account" />
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="btn-3d-accent text-white text-xs font-bold px-3 py-1.5 rounded-lg"
+              >
+                Sign In / Create Account
+              </button>
+            )}
+          </div>
 
           <div className="mb-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
@@ -193,6 +215,7 @@ export default function ProfileScreen() {
                 <div className="flex items-center justify-center mt-2">
                   <span className="text-white font-bold text-base">{profile.rankedRating ?? 1500}</span>
                   <span className="text-white/40 text-sm ml-1">Elo</span>
+                  {user && <span className="w-1.5 h-1.5 rounded-full bg-green-400 ml-1.5" title="Synced" />}
                   <span className="relative group inline-flex items-center ml-1">
                     <span className="w-3.5 h-3.5 rounded-full bg-white/20 text-white/60 text-[9px] font-bold flex items-center justify-center cursor-help">i</span>
                     <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-44 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none">
@@ -450,6 +473,8 @@ export default function ProfileScreen() {
           </div>
         </div>
       </div>
+
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import type { GameState, RoundResult } from '@dudo-dice/shared';
 import { ProfileStorage } from '../utils/profileStorage';
+import { supabase } from '../lib/supabase';
 
 export interface RoomPlayerInfo {
   id: string;
@@ -136,14 +137,20 @@ export function useMultiplayerConnection() {
     }, 100);
   }, []);
 
-  const connect = useCallback(() => {
+  const connect = useCallback(async () => {
     if (socketRef.current?.connected) return;
 
     const serverUrl = import.meta.env.VITE_SERVER_URL
       || (import.meta.env.PROD ? window.location.origin : 'http://localhost:3001');
 
+    // Include Supabase JWT if user is logged in so the server can verify identity
+    const accessToken = supabase
+      ? (await supabase.auth.getSession()).data.session?.access_token ?? null
+      : null;
+
     const socket = io(serverUrl, {
       transports: ['websocket', 'polling'],
+      auth: { token: accessToken },
     });
 
     socket.on('connect', () => {

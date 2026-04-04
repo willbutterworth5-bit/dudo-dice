@@ -515,6 +515,17 @@ img[alt="Dudo Dice Logo"] {
   animation: boardShakeMobile 0.5s ease-out;
 }
 
+@keyframes toastSlideUp {
+  from { transform: translateX(-50%) translateY(120%); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);   opacity: 1; }
+}
+@keyframes toastSlideDown {
+  from { transform: translateX(-50%) translateY(0);   opacity: 1; }
+  to   { transform: translateX(-50%) translateY(120%); opacity: 0; }
+}
+.toast-enter { animation: toastSlideUp 0.35s ease-out forwards; }
+.toast-exit  { animation: toastSlideDown 0.3s ease-in forwards; }
+
 @media (min-width: 640px) {
   .animate-board-shake {
     animation: boardShake 0.6s ease-out;

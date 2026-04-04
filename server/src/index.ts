@@ -6,6 +6,7 @@ import { dirname, join } from 'path';
 import { RoomManager } from './RoomManager.js';
 import { RatingStore } from './RatingStore.js';
 import { setupSocketHandlers } from './SocketHandlers.js';
+import { getSupabaseClient } from './SupabaseClient.js';
 import { MemoryRoomStore } from './store/MemoryRoomStore.js';
 import { RedisRoomStore } from './store/RedisRoomStore.js';
 
@@ -55,9 +56,32 @@ if (process.env.REDIS_URL) {
 const store = process.env.REDIS_URL ? new RedisRoomStore() : new MemoryRoomStore();
 const roomManager = new RoomManager(store);
 const ratingStore = new RatingStore();
+const supabase = getSupabaseClient();
+
+if (supabase) {
+  console.log('✅ Supabase client initialised');
+} else {
+  console.log('ℹ️  Supabase not configured — running in guest-only mode');
+}
+
+// JWT verification middleware — extracts supabaseUserId from socket auth token
+io.use(async (socket, next) => {
+  const token = socket.handshake.auth?.token as string | undefined;
+  if (token && supabase) {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (!error && user) {
+        socket.data.supabaseUserId = user.id as string;
+      }
+    } catch {
+      // Invalid token — proceed as guest
+    }
+  }
+  next();
+});
 
 // Setup socket handlers
-setupSocketHandlers(io, roomManager, ratingStore);
+setupSocketHandlers(io, roomManager, ratingStore, supabase);
 
 // In production, serve the frontend build
 if (process.env.NODE_ENV === 'production') {

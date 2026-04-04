@@ -1,4 +1,5 @@
 import type { Server } from 'socket.io';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { RoomManager } from '../RoomManager.js';
 import type { RoomPlayer, Room } from '../Room.js';
 import type { RoundResult } from '@dudo-dice/shared';
@@ -62,7 +63,7 @@ export function broadcastGameStart(io: Server, room: Room): void {
   emitRoomUpdate(io, room);
 }
 
-export function wireRoomCallbacks(io: Server, room: Room, _roomManager: RoomManager, ratingStore: RatingStore): void {
+export function wireRoomCallbacks(io: Server, room: Room, _roomManager: RoomManager, ratingStore: RatingStore, supabase: SupabaseClient | null = null): void {
   room.onBroadcastState = () => {
     for (const player of room.players) {
       const playerSocket = io.sockets.sockets.get(player.socketId);
@@ -102,6 +103,14 @@ export function wireRoomCallbacks(io: Server, room: Room, _roomManager: RoomMana
     for (const result of results) {
       const roomPlayer = room.players.find(rp => rp.id === result.playerId);
       if (!roomPlayer || !roomPlayer.socketId) continue;
+
+      // Persist to Supabase if the player is logged in (has a Supabase user ID)
+      // We detect this by checking whether the persistentId is a verified Supabase UUID,
+      // which the middleware stored in socket.data. We use the persistentId directly here.
+      if (roomPlayer.persistentId && supabase) {
+        ratingStore.persistToSupabase(roomPlayer.persistentId, supabase).catch(() => {});
+      }
+
       const playerSocket = io.sockets.sockets.get(roomPlayer.socketId);
       if (playerSocket) {
         playerSocket.emit('rating_update', {

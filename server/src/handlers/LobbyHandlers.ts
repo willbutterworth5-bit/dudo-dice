@@ -2,6 +2,11 @@ import type { RoomSettings } from '../Room.js';
 import type { SocketContext } from './types.js';
 import { getBoundRoom, bindPlayer, emitRoomUpdate, wireRoomCallbacks, broadcastGameStart } from './utils.js';
 
+/** Returns the verified Supabase user ID for this socket (if logged in), else falls back to the client-provided persistentId. */
+function resolvedPersistentId(ctx: SocketContext, clientPersistentId?: string): string {
+  return (ctx.socket.data?.supabaseUserId as string | undefined) ?? clientPersistentId ?? crypto.randomUUID();
+}
+
 export function registerLobbyHandlers(ctx: SocketContext): void {
   const { io, socket, roomManager, ratingStore } = ctx;
 
@@ -18,7 +23,9 @@ export function registerLobbyHandlers(ctx: SocketContext): void {
     }
 
     const room = await roomManager.createRoom(data.settings, data.isPublic);
-    const player = room.addPlayer(socket.id, data.playerName, data.persistentId);
+    const pid = resolvedPersistentId(ctx, data.persistentId);
+    await ratingStore.loadFromSupabase(pid, ctx.supabase);
+    const player = room.addPlayer(socket.id, data.playerName, pid);
     if (!player) {
       socket.emit('error', { message: 'Could not create room' });
       return;
@@ -26,7 +33,7 @@ export function registerLobbyHandlers(ctx: SocketContext): void {
 
     socket.join(room.code);
     bindPlayer(ctx, room.code, player);
-    wireRoomCallbacks(io, room, roomManager, ratingStore);
+    wireRoomCallbacks(io, room, roomManager, ratingStore, ctx.supabase);
 
     socket.emit('room_created', { roomCode: room.code });
     emitRoomUpdate(io, room, ratingStore);
@@ -55,7 +62,9 @@ export function registerLobbyHandlers(ctx: SocketContext): void {
       return;
     }
 
-    const player = room.addPlayer(socket.id, data.playerName, data.persistentId);
+    const pid = resolvedPersistentId(ctx, data.persistentId);
+    await ratingStore.loadFromSupabase(pid, ctx.supabase);
+    const player = room.addPlayer(socket.id, data.playerName, pid);
     if (!player) {
       socket.emit('error', { message: 'Room is full' });
       return;
@@ -84,10 +93,12 @@ export function registerLobbyHandlers(ctx: SocketContext): void {
         difficulty: 'medium',
       };
       room = await roomManager.createRoom(defaultSettings, true);
-      wireRoomCallbacks(io, room, roomManager, ratingStore);
+      wireRoomCallbacks(io, room, roomManager, ratingStore, ctx.supabase);
     }
 
-    const player = room.addPlayer(socket.id, data.playerName, data.persistentId);
+    const pid = resolvedPersistentId(ctx, data.persistentId);
+    await ratingStore.loadFromSupabase(pid, ctx.supabase);
+    const player = room.addPlayer(socket.id, data.playerName, pid);
     if (!player) {
       socket.emit('error', { message: 'Could not join room' });
       return;

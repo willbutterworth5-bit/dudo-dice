@@ -1,3 +1,19 @@
+// Lazy imports to avoid circular deps — only called when user is logged in
+let _syncProfile: ((userId: string, profile: PlayerProfile) => Promise<void>) | null = null;
+let _syncAchievement: ((userId: string, id: string) => Promise<void>) | null = null;
+let _getSupabaseUserId: (() => string | null) | null = null;
+
+/** Called once by AuthContext to wire up Supabase sync. */
+export function initSupabaseSync(
+  syncProfile: (userId: string, profile: PlayerProfile) => Promise<void>,
+  syncAchievement: (userId: string, id: string) => Promise<void>,
+  getSupabaseUserId: () => string | null,
+): void {
+  _syncProfile = syncProfile;
+  _syncAchievement = syncAchievement;
+  _getSupabaseUserId = getSupabaseUserId;
+}
+
 export interface PlayerStats {
   gamesPlayed: number;
   gamesWon: number;
@@ -113,6 +129,11 @@ export const ProfileStorage = {
     } catch (e) {
       console.error('Error saving profile to storage:', e);
     }
+    // Sync to Supabase if user is logged in
+    const userId = _getSupabaseUserId?.();
+    if (userId && _syncProfile) {
+      _syncProfile(userId, profile).catch(() => {});
+    }
   },
 
   updateName(name: string): void {
@@ -160,6 +181,11 @@ export const ProfileStorage = {
     if (profile.achievements.includes(id)) return false;
     profile.achievements.push(id);
     this.saveProfile(profile);
+    // Sync individual achievement to Supabase
+    const userId = _getSupabaseUserId?.();
+    if (userId && _syncAchievement) {
+      _syncAchievement(userId, id).catch(() => {});
+    }
     return true;
   },
 

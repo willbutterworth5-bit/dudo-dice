@@ -8,3 +8,7 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: SUPABASE_URL
+        sync: false   # Set this secret in the Render dashboard
+      - key: SUPABASE_SERVICE_KEY
+        sync: false   # Set this secret in the Render dashboard

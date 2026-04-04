@@ -9,6 +9,7 @@ import WaitingRoom from './components/WaitingRoom'
 import JoinRedirect from './components/JoinRedirect'
 import RulesPage from './components/RulesPage'
 import { GameProvider } from './context/GameContext'
+import { AuthProvider } from './context/AuthContext'
 import { useMultiplayerConnection } from './hooks/useMultiplayerConnection'
 import type { GameConfig } from './types/routes'
 
@@ -163,4 +164,12 @@ function App() {
   )
 }
 
-export default App
+function AppWithAuth() {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  )
+}
+
+export default AppWithAuth

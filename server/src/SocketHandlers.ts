@@ -1,4 +1,5 @@
 import { Server, Socket } from 'socket.io';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { RoomManager } from './RoomManager.js';
 import { RatingStore } from './RatingStore.js';
 import type { SocketContext } from './handlers/types.js';
@@ -21,7 +22,7 @@ function createRateLimiter() {
   };
 }
 
-export function setupSocketHandlers(io: Server, roomManager: RoomManager, ratingStore: RatingStore): void {
+export function setupSocketHandlers(io: Server, roomManager: RoomManager, ratingStore: RatingStore, supabase: SupabaseClient | null = null): void {
   io.on('connection', (socket: Socket) => {
     const allowAttempt = createRateLimiter();
 
@@ -30,6 +31,7 @@ export function setupSocketHandlers(io: Server, roomManager: RoomManager, rating
       socket,
       roomManager,
       ratingStore,
+      supabase,
       boundPlayerId: { value: null },
       rejectRateLimited: (bucket: string): boolean => {
         if (allowAttempt(bucket)) return false;
