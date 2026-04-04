@@ -35,7 +35,7 @@ export class BidValidator {
     // Bidding with ones
     if (newIsOnes && !currentIsOnes) {
       // Can bid ones at half quantity (rounded up)
-      const minOnesQuantity = Math.ceil(currentBid.quantity / 2);
+      const minOnesQuantity = Math.floor(currentBid.quantity / 2) + 1;
       if (newBid.quantity < minOnesQuantity) {
         return {
           valid: false,

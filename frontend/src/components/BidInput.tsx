@@ -78,8 +78,8 @@ export default function BidInput({
     if (!currentBid) return 1;
 
     if (forFaceValue === 1 && currentBid.faceValue !== 1) {
-      // Bidding ones: half rounded up
-      return Math.ceil(currentBid.quantity / 2);
+      // Bidding ones: floor(n/2) + 1 (strictly more than half)
+      return Math.floor(currentBid.quantity / 2) + 1;
     } else if (forFaceValue !== 1 && currentBid.faceValue === 1) {
       // Bidding back from ones: must double
       return currentBid.quantity * 2;

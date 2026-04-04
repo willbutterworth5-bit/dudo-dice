@@ -26,9 +26,9 @@ export function RulesContent() {
         <h3 className="text-2xl font-semibold mb-3 text-white">Special Ones Bidding Rules</h3>
         <ul className="list-disc list-inside space-y-2 text-lg ml-4 text-white/85">
           <li>
-            <strong>Bidding with ones:</strong> When bidding ones (face value = 1), the quantity can be half the current bid, rounded up.
+            <strong>Bidding with ones:</strong> When bidding ones (face value = 1), the quantity must be more than half the current bid — specifically, at least ⌊current ÷ 2⌋ + 1.
             <br />
-            <span className="text-white/60 italic">Example: If current bid is "5 fours", you can bid "3 ones" (half of 5, rounded up)</span>
+            <span className="text-white/60 italic">Examples: "5 fours" → minimum "3 ones" (floor of 2.5, +1); "4 fours" → minimum "3 ones" (floor of 2, +1)</span>
           </li>
           <li>
             <strong>Bidding back from ones:</strong> When bidding back to a non-one value (2–6), the quantity must be doubled.

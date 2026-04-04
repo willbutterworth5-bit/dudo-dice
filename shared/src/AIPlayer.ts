@@ -182,7 +182,7 @@ export class AIPlayer {
       }
 
       // Bid ones (roughly half quantity, rounded up)
-      const onesQty = Math.ceil(q / 2);
+      const onesQty = Math.floor(q / 2) + 1;
       candidates.push({ quantity: onesQty,     faceValue: 1, playerId: id });
       candidates.push({ quantity: onesQty + 1, faceValue: 1, playerId: id });
     }
