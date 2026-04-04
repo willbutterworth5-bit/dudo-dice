@@ -94,6 +94,10 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   const successfulDudosThisGame = useRef(0);
   const calzaSucceededThisGame = useRef(false);
   const humanDiceAtGameStart = useRef(startingDice);
+  const humanMinDiceThisGame = useRef(startingDice);  // for Comeback King
+  const humanWasAtOneDie = useRef(false);             // for Dice Whisperer
+  const consecutiveDudoSuccesses = useRef(0);         // for Mind Reader
+  const consecutiveValidBids = useRef(0);             // for The Oracle (valid bids when challenged)
   const [pendingAchievements, setPendingAchievements] = useState<string[]>([]);
 
   const [showGameLog, setShowGameLog] = useState(false);
@@ -374,7 +378,25 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
             if (result) {
               const humanPlayer = freshState.players.find(p => p.isHuman);
               if (humanPlayer && result.bidderId === humanPlayer.id) {
-                ProfileStorage.recordCalledAgainst(result.winnerId === result.challengerId);
+                const aiWon = result.winnerId === result.challengerId;
+                ProfileStorage.recordCalledAgainst(aiWon);
+                if (!aiWon) {
+                  // Human bluffed successfully (AI called but was wrong)
+                  consecutiveValidBids.current++;
+                  const profile = ProfileStorage.getProfile();
+                  const bluffs = profile.vsComputerStats.timesCalledAgainst - profile.vsComputerStats.successfulCallsAgainst;
+                  const toUnlock: string[] = [];
+                  if (!profile.achievements.includes('bold_bluffer') && bluffs >= 5) toUnlock.push('bold_bluffer');
+                  if (!profile.achievements.includes('calculated_risk') && result.actualCount === result.challengedBid.quantity) toUnlock.push('calculated_risk');
+                  if (!profile.achievements.includes('the_oracle') && consecutiveValidBids.current >= 5) toUnlock.push('the_oracle');
+                  if (toUnlock.length) unlockAchievements(toUnlock);
+                } else {
+                  consecutiveValidBids.current = 0;
+                }
+                // Track if human is down to 1 die
+                const humanDiceAfter = freshState.players.find(p => p.isHuman)?.diceCount ?? 0;
+                if (humanDiceAfter === 1) humanWasAtOneDie.current = true;
+                if (humanDiceAfter < humanMinDiceThisGame.current) humanMinDiceThisGame.current = humanDiceAfter;
               }
               // Set animation state BEFORE updating game state to prevent
               // a render frame where dice count shows the new (reduced) value
@@ -410,7 +432,23 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               if (result) {
                 const humanPlayer = freshState.players.find(p => p.isHuman);
                 if (humanPlayer && result.bidderId === humanPlayer.id) {
-                  ProfileStorage.recordCalledAgainst(result.winnerId === result.challengerId);
+                  const aiWon = result.winnerId === result.challengerId;
+                  ProfileStorage.recordCalledAgainst(aiWon);
+                  if (!aiWon) {
+                    consecutiveValidBids.current++;
+                    const profile = ProfileStorage.getProfile();
+                    const bluffs = profile.vsComputerStats.timesCalledAgainst - profile.vsComputerStats.successfulCallsAgainst;
+                    const toUnlock: string[] = [];
+                    if (!profile.achievements.includes('bold_bluffer') && bluffs >= 5) toUnlock.push('bold_bluffer');
+                    if (!profile.achievements.includes('calculated_risk') && result.actualCount === result.challengedBid.quantity) toUnlock.push('calculated_risk');
+                    if (!profile.achievements.includes('the_oracle') && consecutiveValidBids.current >= 5) toUnlock.push('the_oracle');
+                    if (toUnlock.length) unlockAchievements(toUnlock);
+                  } else {
+                    consecutiveValidBids.current = 0;
+                  }
+                  const humanDiceAfter = freshState.players.find(p => p.isHuman)?.diceCount ?? 0;
+                  if (humanDiceAfter === 1) humanWasAtOneDie.current = true;
+                  if (humanDiceAfter < humanMinDiceThisGame.current) humanMinDiceThisGame.current = humanDiceAfter;
                 }
                 startChallengeAnimation(result, freshState);
                 updateGameState();
@@ -482,12 +520,14 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         ProfileStorage.recordDudoCall(successful);
         if (successful) {
           successfulDudosThisGame.current++;
+          consecutiveDudoSuccesses.current++;
           const profile = ProfileStorage.getProfile();
           const toUnlock: string[] = [];
-          if (!profile.achievements.includes('first_dudo') && profile.vsComputerStats.successfulDudoCalls >= 1) toUnlock.push('first_dudo');
-          if (!profile.achievements.includes('sharp_shooter') && successfulDudosThisGame.current >= 5) toUnlock.push('sharp_shooter');
-          if (!profile.achievements.includes('dudo_master') && profile.vsComputerStats.successfulDudoCalls >= 25) toUnlock.push('dudo_master');
+          if (!profile.achievements.includes('cold_blooded') && profile.vsComputerStats.successfulDudoCalls >= 10) toUnlock.push('cold_blooded');
+          if (!profile.achievements.includes('mind_reader') && consecutiveDudoSuccesses.current >= 3) toUnlock.push('mind_reader');
           unlockAchievements(toUnlock);
+        } else {
+          consecutiveDudoSuccesses.current = 0;
         }
         startChallengeAnimation(result, freshState, false);
         updateGameState();
@@ -1352,7 +1392,6 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
               // Achievement checks at game-over
               const profile = ProfileStorage.getProfile();
-              // Update consecutive wins streak
               if (humanWon) {
                 profile.consecutiveWins = (profile.consecutiveWins ?? 0) + 1;
               } else {
@@ -1361,23 +1400,36 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               ProfileStorage.saveProfile(profile);
 
               const humanDiceNow = humanWon ? (humanPlayer?.diceCount ?? 0) : 0;
+              const hour = new Date().getHours();
               const toUnlock: string[] = [];
               const unlocked = profile.achievements;
               const s = profile.vsComputerStats;
               if (!unlocked.includes('first_game') && s.gamesPlayed >= 1) toUnlock.push('first_game');
-              if (!unlocked.includes('first_win') && humanWon && s.gamesWon >= 1) toUnlock.push('first_win');
-              if (!unlocked.includes('survivor') && humanWon && humanDiceNow === 1) toUnlock.push('survivor');
-              if (!unlocked.includes('untouchable') && humanWon && humanDiceNow === humanDiceAtGameStart.current) toUnlock.push('untouchable');
-              if (!unlocked.includes('hard_mode') && humanWon && difficulty === 'hard') toUnlock.push('hard_mode');
-              if (!unlocked.includes('on_a_roll') && profile.consecutiveWins >= 3) toUnlock.push('on_a_roll');
-              if (!unlocked.includes('champion') && s.gamesWon >= 10) toUnlock.push('champion');
-              if (!unlocked.includes('veteran') && s.gamesPlayed >= 50) toUnlock.push('veteran');
+              if (!unlocked.includes('getting_hang') && s.gamesPlayed >= 10) toUnlock.push('getting_hang');
+              if (!unlocked.includes('dice_devotee') && s.gamesPlayed >= 100) toUnlock.push('dice_devotee');
+              if (humanWon) {
+                if (!unlocked.includes('first_win') && s.gamesWon >= 1) toUnlock.push('first_win');
+                if (!unlocked.includes('seasoned_gambler') && s.gamesWon >= 25) toUnlock.push('seasoned_gambler');
+                if (!unlocked.includes('master_of_bluff') && s.gamesWon >= 100) toUnlock.push('master_of_bluff');
+                if (!unlocked.includes('impossible_odds') && humanDiceNow === 1) toUnlock.push('impossible_odds');
+                if (!unlocked.includes('dice_whisperer') && humanWasAtOneDie.current) toUnlock.push('dice_whisperer');
+                if (!unlocked.includes('perfect_game') && humanDiceNow === humanDiceAtGameStart.current) toUnlock.push('perfect_game');
+                if (!unlocked.includes('comeback_king') && humanMinDiceThisGame.current <= humanDiceAtGameStart.current - 3) toUnlock.push('comeback_king');
+                if (!unlocked.includes('hot_streak') && profile.consecutiveWins >= 3) toUnlock.push('hot_streak');
+                if (!unlocked.includes('unstoppable') && profile.consecutiveWins >= 7) toUnlock.push('unstoppable');
+              }
+              if (!unlocked.includes('night_owl') && hour >= 2 && hour < 5) toUnlock.push('night_owl');
+              if (!unlocked.includes('early_bird') && hour >= 5 && hour < 7) toUnlock.push('early_bird');
               unlockAchievements(toUnlock);
 
               // Reset transient refs
               successfulDudosThisGame.current = 0;
               calzaSucceededThisGame.current = false;
               humanDiceAtGameStart.current = startingDice;
+              humanMinDiceThisGame.current = startingDice;
+              humanWasAtOneDie.current = false;
+              consecutiveDudoSuccesses.current = 0;
+              consecutiveValidBids.current = 0;
 
               const settings: GameSettings = {
                 playerCount,
@@ -1405,18 +1457,39 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                 ProfileStorage.saveProfile(profile);
 
                 const humanDiceNow = humanWon ? (humanPlayer?.diceCount ?? 0) : 0;
+                const hour = new Date().getHours();
                 const toUnlock: string[] = [];
                 const unlocked = profile.achievements;
                 const s = profile.vsComputerStats;
                 if (!unlocked.includes('first_game') && s.gamesPlayed >= 1) toUnlock.push('first_game');
-                if (!unlocked.includes('first_win') && humanWon && s.gamesWon >= 1) toUnlock.push('first_win');
-                if (!unlocked.includes('survivor') && humanWon && humanDiceNow === 1) toUnlock.push('survivor');
-                if (!unlocked.includes('untouchable') && humanWon && humanDiceNow === humanDiceAtGameStart.current) toUnlock.push('untouchable');
-                if (!unlocked.includes('hard_mode') && humanWon && difficulty === 'hard') toUnlock.push('hard_mode');
-                if (!unlocked.includes('on_a_roll') && profile.consecutiveWins >= 3) toUnlock.push('on_a_roll');
-                if (!unlocked.includes('champion') && s.gamesWon >= 10) toUnlock.push('champion');
-                if (!unlocked.includes('veteran') && s.gamesPlayed >= 50) toUnlock.push('veteran');
+                if (!unlocked.includes('getting_hang') && s.gamesPlayed >= 10) toUnlock.push('getting_hang');
+                if (!unlocked.includes('dice_devotee') && s.gamesPlayed >= 100) toUnlock.push('dice_devotee');
+                if (humanWon) {
+                  if (!unlocked.includes('first_win') && s.gamesWon >= 1) toUnlock.push('first_win');
+                  if (!unlocked.includes('seasoned_gambler') && s.gamesWon >= 25) toUnlock.push('seasoned_gambler');
+                  if (!unlocked.includes('master_of_bluff') && s.gamesWon >= 100) toUnlock.push('master_of_bluff');
+                  if (!unlocked.includes('impossible_odds') && humanDiceNow === 1) toUnlock.push('impossible_odds');
+                  if (!unlocked.includes('dice_whisperer') && humanWasAtOneDie.current) toUnlock.push('dice_whisperer');
+                  if (!unlocked.includes('perfect_game') && humanDiceNow === humanDiceAtGameStart.current) toUnlock.push('perfect_game');
+                  if (!unlocked.includes('comeback_king') && humanMinDiceThisGame.current <= humanDiceAtGameStart.current - 3) toUnlock.push('comeback_king');
+                  if (!unlocked.includes('hot_streak') && profile.consecutiveWins >= 3) toUnlock.push('hot_streak');
+                  if (!unlocked.includes('unstoppable') && profile.consecutiveWins >= 7) toUnlock.push('unstoppable');
+                }
+                if (!unlocked.includes('night_owl') && hour >= 2 && hour < 5) toUnlock.push('night_owl');
+                if (!unlocked.includes('early_bird') && hour >= 5 && hour < 7) toUnlock.push('early_bird');
                 unlockAchievements(toUnlock);
+              }
+              if (isMultiplayer) {
+                // Track unique online opponents for Friendly Face / Social Butterfly
+                const opponentIds = gameState.players.filter(p => !p.isHuman).map(p => p.id);
+                if (opponentIds.length > 0) {
+                  const uniqueCount = ProfileStorage.recordOnlinePlayers(opponentIds);
+                  const mp = ProfileStorage.getProfile();
+                  const toUnlockOnline: string[] = [];
+                  if (!mp.achievements.includes('friendly_face') && uniqueCount >= 5) toUnlockOnline.push('friendly_face');
+                  if (!mp.achievements.includes('social_butterfly') && uniqueCount >= 20) toUnlockOnline.push('social_butterfly');
+                  if (toUnlockOnline.length) unlockAchievements(toUnlockOnline);
+                }
               }
               onBackToHome();
             }}

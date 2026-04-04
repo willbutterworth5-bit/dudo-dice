@@ -40,7 +40,8 @@ export interface PlayerProfile {
   vsComputerStats: PlayerStats;
   onlineStats: PlayerStats;
   achievements: string[];       // array of unlocked achievement IDs
-  consecutiveWins: number;      // persistent streak for "On A Roll"
+  consecutiveWins: number;      // persistent streak for Hot Streak / Unstoppable
+  uniquePlayerIds: string[];    // unique online opponent IDs for Friendly Face / Social Butterfly
   // Ranked Elo rating (synced from server, display-only on client)
   persistentPlayerId: string;   // stable UUID for rating identity
   rankedRating: number;         // default 1500
@@ -85,6 +86,7 @@ export const ProfileStorage = {
         // Migrate achievements and streak
         if (!parsed.achievements) parsed.achievements = [];
         if (parsed.consecutiveWins === undefined) parsed.consecutiveWins = 0;
+        if (!parsed.uniquePlayerIds) parsed.uniquePlayerIds = [];
         // Migrate country
         if (parsed.country === undefined) parsed.country = null;
         // Migrate ranked rating fields
@@ -111,6 +113,7 @@ export const ProfileStorage = {
       onlineStats: { ...EMPTY_STATS },
       achievements: [],
       consecutiveWins: 0,
+      uniquePlayerIds: [],
       persistentPlayerId: crypto.randomUUID(),
       rankedRating: 1500,
       rankedGamesPlayed: 0,
@@ -173,6 +176,20 @@ export const ProfileStorage = {
     profile.vsComputerStats.timesCalledAgainst++;
     if (successfulAgainstYou) profile.vsComputerStats.successfulCallsAgainst++;
     this.saveProfile(profile);
+  },
+
+  /** Record unique online opponent IDs (for Friendly Face / Social Butterfly). Returns new total unique count. */
+  recordOnlinePlayers(playerIds: string[]): number {
+    const profile = this.getProfile();
+    let changed = false;
+    for (const id of playerIds) {
+      if (!profile.uniquePlayerIds.includes(id)) {
+        profile.uniquePlayerIds.push(id);
+        changed = true;
+      }
+    }
+    if (changed) this.saveProfile(profile);
+    return profile.uniquePlayerIds.length;
   },
 
   /** Unlock an achievement. Returns true if it was newly unlocked. */
