@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import PrivacyPolicyModal from './PrivacyPolicyModal';
+import { APP_VERSION } from '../version';
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
@@ -47,7 +51,21 @@ export default function LandingPage() {
             </button>
           </div>
         </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-center gap-3 mt-5 text-xs text-white/40">
+          <span>{APP_VERSION}</span>
+          <span>·</span>
+          <button
+            onClick={() => setShowPrivacy(true)}
+            className="hover:text-white/70 transition-colors"
+          >
+            Privacy Policy
+          </button>
+        </div>
       </div>
+
+      {showPrivacy && <PrivacyPolicyModal onClose={() => setShowPrivacy(false)} />}
     </div>
   );
 }
