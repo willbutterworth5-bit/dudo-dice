@@ -1,18 +1,27 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import LandingPage from './components/LandingPage'
-import HomeScreen from './components/HomeScreen'
-import GameBoard from './components/GameBoard'
-import ProfileScreen from './components/ProfileScreen'
-import LobbyScreen from './components/LobbyScreen'
-import WaitingRoom from './components/WaitingRoom'
-import JoinRedirect from './components/JoinRedirect'
-import RulesPage from './components/RulesPage'
 import AnalyticsManager from './components/AnalyticsManager'
 import { GameProvider } from './context/GameContext'
 import { AuthProvider } from './context/AuthContext'
 import { useMultiplayerConnection } from './hooks/useMultiplayerConnection'
 import type { GameConfig } from './types/routes'
+
+const HomeScreen = lazy(() => import('./components/HomeScreen'))
+const GameBoard = lazy(() => import('./components/GameBoard'))
+const ProfileScreen = lazy(() => import('./components/ProfileScreen'))
+const LobbyScreen = lazy(() => import('./components/LobbyScreen'))
+const WaitingRoom = lazy(() => import('./components/WaitingRoom'))
+const JoinRedirect = lazy(() => import('./components/JoinRedirect'))
+const RulesPage = lazy(() => import('./components/RulesPage'))
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin w-8 h-8 border-2 border-white border-t-transparent rounded-full" />
+    </div>
+  )
+}
 
 // Wrapper for single-player game that reads config from location.state
 function SinglePlayerGame() {
@@ -139,22 +148,24 @@ function App() {
   return (
     <>
       <AnalyticsManager />
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/play" element={
-          <GameProvider>
-            <HomeScreen />
-          </GameProvider>
-        } />
-        <Route path="/game" element={<SinglePlayerGame />} />
-        <Route path="/profile" element={<ProfileScreen />} />
-        <Route path="/online" element={<LobbyScreen mp={mp} />} />
-        <Route path="/online/waiting" element={<OnlineWaiting mp={mp} />} />
-        <Route path="/online/game" element={<OnlineGame mp={mp} />} />
-        <Route path="/online/join/:roomCode" element={<JoinRedirect mp={mp} />} />
-        <Route path="/rules" element={<RulesPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/play" element={
+            <GameProvider>
+              <HomeScreen />
+            </GameProvider>
+          } />
+          <Route path="/game" element={<SinglePlayerGame />} />
+          <Route path="/profile" element={<ProfileScreen />} />
+          <Route path="/online" element={<LobbyScreen mp={mp} />} />
+          <Route path="/online/waiting" element={<OnlineWaiting mp={mp} />} />
+          <Route path="/online/game" element={<OnlineGame mp={mp} />} />
+          <Route path="/online/join/:roomCode" element={<JoinRedirect mp={mp} />} />
+          <Route path="/rules" element={<RulesPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
 
       {/* Reconnecting overlay — shown on top of the online game */}
       {mp.isReconnecting && location.pathname === '/online/game' && (
