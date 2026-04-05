@@ -263,14 +263,14 @@ export default function ProfileScreen() {
                 )}
                 {/* Elo rating below photo */}
                 <div className="flex items-center justify-center mt-2">
-                  <span className="text-white font-bold text-base">{profile.rankedRating ?? 1500}</span>
-                  <span className="text-white/40 text-sm ml-1">Ranking</span>
+                  <span className="text-white/40 text-sm">Ranking:</span>
+                  <span className="text-white font-bold text-base ml-1">{profile.rankedRating ?? 1500}</span>
                   {user && <span className="w-1.5 h-1.5 rounded-full bg-green-400 ml-1.5" title="Synced" />}
                   <span className="relative group inline-flex items-center ml-1">
                     <span className="w-3.5 h-3.5 rounded-full bg-white/20 text-white/60 text-[9px] font-bold flex items-center justify-center cursor-help">i</span>
                     <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none">
                       <span className="block text-xs text-white/90 bg-indigo-900 border border-white/20 rounded-lg p-2 shadow-lg text-left">
-                        This is an Elo ranking based on your results online versus other players, taking into account their rating. Starts at 1500.
+                        This is an Elo ranking based on your results online versus other players, taking into account their rating.
                       </span>
                     </span>
                   </span>
