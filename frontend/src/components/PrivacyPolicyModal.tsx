@@ -22,63 +22,83 @@ export default function PrivacyPolicyModal({ onClose }: Props) {
           </button>
         </div>
 
-        <div className="overflow-y-auto px-5 py-4 space-y-4 text-sm text-white/80 leading-relaxed">
-          <p className="text-white/50 text-xs">Last updated: January 2026</p>
+        <div className="overflow-y-auto scrollbar-indigo px-5 py-4 space-y-4 text-sm text-white/80 leading-relaxed">
+          <p className="text-white/50 text-xs">Last updated: April 2026</p>
 
           <section>
-            <h3 className="font-bold text-white mb-1">What we collect</h3>
+            <h3 className="font-bold text-white mb-1">Who we are</h3>
             <p>
-              Dudo Dice stores your game statistics, achievements, and profile settings locally in your browser
-              (localStorage). If you create an account, this data is also stored in our database so you can
-              access it across devices.
+              Dudo Dice is an online Perudo (Liar's Dice) game. This policy explains what personal data we
+              collect, why we collect it, and your rights under the UK GDPR and EU GDPR.
             </p>
           </section>
 
           <section>
-            <h3 className="font-bold text-white mb-1">Account data</h3>
+            <h3 className="font-bold text-white mb-1">What data we collect and why</h3>
+            <ul className="list-disc list-inside space-y-1">
+              <li><span className="text-white font-medium">Email address</span> — to identify your account and send password-reset emails. Legal basis: contract.</li>
+              <li><span className="text-white font-medium">Display name and country</span> — to personalise your profile. Legal basis: contract.</li>
+              <li><span className="text-white font-medium">Date of birth</span> — to verify you are 13 or older (required to use the service). Not shown publicly. Legal basis: legal obligation / legitimate interest.</li>
+              <li><span className="text-white font-medium">Game statistics and achievements</span> — to track your progress and display your profile. Legal basis: contract.</li>
+              <li><span className="text-white font-medium">Elo rating</span> — to match you with similarly-skilled opponents in ranked play. Legal basis: contract.</li>
+              <li><span className="text-white font-medium">Feedback messages</span> — to respond to bug reports and suggestions. Legal basis: legitimate interest. Providing your email is optional.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3 className="font-bold text-white mb-1">Guest play</h3>
             <p>
-              If you sign in with Google or create an email account, we store your email address, display name,
-              country, and date of birth. Your date of birth is used only to verify you meet the minimum age
-              requirement (13+) and is never shared publicly.
+              If you play without an account, game data is stored only in your browser's localStorage. We do
+              not receive or process this data. It is deleted when you clear your browser data.
             </p>
           </section>
 
           <section>
-            <h3 className="font-bold text-white mb-1">Game data</h3>
+            <h3 className="font-bold text-white mb-1">Third-party processors</h3>
             <p>
-              We store your win/loss record, Dudo call statistics, achievements, and Elo rating. This data is
-              used to display your profile and, for ranked play, to match you with similarly-rated opponents.
-            </p>
-          </section>
-
-          <section>
-            <h3 className="font-bold text-white mb-1">Feedback</h3>
-            <p>
-              If you submit feedback, we store the message content and optionally your email address if provided.
-              This is used solely to respond to your feedback and improve the game.
-            </p>
-          </section>
-
-          <section>
-            <h3 className="font-bold text-white mb-1">Third parties</h3>
-            <p>
-              We use Supabase to store account and game data. Authentication via Google OAuth is handled by
-              Google. We do not sell or share your data with any other third parties.
+              We use <span className="text-white font-medium">Supabase</span> (EU region) to store account and game data, and <span className="text-white font-medium">Google OAuth</span> to enable sign-in with Google.
+              Both act as data processors under written agreements. We do not sell your data to any third party.
             </p>
           </section>
 
           <section>
             <h3 className="font-bold text-white mb-1">Data retention</h3>
             <p>
-              You can delete your account at any time by contacting us. Guest data stored in localStorage
-              is cleared when you clear your browser data.
+              Account data is retained for as long as your account is active. If you request deletion, we will
+              erase your personal data within 30 days. Game statistics may be retained in anonymised,
+              aggregated form for analytics after deletion.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="font-bold text-white mb-1">Your rights</h3>
+            <p>Under UK/EU GDPR you have the right to:</p>
+            <ul className="list-disc list-inside space-y-1 mt-1">
+              <li>Access the personal data we hold about you</li>
+              <li>Correct inaccurate data</li>
+              <li>Request erasure of your data ("right to be forgotten")</li>
+              <li>Restrict or object to processing</li>
+              <li>Data portability (receive your data in a machine-readable format)</li>
+              <li>Withdraw consent at any time (where processing is based on consent)</li>
+            </ul>
+            <p className="mt-1">
+              To exercise any of these rights, use the feedback form in the app. We will respond within 30 days.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="font-bold text-white mb-1">Cookies</h3>
+            <p>
+              We do not use tracking or advertising cookies. The app uses localStorage for session and profile
+              data only.
             </p>
           </section>
 
           <section>
             <h3 className="font-bold text-white mb-1">Contact</h3>
             <p>
-              For privacy questions or data deletion requests, use the feedback form in the app.
+              For privacy questions, data requests, or complaints, use the feedback form in the app. You also
+              have the right to lodge a complaint with your national supervisory authority (e.g. the ICO in the UK).
             </p>
           </section>
         </div>
