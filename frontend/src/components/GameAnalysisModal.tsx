@@ -20,7 +20,6 @@ function ProbBadge({ prob }: { prob: number }) {
 
 function InfoTooltip({ text, align = 'left' }: { text: string; align?: 'left' | 'right' }) {
   const [visible, setVisible] = useState(false);
-
   return (
     <span className="relative inline-flex items-center">
       <button
@@ -126,6 +125,71 @@ function MissedDudosPage({
   );
 }
 
+function DudoCallsPage({
+  roundHistory,
+  players,
+  onBack,
+}: {
+  roundHistory: RoundResult[];
+  players: Player[];
+  onBack: () => void;
+}) {
+  const human = players.find(p => p.isHuman);
+  const calls = roundHistory.filter(r => r.challengerId === human?.id && r.challengeType === 'dudo');
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex items-center gap-2 border-b border-white/20 px-4 py-2">
+        <button onClick={onBack} className="text-sm text-white/60 hover:text-white">&larr; Back</button>
+        <h3 className="text-sm font-bold text-white">Your DUDO Calls</h3>
+      </div>
+      <div className="scrollbar-indigo flex-1 overflow-y-auto px-4 py-3">
+        {calls.length === 0 ? (
+          <p className="text-center text-xs italic text-white/40">You made no DUDO calls this game.</p>
+        ) : (
+          <div className="space-y-2">
+            {calls.map((round, idx) => {
+              const won = round.winnerId === human?.id;
+              const bidder = players.find(p => p.id === round.bidderId);
+              const bidderColor = bidder ? PLAYER_COLOR_MAP[bidder.color] || '#6B7280' : '#6B7280';
+              const lastBid = round.bids[round.bids.length - 1];
+              const prob = lastBid ? probabilityFromRecord(lastBid) : null;
+              return (
+                <div
+                  key={idx}
+                  className={`rounded-lg p-2.5 ring-1 ${
+                    won
+                      ? 'bg-green-500/15 ring-green-400/30'
+                      : 'bg-red-500/15 ring-red-400/30'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <p className={`text-[10px] font-bold uppercase tracking-wider ${won ? 'text-green-300/70' : 'text-red-300/70'}`}>
+                      Round {round.round} — {won ? 'Correct ✓' : 'Wrong ✗'}
+                    </p>
+                    {prob !== null && <ProbBadge prob={prob} />}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: bidderColor }} />
+                    <span className="text-xs text-white/70">
+                      {bidder?.isHuman ? 'You' : bidder?.name ?? 'Unknown'} bid
+                    </span>
+                    <BidDisplay quantity={round.challengedBid.quantity} faceValue={round.challengedBid.faceValue} />
+                  </div>
+                  <p className="mt-1 text-[11px] text-white/60">
+                    Actual: <span className="font-bold text-white">{round.actualCount}x</span>{' '}
+                    {won ? '— bid was a bluff.' : '— bid was real, you lost a die.'}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function RoundDetail({
   round,
   players,
@@ -167,10 +231,7 @@ function RoundDetail({
               {challenger?.isHuman ? 'You' : challenger?.name}{' '}
               {round.challengeType === 'calza' ? 'called CALZA on' : 'called DUDO on'}
             </span>
-            <BidDisplay
-              quantity={round.challengedBid.quantity}
-              faceValue={round.challengedBid.faceValue}
-            />
+            <BidDisplay quantity={round.challengedBid.quantity} faceValue={round.challengedBid.faceValue} />
             <span className="flex items-center gap-1">
               Actual:
               <span className="font-bold text-white">{round.actualCount}x</span>
@@ -209,9 +270,7 @@ function RoundDetail({
 
       <div className="rounded-lg bg-white/10 p-3">
         <div className="mb-1.5 flex items-center gap-1.5">
-          <p className="text-xs font-bold uppercase tracking-wider text-white/50">
-            Bid Timeline
-          </p>
+          <p className="text-xs font-bold uppercase tracking-wider text-white/50">Bid Timeline</p>
           <InfoTooltip text="Every bid in order. The percentage reflects how likely the bid was from your perspective using your known dice and the remaining dice in play." />
         </div>
         <div className="space-y-0.5">
@@ -221,23 +280,15 @@ function RoundDetail({
             const name = player?.isHuman ? 'You' : player?.name ?? 'Unknown';
             const prob = probabilityFromRecord(record);
             const isFinal = index === round.bids.length - 1;
-
             return (
               <div key={index}>
                 <div
                   className={`flex items-center gap-2 rounded-lg px-2 py-1 ${
-                    isFinal
-                      ? 'border border-dashed border-white/30 bg-white/15'
-                      : 'bg-white/8'
+                    isFinal ? 'border border-dashed border-white/30 bg-white/15' : 'bg-white/8'
                   }`}
                 >
-                  <div
-                    className="h-2 w-2 flex-shrink-0 rounded-full"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span className="flex-1 truncate text-xs font-semibold text-white/80">
-                    {name}
-                  </span>
+                  <div className="h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: color }} />
+                  <span className="flex-1 truncate text-xs font-semibold text-white/80">{name}</span>
                   <BidDisplay quantity={record.bid.quantity} faceValue={record.bid.faceValue} />
                   <ProbBadge prob={prob} />
                 </div>
@@ -252,20 +303,13 @@ function RoundDetail({
 
       {humanWasChallenger && humanLost && (
         <div className="rounded-lg bg-white/10 p-2.5">
-          <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-white/50">
-            What You Could Have Bid
-          </p>
+          <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-white/50">What You Could Have Bid</p>
           {alternatives.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {alternatives.map((alternative, index) => (
                 <div key={index} className="flex items-center gap-1">
-                  <BidDisplay
-                    quantity={alternative.quantity}
-                    faceValue={alternative.faceValue}
-                  />
-                  <span className="text-xs text-white/50">
-                    ({alternative.actualCount} on board)
-                  </span>
+                  <BidDisplay quantity={alternative.quantity} faceValue={alternative.faceValue} />
+                  <span className="text-xs text-white/50">({alternative.actualCount} on board)</span>
                 </div>
               ))}
             </div>
@@ -285,26 +329,16 @@ function RoundDetail({
         <div className="space-y-1">
           {round.allDice.map(({ playerId, dice }) => {
             const player = players.find(candidate => candidate.id === playerId);
-            if (!player || dice.length === 0) {
-              return null;
-            }
-
+            if (!player || dice.length === 0) return null;
             const color = PLAYER_COLOR_MAP[player.color] || '#6B7280';
             const name = player.isHuman ? 'You' : player.name;
-
             return (
               <div key={playerId} className="flex items-center gap-2">
-                <div
-                  className="h-2 w-2 flex-shrink-0 rounded-full"
-                  style={{ backgroundColor: color }}
-                />
+                <div className="h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: color }} />
                 <span className="w-14 truncate text-xs text-white/70">{name}</span>
                 <div className="flex gap-0.5">
-                  {[...dice].sort((left, right) => left - right).map((dieValue, dieIndex) => (
-                    <div
-                      key={dieIndex}
-                      className="flex h-4 w-4 items-center justify-center rounded bg-white"
-                    >
+                  {[...dice].sort((a, b) => a - b).map((dieValue, dieIndex) => (
+                    <div key={dieIndex} className="flex h-4 w-4 items-center justify-center rounded bg-white">
                       <DiceFace value={dieValue} size="sm" />
                     </div>
                   ))}
@@ -320,9 +354,7 @@ function RoundDetail({
 
 function computeSummaryStats(roundHistory: RoundResult[], players: Player[]) {
   const human = players.find(player => player.isHuman);
-  if (!human || roundHistory.length === 0) {
-    return null;
-  }
+  if (!human || roundHistory.length === 0) return null;
 
   const humanBids = roundHistory.flatMap(round =>
     round.bids.filter(record => record.playerId === human.id),
@@ -332,34 +364,21 @@ function computeSummaryStats(roundHistory: RoundResult[], players: Player[]) {
       ? humanBids.reduce((sum, bid) => sum + probabilityFromRecord(bid), 0) / humanBids.length
       : null;
 
-  const humanChallenges = roundHistory.filter(round => round.challengerId === human.id);
+  const humanChallenges = roundHistory.filter(round => round.challengerId === human.id && round.challengeType === 'dudo');
   const correctChallenges = humanChallenges.filter(round => round.winnerId === human.id);
 
   const missedOpportunities = roundHistory.filter(round => {
-    if (round.challengerId === human.id) {
-      return false;
-    }
-
+    if (round.challengerId === human.id) return false;
     const flatDice = round.allDice.flatMap(playerDice => playerDice.dice);
     const wasPalifico = round.bids[0]?.palificoMode ?? false;
-
     return round.bids.some((bid, index) => {
-      if (bid.playerId === human.id) {
-        return false;
-      }
-
+      if (bid.playerId === human.id) return false;
       const nextBid = round.bids[index + 1];
-      if (!nextBid || nextBid.playerId !== human.id) {
-        return false;
-      }
-
+      if (!nextBid || nextBid.playerId !== human.id) return false;
       const actual = flatDice.filter(dieValue => {
-        if (wasPalifico) {
-          return dieValue === bid.bid.faceValue;
-        }
+        if (wasPalifico) return dieValue === bid.bid.faceValue;
         return dieValue === bid.bid.faceValue || dieValue === 1;
       }).length;
-
       return actual < bid.bid.quantity;
     });
   });
@@ -369,24 +388,19 @@ function computeSummaryStats(roundHistory: RoundResult[], players: Player[]) {
     correctChallenges: correctChallenges.length,
     totalChallenges: humanChallenges.length,
     missedOpportunities: missedOpportunities.length,
-    missedRounds: missedOpportunities.map(round => round.round),
   };
 }
 
-export default function GameAnalysisModal({
-  roundHistory,
-  players,
-  onClose,
-}: GameAnalysisModalProps) {
+type SubPage = 'main' | 'missed' | 'dudos';
+
+export default function GameAnalysisModal({ roundHistory, players, onClose }: GameAnalysisModalProps) {
   const [selectedRound, setSelectedRound] = useState(
     roundHistory[roundHistory.length - 1]?.round ?? 1,
   );
-  const [showMissedPage, setShowMissedPage] = useState(false);
+  const [subPage, setSubPage] = useState<SubPage>('main');
 
   const stats = computeSummaryStats(roundHistory, players);
-  const selectedResult = roundHistory.find(round => round.round === selectedRound)
-    ?? roundHistory[0]
-    ?? null;
+  const selectedResult = roundHistory.find(round => round.round === selectedRound) ?? roundHistory[0] ?? null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -394,59 +408,54 @@ export default function GameAnalysisModal({
         className="flex w-full max-w-sm flex-col rounded-xl bg-gradient-to-br from-indigo-700 to-purple-900 shadow-2xl"
         style={{ maxHeight: '88vh' }}
       >
+        {/* Header */}
         <div className="flex flex-shrink-0 items-center justify-between border-b border-white/20 px-4 py-3">
           <h2 className="text-base font-bold text-white">Game Analysis</h2>
-          <button
-            onClick={onClose}
-            className="px-1 text-lg leading-none text-white/60 hover:text-white"
-          >
-            x
-          </button>
+          <button onClick={onClose} className="px-1 text-lg leading-none text-white/60 hover:text-white">×</button>
         </div>
 
-        {stats && (
-          <div className="flex flex-shrink-0 gap-3 border-b border-white/20 px-4 py-3">
-            {stats.avgProb !== null && (
-              <div className="flex-1 rounded-lg bg-white/10 p-2 text-center">
-                <p className="text-lg font-bold text-white">{Math.round(stats.avgProb * 100)}%</p>
-                <p className="text-xs text-white/50">Avg bid probability</p>
-              </div>
-            )}
-            <div className="flex-1 rounded-lg bg-white/10 p-2 text-center">
-              <p className="text-lg font-bold text-white">
-                {stats.correctChallenges}/{stats.totalChallenges}
-              </p>
-              <p className="text-xs text-white/50">DUDO calls</p>
-            </div>
-            <button
-              className={`flex-1 rounded-lg p-2 text-center transition-colors ${
-                stats.missedOpportunities > 0
-                  ? 'bg-white/10 hover:bg-amber-500/20'
-                  : 'bg-white/10'
-              }`}
-              onClick={() => {
-                if (stats.missedOpportunities > 0) {
-                  setShowMissedPage(true);
-                }
-              }}
-            >
-              <p className="text-lg font-bold text-white">{stats.missedOpportunities}</p>
-              <p className="text-xs text-white/50">
-                Missed DUDOs
-              </p>
-            </button>
-          </div>
-        )}
-
-        {showMissedPage ? (
-          <MissedDudosPage
-            roundHistory={roundHistory}
-            players={players}
-            onBack={() => setShowMissedPage(false)}
-          />
+        {subPage === 'missed' ? (
+          <MissedDudosPage roundHistory={roundHistory} players={players} onBack={() => setSubPage('main')} />
+        ) : subPage === 'dudos' ? (
+          <DudoCallsPage roundHistory={roundHistory} players={players} onBack={() => setSubPage('main')} />
         ) : (
           <>
-            <div className="flex-shrink-0 border-b border-white/20 px-4 py-2">
+            {/* Game Analysis summary */}
+            {stats && (
+              <div className="flex-shrink-0 border-b border-white/20 px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">Summary</p>
+                <div className="flex gap-3 items-stretch">
+                  {stats.avgProb !== null && (
+                    <div className="flex-1 rounded-lg bg-white/10 p-2 text-center flex flex-col items-center justify-center">
+                      <p className="text-lg font-bold text-white leading-tight">{Math.round(stats.avgProb * 100)}%</p>
+                      <p className="text-[11px] text-white/50 leading-tight mt-0.5">Avg bid probability</p>
+                    </div>
+                  )}
+                  <button
+                    className="flex-1 rounded-lg bg-white/10 p-2 text-center flex flex-col items-center justify-center hover:bg-white/20 transition-colors"
+                    onClick={() => setSubPage('dudos')}
+                  >
+                    <p className="text-lg font-bold text-white leading-tight">
+                      {stats.correctChallenges}/{stats.totalChallenges}
+                    </p>
+                    <p className="text-[11px] text-white/50 leading-tight mt-0.5">DUDO calls</p>
+                  </button>
+                  <button
+                    className={`flex-1 rounded-lg p-2 text-center flex flex-col items-center justify-center transition-colors ${
+                      stats.missedOpportunities > 0 ? 'bg-white/10 hover:bg-amber-500/20' : 'bg-white/10 opacity-60'
+                    }`}
+                    onClick={() => { if (stats.missedOpportunities > 0) setSubPage('missed'); }}
+                  >
+                    <p className="text-lg font-bold text-white leading-tight">{stats.missedOpportunities}</p>
+                    <p className="text-[11px] text-white/50 leading-tight mt-0.5">Missed DUDOs</p>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Round by round section */}
+            <div className="flex-shrink-0 border-b border-white/20 px-4 pt-3 pb-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">Round by Round</p>
               <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                 {roundHistory.map(round => (
                   <button
@@ -464,10 +473,7 @@ export default function GameAnalysisModal({
 
             <div className="scrollbar-indigo flex-1 overflow-y-auto px-4 py-3">
               {selectedResult ? (
-                <RoundDetail
-                  round={selectedResult}
-                  players={players}
-                />
+                <RoundDetail round={selectedResult} players={players} />
               ) : (
                 <p className="text-xs italic text-white/40">No data for this round.</p>
               )}
@@ -476,10 +482,7 @@ export default function GameAnalysisModal({
         )}
 
         <div className="flex-shrink-0 border-t border-white/20 px-4 py-3">
-          <button
-            onClick={onClose}
-            className="btn-3d-accent w-full rounded-xl py-2 text-sm font-bold text-white"
-          >
+          <button onClick={onClose} className="btn-3d-accent w-full rounded-xl py-2 text-sm font-bold text-white">
             Close
           </button>
         </div>
