@@ -22,7 +22,7 @@ export default function AnalyticsManager() {
   }, []);
 
   useEffect(() => {
-    if (consent !== 'all') return;
+    if (consent === null) return;
 
     const path = `${location.pathname}${location.search}${location.hash}`;
     trackPageView(path, document.title);

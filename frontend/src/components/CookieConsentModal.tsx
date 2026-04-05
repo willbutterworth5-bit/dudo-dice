@@ -29,8 +29,9 @@ export default function CookieConsentModal({ onAccept }: Props) {
               <div>
                 <h2 className="text-base font-bold text-white">Cookie Preferences</h2>
                 <p className="text-sm text-white/70 mt-1">
-                  We use cookies to keep the game working and, with your permission, to understand how
-                  people use Dudo Dice so we can improve it. Read our{' '}
+                  We use storage to keep the game working. We also use limited, cookie-free measurement,
+                  and with your permission we use analytics cookies to better understand how people use
+                  Dudo Dice so we can improve it. Read our{' '}
                   <button
                     onClick={() => setShowPrivacy(true)}
                     className="underline text-white/80 hover:text-white transition-colors"
@@ -48,14 +49,14 @@ export default function CookieConsentModal({ onAccept }: Props) {
                   <div className="mt-0.5 w-4 h-4 rounded-full bg-green-400 flex-shrink-0" />
                   <div>
                     <p className="font-semibold text-white">Essential cookies <span className="font-normal text-white/50">(always on)</span></p>
-                    <p className="text-white/60">Required for login, game state, and profile storage. Cannot be disabled.</p>
+                    <p className="text-white/60">Required for login, game state, and profile storage. Includes limited cookie-free measurement so we can monitor basic usage without analytics cookies.</p>
                   </div>
                 </div>
                 <div className="flex gap-3">
                   <div className="mt-0.5 w-4 h-4 rounded-full bg-blue-400 flex-shrink-0" />
                   <div>
                     <p className="font-semibold text-white">Analytics cookies <span className="font-normal text-white/50">(optional)</span></p>
-                    <p className="text-white/60">Help us understand which features are used so we can improve the game. No personal data is sold.</p>
+                    <p className="text-white/60">Allow Google Analytics cookies for better measurement of repeat visits and player journeys. No personal data is sold.</p>
                   </div>
                 </div>
               </div>

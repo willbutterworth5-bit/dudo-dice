@@ -58,8 +58,8 @@ export default function PrivacyPolicyModal({ onClose }: Props) {
           <section>
             <h3 className="font-bold text-white mb-1">Third-party processors</h3>
             <p>
-              We use <span className="text-white font-medium">Supabase</span> (EU region) to store account and game data, and <span className="text-white font-medium">Google OAuth</span> to enable sign-in with Google.
-              Both act as data processors under written agreements. We do not sell your data to any third party.
+              We use <span className="text-white font-medium">Supabase</span> (EU region) to store account and game data, <span className="text-white font-medium">Google OAuth</span> to enable sign-in with Google, and <span className="text-white font-medium">Google Analytics</span> for website measurement.
+              These providers act as processors or independent service providers depending on the feature used. We do not sell your data to any third party.
             </p>
           </section>
 
@@ -91,8 +91,10 @@ export default function PrivacyPolicyModal({ onClose }: Props) {
           <section>
             <h3 className="font-bold text-white mb-1">Cookies</h3>
             <p>
-              We do not use tracking or advertising cookies. The app uses localStorage for session and profile
-              data only.
+              The app uses localStorage for session and profile data. We do not use advertising cookies. If you
+              choose <span className="text-white font-medium">Essential only</span>, Google Analytics is limited to
+              cookieless measurement with analytics storage denied. If you choose <span className="text-white font-medium">Accept all</span>,
+              Google Analytics may also use analytics cookies for fuller measurement of visits and navigation.
             </p>
           </section>
 

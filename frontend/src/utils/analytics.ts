@@ -2,14 +2,19 @@ import type { CookieConsent } from './cookieConsent';
 
 const MEASUREMENT_ID = 'G-RMBXWLR658';
 const SCRIPT_ID = 'dudo-gtag-script';
-const DISABLE_KEY = `ga-disable-${MEASUREMENT_ID}`;
+
+const DEFAULT_CONSENT = {
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  analytics_storage: 'denied',
+} as const;
 
 declare global {
   interface Window {
     dataLayer?: unknown[];
     gtag?: (...args: unknown[]) => void;
     __dudoAnalyticsConfigured?: boolean;
-    [DISABLE_KEY]?: boolean;
   }
 }
 
@@ -37,9 +42,9 @@ function updateConsentMode(granted: boolean): void {
   if (!window.gtag) return;
 
   window.gtag('consent', 'update', {
-    ad_storage: 'denied',
-    ad_user_data: 'denied',
-    ad_personalization: 'denied',
+    ad_storage: DEFAULT_CONSENT.ad_storage,
+    ad_user_data: DEFAULT_CONSENT.ad_user_data,
+    ad_personalization: DEFAULT_CONSENT.ad_personalization,
     analytics_storage: granted ? 'granted' : 'denied',
   });
 }
@@ -47,26 +52,23 @@ function updateConsentMode(granted: boolean): void {
 export function applyAnalyticsConsent(consent: CookieConsent | null): void {
   ensureGtagStub();
 
-  const granted = consent === 'all';
-  window[DISABLE_KEY] = !granted;
-
-  if (!granted) {
-    updateConsentMode(false);
-    return;
-  }
-
-  ensureAnalyticsScript();
-  updateConsentMode(true);
-
   if (!window.__dudoAnalyticsConfigured) {
+    window.gtag?.('consent', 'default', DEFAULT_CONSENT);
     window.gtag?.('js', new Date());
     window.gtag?.('config', MEASUREMENT_ID, { send_page_view: false });
     window.__dudoAnalyticsConfigured = true;
   }
+
+  if (consent === null) {
+    return;
+  }
+
+  ensureAnalyticsScript();
+  updateConsentMode(consent === 'all');
 }
 
 export function trackPageView(path: string, title: string): void {
-  if (window[DISABLE_KEY] || !window.__dudoAnalyticsConfigured || !window.gtag) {
+  if (!window.__dudoAnalyticsConfigured || !window.gtag) {
     return;
   }
 
