@@ -5,11 +5,15 @@ import { ACHIEVEMENTS } from '../utils/achievements';
 import { COUNTRIES } from '../utils/countries';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from './AuthModal';
+import PrivacyPolicyModal from './PrivacyPolicyModal';
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, session, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteStatus, setDeleteStatus] = useState<'idle' | 'deleting' | 'error'>('idle');
   const [profile, setProfile] = useState<PlayerProfile>(ProfileStorage.getProfile());
   const [name, setName] = useState(profile.name);
   const [photo, setPhoto] = useState<string | null>(profile.photo);
@@ -120,6 +124,49 @@ export default function ProfileScreen() {
     if (s.timesCalledAgainst === 0) return 0;
     return Math.round((s.successfulCallsAgainst / s.timesCalledAgainst) * 100);
   }
+
+  const handleExportData = () => {
+    const p = ProfileStorage.getProfile();
+    const exportData = {
+      exportDate: new Date().toISOString(),
+      name: p.name,
+      country: p.country,
+      vsComputerStats: p.vsComputerStats,
+      onlineStats: p.onlineStats,
+      achievements: p.achievements,
+      rankedRating: p.rankedRating,
+      rankedGamesPlayed: p.rankedGamesPlayed,
+      rankedWins: p.rankedWins,
+      rankedLosses: p.rankedLosses,
+      consecutiveWins: p.consecutiveWins,
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dudo-dice-data-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleteStatus('deleting');
+    try {
+      if (user && session) {
+        const res = await fetch('/api/account', {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (!res.ok) throw new Error('Server error');
+        await signOut();
+      }
+      // Clear all local data
+      localStorage.clear();
+      navigate('/');
+    } catch {
+      setDeleteStatus('error');
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 relative">
@@ -474,7 +521,53 @@ export default function ProfileScreen() {
         </div>
       </div>
 
+      {/* Data & Privacy footer */}
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-2 text-xs text-white/30">
+        <button onClick={handleExportData} className="hover:text-white/60 transition-colors">
+          Export my data
+        </button>
+        <span>·</span>
+        <button onClick={() => setShowPrivacy(true)} className="hover:text-white/60 transition-colors">
+          Privacy Policy
+        </button>
+        <span>·</span>
+        <button onClick={() => setShowDeleteConfirm(true)} className="hover:text-red-400 transition-colors">
+          Delete account
+        </button>
+      </div>
+
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+      {showPrivacy && <PrivacyPolicyModal onClose={() => setShowPrivacy(false)} />}
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => { if (deleteStatus !== 'deleting') setShowDeleteConfirm(false); }}>
+          <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl w-full max-w-sm p-5 animate-modal-enter" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-white mb-2">Delete Account</h2>
+            <p className="text-sm text-white/70 mb-4">
+              This will permanently delete your account and all associated data — stats, achievements, and rating. This cannot be undone.
+            </p>
+            {deleteStatus === 'error' && (
+              <p className="text-red-300 text-sm mb-3">Something went wrong. Please try again.</p>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleteStatus === 'deleting'}
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm btn-glass"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteStatus === 'deleting'}
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-red-500 hover:bg-red-600 text-white transition-colors disabled:opacity-50"
+              >
+                {deleteStatus === 'deleting' ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

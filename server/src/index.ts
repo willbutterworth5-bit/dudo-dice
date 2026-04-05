@@ -113,6 +113,33 @@ app.post('/api/feedback', (req, res) => {
   res.json({ ok: true });
 });
 
+// Account deletion endpoint
+app.delete('/api/account', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) { res.status(401).json({ error: 'No token' }); return; }
+  if (!supabase) { res.status(503).json({ error: 'Auth not configured' }); return; }
+
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) { res.status(401).json({ error: 'Invalid token' }); return; }
+
+  // Delete all user data rows (RLS bypassed via service key)
+  await supabase.from('player_achievements').delete().eq('user_id', user.id);
+  await supabase.from('player_ratings').delete().eq('id', user.id);
+  await supabase.from('player_stats').delete().eq('id', user.id);
+  await supabase.from('profiles').delete().eq('id', user.id);
+
+  // Delete the auth user
+  const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
+  if (deleteError) {
+    console.error('Failed to delete auth user:', deleteError.message);
+    res.status(500).json({ error: 'Failed to delete account' });
+    return;
+  }
+
+  console.log(`🗑️ Account deleted: ${user.id}`);
+  res.json({ ok: true });
+});
+
 // Health check
 app.get('/api/health', async (_req, res) => {
   const rooms = await roomManager.getPublicRooms();

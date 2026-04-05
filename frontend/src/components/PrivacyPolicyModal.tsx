@@ -41,6 +41,8 @@ export default function PrivacyPolicyModal({ onClose }: Props) {
               <li><span className="text-white font-medium">Date of birth</span> — to verify you are 13 or older (required to use the service). Not shown publicly. Legal basis: legal obligation / legitimate interest.</li>
               <li><span className="text-white font-medium">Game statistics and achievements</span> — to track your progress and display your profile. Legal basis: contract.</li>
               <li><span className="text-white font-medium">Elo rating</span> — to match you with similarly-skilled opponents in ranked play. Legal basis: contract.</li>
+              <li><span className="text-white font-medium">Profile photo</span> — stored locally in your browser and optionally synced to your account to display on your profile. Legal basis: contract. You can remove it at any time from the Profile screen.</li>
+              <li><span className="text-white font-medium">IP address</span> — processed transiently by our server when you connect to online games. Not stored persistently. Legal basis: legitimate interest (preventing abuse).</li>
               <li><span className="text-white font-medium">Feedback messages</span> — to respond to bug reports and suggestions. Legal basis: legitimate interest. Providing your email is optional.</li>
             </ul>
           </section>
@@ -82,7 +84,7 @@ export default function PrivacyPolicyModal({ onClose }: Props) {
               <li>Withdraw consent at any time (where processing is based on consent)</li>
             </ul>
             <p className="mt-1">
-              To exercise any of these rights, use the feedback form in the app. We will respond within 30 days.
+              You can exercise these rights directly in the app: use <span className="text-white font-medium">Export my data</span> on your profile page to download a copy of your data, and <span className="text-white font-medium">Delete account</span> to permanently erase your account. For other requests, use the feedback form. We will respond within 30 days.
             </p>
           </section>
 
