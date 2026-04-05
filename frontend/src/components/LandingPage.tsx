@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PrivacyPolicyModal from './PrivacyPolicyModal';
+import CookieConsentModal from './CookieConsentModal';
 import { APP_VERSION } from '../version';
+import { hasConsent } from '../utils/cookieConsent';
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [consentGiven, setConsentGiven] = useState(hasConsent);
+  const [showCookiePrefs, setShowCookiePrefs] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackCategory, setFeedbackCategory] = useState<'bug' | 'suggestion' | 'other'>('suggestion');
@@ -56,7 +60,7 @@ export default function LandingPage() {
         </div>
 
         {/* Mode selection card */}
-        <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl p-6">
+        <div className={`bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl p-6 transition-opacity duration-200 ${!consentGiven ? 'opacity-40 pointer-events-none select-none' : ''}`}>
           <h2 className="text-xl font-bold text-white text-center mb-6">
             Choose Game Mode
           </h2>
@@ -88,11 +92,19 @@ export default function LandingPage() {
             Privacy Policy
           </button>
           <span>·</span>
+          <button onClick={() => setShowCookiePrefs(true)} className="hover:text-white/70 transition-colors">
+            Cookie Preferences
+          </button>
+          <span>·</span>
           <button onClick={() => setShowFeedback(true)} className="hover:text-white/70 transition-colors">
             Share feedback
           </button>
         </div>
       </div>
+
+      {(!consentGiven || showCookiePrefs) && (
+        <CookieConsentModal onAccept={() => { setConsentGiven(true); setShowCookiePrefs(false); }} />
+      )}
 
       {showPrivacy && <PrivacyPolicyModal onClose={() => setShowPrivacy(false)} />}
 
