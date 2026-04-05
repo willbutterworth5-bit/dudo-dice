@@ -108,7 +108,7 @@ export default function ProfileScreen() {
     ? COUNTRIES.find(c => c.code === country)?.name
     : null;
 
-  const [activeTab, setActiveTab] = useState<'vs-computer' | 'online' | 'achievements'>('vs-computer');
+  const [activeTab, setActiveTab] = useState<'vs-computer' | 'online' | 'achievements'>('online');
 
   const winRate = ProfileStorage.getWinRate();
   const dudoSuccessRate = ProfileStorage.getDudoSuccessRate();
@@ -236,33 +236,31 @@ export default function ProfileScreen() {
                   id="photo-upload"
                 />
                 {/* Clickable photo circle */}
-                <label htmlFor="photo-upload" className="cursor-pointer block relative group">
-                  {photo ? (
-                    <>
-                      <img
-                        src={photo}
-                        alt="Profile"
-                        className="w-32 h-32 rounded-full object-cover border-2 border-white/30 shadow-md"
-                      />
-                      {/* Hover overlay */}
-                      <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span className="text-white text-2xl">📷</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.preventDefault(); handleRemovePhoto(); }}
-                        className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow"
-                      >
-                        ×
-                      </button>
-                    </>
-                  ) : (
+                {photo ? (
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    className="cursor-pointer block relative group"
+                    title="Click to remove photo"
+                  >
+                    <img
+                      src={photo}
+                      alt="Profile"
+                      className="w-32 h-32 rounded-full object-cover border-2 border-white/30 shadow-md"
+                    />
+                    <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
+                      <span className="text-white text-xl">✕</span>
+                      <span className="text-white text-xs font-semibold">Remove</span>
+                    </div>
+                  </button>
+                ) : (
+                  <label htmlFor="photo-upload" className="cursor-pointer block relative group">
                     <div className="w-32 h-32 rounded-full bg-white/15 border-2 border-dashed border-white/40 flex flex-col items-center justify-center gap-1 group-hover:bg-white/20 transition-colors">
                       <span className="text-white/60 text-3xl">📷</span>
                       <span className="text-white/50 text-xs font-medium">Upload</span>
                     </div>
-                  )}
-                </label>
+                  </label>
+                )}
                 {/* Elo rating below photo */}
                 <div className="flex items-center justify-center mt-2">
                   <span className="text-white font-bold text-base">{profile.rankedRating ?? 1500}</span>
@@ -388,7 +386,7 @@ export default function ProfileScreen() {
         <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl shadow-2xl overflow-hidden mb-6">
           {/* Tab bar */}
           <div className="flex gap-2 p-3 border-b border-white/20">
-            {(['vs-computer', 'online', 'achievements'] as const).map((tab) => (
+            {(['online', 'vs-computer', 'achievements'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -454,6 +452,15 @@ export default function ProfileScreen() {
                 <>
                   <p className="text-white font-bold text-sm mb-3">Online Statistics</p>
                   <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <div className="text-white/65 text-sm mb-1">Elo Rating</div>
+                      <div className="text-3xl font-bold text-white">{profile.rankedRating ?? 1500}</div>
+                      {(profile.lastRatingChange ?? 0) !== 0 && (
+                        <div className={`text-xs font-semibold mt-1 ${(profile.lastRatingChange ?? 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {(profile.lastRatingChange ?? 0) > 0 ? '+' : ''}{profile.lastRatingChange} last game
+                        </div>
+                      )}
+                    </div>
                     <div className="bg-white/10 rounded-lg p-4 border border-white/20">
                       <div className="text-white/65 text-sm mb-1">Games Played</div>
                       <div className="text-3xl font-bold text-white">{s.gamesPlayed}</div>
