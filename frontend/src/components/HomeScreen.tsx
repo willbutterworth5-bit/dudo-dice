@@ -39,12 +39,10 @@ export default function HomeScreen() {
       <div className="max-w-2xl w-full">
         {/* Logo and title side by side */}
         <div className="flex items-center justify-center gap-4 mb-5">
-          <img
-            src="/Logo.png"
-            alt="Dudo Dice Logo"
-            className="flex-shrink-0"
-            style={{ width: '72px', height: '72px' }}
-          />
+          <picture>
+            <source srcSet="/Logo.webp" type="image/webp" />
+            <img src="/Logo.png" alt="Dudo Dice Logo" className="flex-shrink-0" style={{ width: '72px', height: '72px' }} />
+          </picture>
           <div className="flex flex-col">
             <h1 className="text-4xl font-bold text-white">
               Dudo Dice

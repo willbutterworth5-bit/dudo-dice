@@ -188,7 +188,7 @@ export default function ProfileScreen() {
         {/* Logo and title */}
         <div className="flex items-center justify-center gap-4 mb-5">
           <img
-            src="/Logo.png"
+            src="/Logo.webp"
             alt="Dudo Dice Logo"
             className="flex-shrink-0"
             style={{ width: '72px', height: '72px' }}

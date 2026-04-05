@@ -71,7 +71,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
       <div className="max-w-lg w-full">
         {/* Header */}
         <div className="flex items-center justify-center gap-4 mb-5 pl-16">
-          <img src="/Logo.png" alt="Dudo Dice Logo" className="flex-shrink-0" style={{ width: '56px', height: '56px' }} />
+          <picture><source srcSet="/Logo.webp" type="image/webp" /><img src="/Logo.png" alt="Dudo Dice Logo" className="flex-shrink-0" style={{ width: '56px', height: '56px' }} /></picture>
           <div className="flex flex-col">
             <h1 className="text-3xl font-bold text-white">Play Online</h1>
             <p className="text-sm text-white/70">

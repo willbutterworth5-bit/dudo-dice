@@ -53,7 +53,7 @@ export default function WaitingRoom({
       </button>
       <div className="max-w-md w-full">
         <div className="flex items-center justify-center gap-4 mb-5">
-          <img src="/Logo.png" alt="Dudo Dice Logo" className="flex-shrink-0" style={{ width: '56px', height: '56px' }} />
+          <picture><source srcSet="/Logo.webp" type="image/webp" /><img src="/Logo.png" alt="Dudo Dice Logo" className="flex-shrink-0" style={{ width: '56px', height: '56px' }} /></picture>
           <div className="flex flex-col">
             <h1 className="text-3xl font-bold text-white">Waiting Room</h1>
           </div>

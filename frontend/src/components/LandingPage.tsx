@@ -44,11 +44,10 @@ export default function LandingPage() {
       <div className="max-w-md w-full">
         {/* Logo and title */}
         <div className="flex items-center justify-center gap-4 mb-8">
-          <img
-            src="/Logo.png"
-            alt="Dudo Dice Logo"
-            className="flex-shrink-0 w-16 h-16 sm:w-[88px] sm:h-[88px]"
-          />
+          <picture>
+            <source srcSet="/Logo.webp" type="image/webp" />
+            <img src="/Logo.png" alt="Dudo Dice Logo" className="flex-shrink-0 w-16 h-16 sm:w-[88px] sm:h-[88px]" />
+          </picture>
           <div className="flex flex-col">
             <h1 className="text-4xl sm:text-5xl font-bold text-white">
               Dudo Dice
