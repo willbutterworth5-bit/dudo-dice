@@ -75,7 +75,7 @@ function PreviousRound({ round, players, analysisEnabled }: {
           {round.bids.map((bid, i) => (
             <BidRow
               key={i}
-              bid={bid.bid as Bid}
+              bid={{ ...bid.bid, playerId: bid.playerId } as Bid}
               players={players}
               record={bid}
               analysisEnabled={analysisEnabled}
