@@ -387,7 +387,7 @@ export default function ProfileScreen() {
                   activeTab === tab ? 'text-white btn-3d-accent' : 'btn-glass'
                 }`}
               >
-                {tab === 'vs-computer' ? 'VS Computer' : tab === 'online' ? 'Online' : 'Achievements'}
+                {tab === 'vs-computer' ? 'vs Computer' : tab === 'online' ? 'Online' : 'Achievements'}
               </button>
             ))}
           </div>
@@ -398,7 +398,7 @@ export default function ProfileScreen() {
               const s = profile.vsComputerStats;
               return (
                 <>
-                  <p className="text-white font-bold text-sm mb-3">VS Computer Statistics</p>
+                  <p className="text-white font-bold text-sm mb-3">vs Computer Statistics</p>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/10 rounded-lg p-4 border border-white/20">
                     <div className="text-white/65 text-sm mb-1">Games Played</div>
