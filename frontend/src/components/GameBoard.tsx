@@ -3,6 +3,8 @@ import { useGameContext } from '../hooks/useGameContext';
 import { AIPlayer, Difficulty } from '../game/AIPlayer';
 import { Bid, GameSettings, GameState, RoundResult, PLAYER_COLOR_MAP } from '../game/GameState';
 import { ProfileStorage } from '../utils/profileStorage';
+import { useAuth } from '../context/AuthContext';
+import { recordGameSession } from '../utils/supabaseSync';
 import AchievementToast from './AchievementToast';
 import DiceFace from './DiceFace';
 import BidInput from './BidInput';
@@ -65,6 +67,7 @@ function darkenHex(hex: string, amount: number): string {
 
 export default function GameBoard({ playerCount, difficulty, startingDice, analysisEnabled, palificoEnabled, calzaEnabled, onBackToHome, multiplayerMode }: GameBoardProps) {
   const isMultiplayer = !!multiplayerMode;
+  const { user } = useAuth();
   const { gameEngine, gameState: localGameState, initializeGame, makeBid: localMakeBid, challengeBid: localChallengeBid, callCalza: localCallCalza, updateGameState } = useGameContext();
   const [aiPlayer, setAiPlayer] = useState(() => new AIPlayer(difficulty));
 
@@ -100,8 +103,26 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   const consecutiveValidBids = useRef(0);             // for The Oracle (valid bids when challenged)
   const pendingDudoAchievements = useRef<string[]>([]); // queued until after reveal animation
   const gameStartHour = useRef(new Date().getHours());  // for Night Owl / Early Bird
+  const gameStartTime = useRef(Date.now());              // for session duration tracking
   const unlockAchievementsRef = useRef<(ids: string[]) => void>(() => {});
   const [pendingAchievements, setPendingAchievements] = useState<string[]>([]);
+
+  // Fire-and-forget session recording for Supabase analytics
+  const fireSession = (result: 'win' | 'loss' | 'abandoned') => {
+    if (!gameState) return;
+    recordGameSession(user?.id ?? null, {
+      session_type: isMultiplayer ? 'online' : 'vs_ai',
+      difficulty: isMultiplayer ? undefined : difficulty,
+      player_count: playerCount,
+      human_count: isMultiplayer ? gameState.players.filter(p => p.isHuman).length : 1,
+      result,
+      rounds_played: gameState.roundHistory.length,
+      starting_dice: startingDice,
+      palifico_enabled: palificoEnabled,
+      calza_enabled: calzaEnabled,
+      duration_seconds: Math.round((Date.now() - gameStartTime.current) / 1000),
+    }).catch(() => {});
+  };
 
   const [showGameLog, setShowGameLog] = useState(false);
   const [showRoundAnalysis, setShowRoundAnalysis] = useState(false);
@@ -681,7 +702,10 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
       <div className="max-w-4xl mx-auto relative">
         {/* Back button - fixed top left */}
         <button
-          onClick={onBackToHome}
+          onClick={() => {
+            if (!winner) fireSession('abandoned');
+            onBackToHome();
+          }}
           className="fixed h-7 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-1.5 sm:px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
           style={{ left: 'max(0.75rem, env(safe-area-inset-left, 0px))', top: 'max(0.75rem, env(safe-area-inset-top, 0px))' }}
         >
@@ -1354,6 +1378,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                 setModalClosing(false);
               } : undefined}
               onLeaveGame={humanJustEliminated && isMultiplayer ? () => {
+                fireSession('loss');
                 onBackToHome();
               } : undefined}
               onClose={() => {
@@ -1404,6 +1429,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               const humanPlayer = gameState.players.find(p => p.isHuman);
               const humanWon = !!(humanPlayer && winner.id === humanPlayer.id);
               ProfileStorage.recordGame(humanWon);
+              fireSession(humanWon ? 'win' : 'loss');
 
               // Achievement checks at game-over
               const profile = ProfileStorage.getProfile();
@@ -1446,6 +1472,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               consecutiveDudoSuccesses.current = 0;
               consecutiveValidBids.current = 0;
               gameStartHour.current = new Date().getHours();
+              gameStartTime.current = Date.now();
 
               const settings: GameSettings = {
                 playerCount,
@@ -1462,6 +1489,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                 const humanPlayer = gameState.players.find(p => p.isHuman);
                 const humanWon = !!(humanPlayer && winner.id === humanPlayer.id);
                 ProfileStorage.recordGame(humanWon);
+                fireSession(humanWon ? 'win' : 'loss');
 
                 // Achievement checks at game-over
                 const profile = ProfileStorage.getProfile();
@@ -1496,6 +1524,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                 unlockAchievements(toUnlock);
               }
               if (isMultiplayer) {
+                const humanWonMp = !!(multiplayerMode?.playerId && winner.id === multiplayerMode.playerId);
+                fireSession(humanWonMp ? 'win' : 'loss');
                 // Track unique online opponents for Friendly Face / Social Butterfly
                 const opponentIds = gameState.players.filter(p => !p.isHuman).map(p => p.id);
                 if (opponentIds.length > 0) {

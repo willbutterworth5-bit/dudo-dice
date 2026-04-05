@@ -123,6 +123,51 @@ export async function syncProfileToSupabase(userId: string, profile: PlayerProfi
   }
 }
 
+export interface GameSessionData {
+  session_type: 'vs_ai' | 'online'
+  difficulty?: string
+  player_count: number
+  human_count: number
+  result: 'win' | 'loss' | 'abandoned'
+  rounds_played: number
+  starting_dice: number
+  palifico_enabled: boolean
+  calza_enabled: boolean
+  duration_seconds: number
+}
+
+/**
+ * Insert a game session row for analytics.
+ * userId is null for guests. Never throws — silently swallows errors.
+ */
+export async function recordGameSession(userId: string | null, session: GameSessionData): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.from('game_sessions').insert({
+      user_id: userId,
+      ...session,
+      played_at: new Date().toISOString(),
+    });
+  } catch {
+    // never block the game
+  }
+}
+
+/**
+ * Update profiles.last_seen_at to now. Called on sign-in.
+ */
+export async function updateLastSeen(userId: string): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.from('profiles').upsert({
+      id: userId,
+      last_seen_at: new Date().toISOString(),
+    });
+  } catch {
+    // silently ignore
+  }
+}
+
 /**
  * Insert a single achievement unlock for the user.
  * Silently ignores duplicate inserts (primary key conflict).

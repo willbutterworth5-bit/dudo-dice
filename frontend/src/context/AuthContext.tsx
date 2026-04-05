@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { loadFromSupabase, syncProfileToSupabase, syncAchievementToSupabase } from '../utils/supabaseSync';
+import { loadFromSupabase, syncProfileToSupabase, syncAchievementToSupabase, updateLastSeen } from '../utils/supabaseSync';
 import { initSupabaseSync } from '../utils/profileStorage';
 
 interface AuthContextValue {
@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (newSession?.user) {
       // Merge remote Supabase data into localStorage
       await loadFromSupabase(newSession.user.id, newSession);
+      updateLastSeen(newSession.user.id).catch(() => {});
     }
   }, []);
 
