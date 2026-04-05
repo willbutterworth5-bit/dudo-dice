@@ -1171,12 +1171,16 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                       <span className="text-sm font-bold opacity-80">×{lastRoundResult.challengedBid.quantity}</span>
                     </div>
                     <div className="text-[9px] text-white/70 uppercase tracking-widest leading-none mb-2">Found</div>
-                    <div
-                      key={`found-${currentMatchingCount}`}
-                      className="text-4xl font-bold leading-none animate-count-pulse"
-                    >
-                      {currentMatchingCount}
-                    </div>
+                    {currentMatchingCount > 0 ? (
+                      <div
+                        key={`found-${currentMatchingCount}`}
+                        className="text-4xl font-bold leading-none animate-count-pulse"
+                      >
+                        {currentMatchingCount}
+                      </div>
+                    ) : (
+                      <div className="text-4xl font-bold leading-none opacity-30">—</div>
+                    )}
                   </div>
                 ) : (
                   // Normal play — human shows "Your Turn", AI/others show "Thinking" or player name
