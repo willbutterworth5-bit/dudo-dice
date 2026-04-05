@@ -98,6 +98,9 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   const humanWasAtOneDie = useRef(false);             // for Dice Whisperer
   const consecutiveDudoSuccesses = useRef(0);         // for Mind Reader
   const consecutiveValidBids = useRef(0);             // for The Oracle (valid bids when challenged)
+  const pendingDudoAchievements = useRef<string[]>([]); // queued until after reveal animation
+  const gameStartHour = useRef(new Date().getHours());  // for Night Owl / Early Bird
+  const unlockAchievementsRef = useRef<(ids: string[]) => void>(() => {});
   const [pendingAchievements, setPendingAchievements] = useState<string[]>([]);
 
   const [showGameLog, setShowGameLog] = useState(false);
@@ -260,7 +263,14 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
       trackTimeout(() => {
         setInnerCircleChallenge(false);
         setDudoFadingOut(false);
-        startSequentialReveal(result, state, () => setShowDice(true));
+        startSequentialReveal(result, state, () => {
+          setShowDice(true);
+          // Fire any Dudo achievements queued to show after the reveal
+          if (pendingDudoAchievements.current.length > 0) {
+            unlockAchievementsRef.current(pendingDudoAchievements.current);
+            pendingDudoAchievements.current = [];
+          }
+        });
       }, 300);
     }, 1200);
   }, [startSequentialReveal, trackTimeout]);
@@ -472,6 +482,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
       setPendingAchievements(prev => [...prev, ...newlyUnlocked]);
     }
   }, []);
+  unlockAchievementsRef.current = unlockAchievements;
 
   const handleHumanBid = useCallback(async (bid: Bid) => {
     if (isMultiplayer && multiplayerMode) {
@@ -522,10 +533,11 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           successfulDudosThisGame.current++;
           consecutiveDudoSuccesses.current++;
           const profile = ProfileStorage.getProfile();
-          const toUnlock: string[] = [];
-          if (!profile.achievements.includes('cold_blooded') && profile.vsComputerStats.successfulDudoCalls >= 10) toUnlock.push('cold_blooded');
-          if (!profile.achievements.includes('mind_reader') && consecutiveDudoSuccesses.current >= 3) toUnlock.push('mind_reader');
-          unlockAchievements(toUnlock);
+          const toQueue: string[] = [];
+          if (!profile.achievements.includes('cold_blooded') && profile.vsComputerStats.successfulDudoCalls >= 10) toQueue.push('cold_blooded');
+          if (!profile.achievements.includes('mind_reader') && consecutiveDudoSuccesses.current >= 3) toQueue.push('mind_reader');
+          // Queue to show after reveal animation
+          if (toQueue.length) pendingDudoAchievements.current.push(...toQueue);
         } else {
           consecutiveDudoSuccesses.current = 0;
         }
@@ -1400,7 +1412,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               ProfileStorage.saveProfile(profile);
 
               const humanDiceNow = humanWon ? (humanPlayer?.diceCount ?? 0) : 0;
-              const hour = new Date().getHours();
+              const hour = gameStartHour.current;
               const toUnlock: string[] = [];
               const unlocked = profile.achievements;
               const s = profile.vsComputerStats;
@@ -1430,6 +1442,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               humanWasAtOneDie.current = false;
               consecutiveDudoSuccesses.current = 0;
               consecutiveValidBids.current = 0;
+              gameStartHour.current = new Date().getHours();
 
               const settings: GameSettings = {
                 playerCount,
@@ -1457,7 +1470,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                 ProfileStorage.saveProfile(profile);
 
                 const humanDiceNow = humanWon ? (humanPlayer?.diceCount ?? 0) : 0;
-                const hour = new Date().getHours();
+                const hour = gameStartHour.current;
                 const toUnlock: string[] = [];
                 const unlocked = profile.achievements;
                 const s = profile.vsComputerStats;
