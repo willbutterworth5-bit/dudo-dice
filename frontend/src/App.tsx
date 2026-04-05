@@ -8,6 +8,7 @@ import LobbyScreen from './components/LobbyScreen'
 import WaitingRoom from './components/WaitingRoom'
 import JoinRedirect from './components/JoinRedirect'
 import RulesPage from './components/RulesPage'
+import AnalyticsManager from './components/AnalyticsManager'
 import { GameProvider } from './context/GameContext'
 import { AuthProvider } from './context/AuthContext'
 import { useMultiplayerConnection } from './hooks/useMultiplayerConnection'
@@ -115,9 +116,13 @@ function App() {
     if (!mp.roomUpdate) return
     const { phase } = mp.roomUpdate
 
-    if (phase === 'waiting' && location.pathname === '/online') {
+    if (phase === 'waiting' && (location.pathname === '/online' || location.pathname.startsWith('/online/join/'))) {
       navigate('/online/waiting')
-    } else if (phase === 'playing' && (location.pathname === '/online/waiting' || location.pathname === '/online')) {
+    } else if (phase === 'playing' && (
+      location.pathname === '/online/waiting'
+      || location.pathname === '/online'
+      || location.pathname.startsWith('/online/join/')
+    )) {
       navigate('/online/game')
     }
   }, [mp.roomUpdate, location.pathname, navigate])
@@ -133,6 +138,7 @@ function App() {
 
   return (
     <>
+      <AnalyticsManager />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/play" element={

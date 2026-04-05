@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { ProfileStorage } from '../utils/profileStorage';
 import type { useMultiplayerConnection } from '../hooks/useMultiplayerConnection';
 
@@ -9,6 +9,7 @@ interface JoinRedirectProps {
 
 export default function JoinRedirect({ mp }: JoinRedirectProps) {
   const { roomCode } = useParams<{ roomCode: string }>();
+  const normalizedCode = roomCode?.toUpperCase() ?? '';
 
   useEffect(() => {
     if (!roomCode) return;
@@ -20,6 +21,14 @@ export default function JoinRedirect({ mp }: JoinRedirectProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Show lobby briefly while connecting; App's auto-nav effect takes over
-  return <Navigate to="/online" replace />;
+  return (
+    <div className="min-h-screen flex items-center justify-center p-8">
+      <div className="text-center text-white">
+        <p className="text-2xl font-bold">Joining room...</p>
+        {normalizedCode && (
+          <p className="text-white/60 text-sm mt-2">{normalizedCode}</p>
+        )}
+      </div>
+    </div>
+  );
 }

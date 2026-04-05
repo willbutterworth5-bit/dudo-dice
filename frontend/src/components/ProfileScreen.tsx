@@ -55,6 +55,7 @@ export default function ProfileScreen() {
     try {
       const base64 = await imageToBase64(file);
       setPhoto(base64);
+      ProfileStorage.updatePhoto(base64);
     } catch (error) {
       console.error('Error processing image:', error);
       alert('Error processing image. Please try again.');
@@ -63,6 +64,7 @@ export default function ProfileScreen() {
 
   const handleRemovePhoto = () => {
     setPhoto(null);
+    ProfileStorage.updatePhoto(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -70,6 +72,7 @@ export default function ProfileScreen() {
 
   const handleSelectCountry = (code: string) => {
     setCountry(code);
+    ProfileStorage.updateCountry(code);
     setCountryPickerOpen(false);
     setCountrySearch('');
   };
@@ -77,12 +80,14 @@ export default function ProfileScreen() {
   const handleClearCountry = (e: React.MouseEvent) => {
     e.stopPropagation();
     setCountry(null);
+    ProfileStorage.updateCountry(null);
     setCountrySearch('');
   };
 
   const handleBack = () => {
+    const storedProfile = ProfileStorage.getProfile();
     const updatedProfile: PlayerProfile = {
-      ...profile,
+      ...storedProfile,
       name: name.trim() || 'You',
       photo: photo,
       country: country,
@@ -289,7 +294,11 @@ export default function ProfileScreen() {
                   <input
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => {
+                      const nextName = e.target.value;
+                      setName(nextName);
+                      ProfileStorage.updateName(nextName);
+                    }}
                     placeholder="Enter your name"
                     maxLength={20}
                     className="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-white/40 border border-white/30 focus:border-white/60 focus:outline-none text-lg"
