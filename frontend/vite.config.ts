@@ -10,4 +10,15 @@ export default defineConfig({
     host: true,
     historyApiFallback: true,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-socket': ['socket.io-client'],
+        },
+      },
+    },
+  },
 })
