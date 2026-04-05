@@ -333,14 +333,13 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     }
   }, [multiplayerMode, isMultiplayer, gameState, startChallengeAnimation]);
 
-  // Clear round result overlay when game ends (prevents it stacking behind Game Over modal)
+  // Clear round result overlay when game ends (after reveal completes — see RoundResultModal gate below)
   const hasWinner = isMultiplayer
     ? !!multiplayerMode?.winnerId
     : !!(gameEngine?.getWinner());
   useEffect(() => {
-    if (hasWinner) {
+    if (hasWinner && !lastRoundResult) {
       setShowDice(false);
-      setLastRoundResult(null);
       setChallengedBidPlayerId(null);
       setRevealState(null);
       setRevealComplete(false);
@@ -349,7 +348,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
       setIsCalzaRound(false);
       setModalClosing(false);
     }
-  }, [hasWinner]);
+  }, [hasWinner, lastRoundResult]);
 
   // Handle AI turns (local mode only — in multiplayer, server handles AI)
   useEffect(() => {
@@ -1393,8 +1392,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           />
         )}
 
-        {/* Game Over Modal */}
-        {winner && (
+        {/* Game Over Modal — only show after reveal animation clears */}
+        {winner && !lastRoundResult && !revealState && (
           <GameOverModal
             winner={winner}
             analysisEnabled={isMultiplayer ? false : analysisEnabled}
