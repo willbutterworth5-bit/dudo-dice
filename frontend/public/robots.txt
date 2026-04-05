@@ -2,13 +2,19 @@ User-agent: *
 Disallow: /game
 Disallow: /online/game
 Disallow: /online/waiting
+Disallow: /online/join/
+Disallow: /profile
 
 User-agent: Googlebot
 Allow: /
+Allow: /play
+Allow: /online
 Allow: /rules
 
 User-agent: OAI-SearchBot
 Allow: /
+Allow: /play
+Allow: /online
 Allow: /rules
 
 Sitemap: https://dudodice.com/sitemap.xml
