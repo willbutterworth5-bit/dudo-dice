@@ -3,17 +3,8 @@ import { ProfileStorage } from '../utils/profileStorage';
 
 export type { PlayerConfig } from '@dudo-dice/shared';
 
-const BOT_NAMES = [
-  'DudoBot', 'DiceAI', 'RollX9', 'CupUnit', 'SpotXAI', 'DudoX1', 'DiceRX',
-  'RollBot', 'Cup9000', 'SpotCore', 'DudoAI', 'DiceQ7', 'RollXAI', 'CupX22',
-  'SpotBot', 'DudoRX', 'DiceN1', 'Roll900', 'CupAI', 'SpotX9', 'DudoX9',
-  'DiceFX', 'RollX5', 'CupRobo', 'SpotAI', 'Dudo7', 'DiceX2', 'RollN3',
-  'CupXAI', 'SpotR1', 'DudoCore', 'DiceZ9',
-];
-
 function pickUniqueNames(count: number): string[] {
-  const shuffled = [...BOT_NAMES].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+  return Array.from({ length: count }, (_, i) => `DudoBot ${i + 1}`);
 }
 
 /**

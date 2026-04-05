@@ -4,17 +4,14 @@ import type { RatingStore } from './RatingStore.js';
 import { calculateElo } from './Elo.js';
 import type { EloResult } from './Elo.js';
 
-const BOT_NAMES = [
-  'DudoBot', 'DiceAI', 'RollX9', 'CupUnit', 'SpotXAI', 'DudoX1', 'DiceRX',
-  'RollBot', 'Cup9000', 'SpotCore', 'DudoAI', 'DiceQ7', 'RollXAI', 'CupX22',
-  'SpotBot', 'DudoRX', 'DiceN1', 'Roll900', 'CupAI', 'SpotX9', 'DudoX9',
-  'DiceFX', 'RollX5', 'CupRobo', 'SpotAI', 'Dudo7', 'DiceX2', 'RollN3',
-];
-
 function pickBotNames(count: number, taken: string[]): string[] {
-  const available = BOT_NAMES.filter(n => !taken.includes(n));
-  const shuffled = [...available].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+  const names: string[] = [];
+  let n = 1;
+  while (names.length < count) {
+    const name = `DudoBot ${n++}`;
+    if (!taken.includes(name)) names.push(name);
+  }
+  return names;
 }
 
 export interface RoomSettings {
