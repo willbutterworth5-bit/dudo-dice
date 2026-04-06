@@ -109,12 +109,12 @@ export default function BidInput({
       )}
 
       <div className="space-y-1.5">
-        {/* Horizontal Container for Face Value and Quantity */}
-        <div className="flex items-center gap-3 justify-center">
-          {/* Face Value */}
-          <div className="flex flex-col items-center">
+        {/* Face Value + Quantity: same gap/flex-1 as button row so columns align */}
+        <div className="flex gap-1.5">
+          {/* Face Value — aligns with Dudo button */}
+          <div className="flex-1 flex flex-col items-center">
             <label className="block text-[10px] font-medium text-white mb-1 text-center">Face Value</label>
-            <div className="flex gap-1 flex-wrap justify-center" style={{ maxWidth: '112px' }}>
+            <div className="grid grid-cols-3 gap-1">
               {[1, 2, 3, 4, 5, 6].map((value) => {
                 const isDisabled = value === 1 ? !canBidOnes : !canBidNonOnes;
                 const isLocked = palificoMode.active && palificoMode.lockedFaceValue !== value;
@@ -160,8 +160,8 @@ export default function BidInput({
             </div>
           </div>
 
-          {/* Quantity */}
-          <div className="flex flex-col items-center">
+          {/* Quantity — aligns with Bid button */}
+          <div className="flex-1 flex flex-col items-center justify-center">
             <label className="block text-[10px] font-medium text-white mb-1 text-center">Quantity</label>
             <div className="flex items-center justify-center gap-1.5">
               <button

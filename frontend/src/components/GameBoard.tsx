@@ -765,10 +765,10 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         </div>
 
         {/* Redesigned Game Board - Segmented Circle */}
-        <div className="relative flex-shrink-0 sm:flex-1 w-full" style={{ overflow: 'visible', minHeight: `${Math.round(BOARD_BASE * boardScale)}px` }}>
+        <div className="relative flex-1 w-full" style={{ overflow: 'visible', minHeight: `${Math.round(BOARD_BASE * boardScale)}px` }}>
           {/* Table Container */}
-          <div className="absolute inset-0 flex items-center justify-center" style={{ overflow: 'visible', padding: '0' }}>
-            <div className={`relative ${boardShaking ? 'animate-board-shake' : ''}`} style={{ width: '450px', height: '450px', overflow: 'visible', flexShrink: 0, transform: `scale(${boardScale})`, transformOrigin: 'center center' }}>
+          <div className="absolute inset-0 flex items-end sm:items-center justify-center" style={{ overflow: 'visible', padding: '0' }}>
+            <div className={`relative ${boardShaking ? 'animate-board-shake' : ''}`} style={{ width: '450px', height: '450px', overflow: 'visible', flexShrink: 0, transform: `scale(${boardScale})`, transformOrigin: 'center bottom' }}>
               {/* Base Circle */}
               <div
                 className="absolute inset-0 rounded-full"
@@ -1236,8 +1236,6 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           </div>
         </div>
 
-        {/* Mobile spacer: centers names+bid below board */}
-        <div className="flex-1 sm:hidden" style={{ minHeight: '1rem' }} />
 
         {/* Player Color Legend */}
         <div className="px-3 flex-shrink-0">
@@ -1323,7 +1321,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
             {!isMyTurn && gameState.gamePhase === 'bidding' && !lastRoundResult && !innerCircleChallenge && (
               <div
                 key={`waiting-${gameState.currentPlayerIndex}`}
-                className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-3 shadow-2xl text-center animate-fade-slide-up"
+                className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-1.5 sm:p-3 shadow-2xl animate-fade-slide-up flex items-center justify-center"
+                style={{ minHeight: '8.5rem' }}
               >
                 <div className="flex items-center justify-center gap-2">
                   <div
