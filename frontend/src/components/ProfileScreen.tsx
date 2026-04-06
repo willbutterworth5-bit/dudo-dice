@@ -184,7 +184,7 @@ export default function ProfileScreen() {
         ← Back
       </button>
 
-      <div className="max-w-2xl w-full pt-12 sm:pt-0">
+      <div className="max-w-2xl sm:max-w-4xl w-full pt-12 sm:pt-0">
         {/* Logo and title */}
         <div className="flex items-center justify-center gap-4 mb-5 pl-16 sm:pl-0">
           <img
