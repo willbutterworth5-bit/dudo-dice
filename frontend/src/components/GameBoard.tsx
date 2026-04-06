@@ -1300,7 +1300,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         </div>
 
         {/* Bid Input Section */}
-        <div className="px-3 pb-2 sm:pb-5 relative z-10 flex-shrink-0">
+        <div className="px-3 pb-2 sm:pb-8 relative z-10 flex-shrink-0">
           <div className="max-w-2xl mx-auto">
             {/* Challenge Context Banner — who called who and what the bid was */}
             {lastRoundResult && !showDice && !modalClosing && (() => {
