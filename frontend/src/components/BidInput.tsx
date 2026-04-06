@@ -101,14 +101,14 @@ export default function BidInput({
   const canBidNonOnes = !palificoMode.active || (palificoMode.lockedFaceValue !== null && faceValue === palificoMode.lockedFaceValue);
 
   return (
-    <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-3 shadow-2xl animate-fade-slide-up sm:flex sm:flex-col sm:min-h-[9.5rem]">
+    <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-3 shadow-2xl animate-fade-slide-up">
       {error && (
         <div className="bg-red-500/30 border border-red-400/40 text-red-100 px-2 py-1 rounded mb-1.5 text-xs">
           {error}
         </div>
       )}
 
-      <div className="space-y-1.5 sm:space-y-0 sm:flex-1 sm:flex sm:flex-col sm:justify-between">
+      <div className="space-y-1.5">
         {/* Face Value + Quantity: same gap/flex-1 as button row so columns align */}
         <div className="flex gap-1.5">
           {/* Face Value — aligns with Dudo button */}
