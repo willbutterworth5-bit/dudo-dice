@@ -114,7 +114,7 @@ export default function BidInput({
           {/* Face Value — aligns with Dudo button */}
           <div className="flex-1 flex flex-col items-center">
             <label className="block text-[10px] font-medium text-white mb-1 text-center">Face Value</label>
-            <div className="grid grid-cols-3 gap-1">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-1">
               {[1, 2, 3, 4, 5, 6].map((value) => {
                 const isDisabled = value === 1 ? !canBidOnes : !canBidNonOnes;
                 const isLocked = palificoMode.active && palificoMode.lockedFaceValue !== value;
