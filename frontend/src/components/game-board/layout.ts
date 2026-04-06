@@ -1,16 +1,25 @@
 import type { Player } from '../../game/GameState';
 
 export const BOARD_BASE = 450;
+const MOBILE_VERTICAL_RESERVE = 240;
 
 export function getResponsiveBoardSize(viewportWidth: number, viewportHeight: number): number {
   const isMobile = viewportWidth < 640;
   const widthBased = viewportWidth - 48;
-  const heightBased = isMobile ? viewportHeight - 240 : BOARD_BASE;
-  return Math.min(BOARD_BASE, widthBased, heightBased);
+  const heightBased = isMobile ? viewportHeight - MOBILE_VERTICAL_RESERVE : BOARD_BASE;
+  return getBoardSizeForAvailableSpace(widthBased, heightBased);
+}
+
+export function getBoardSizeForAvailableSpace(availableWidth: number, availableHeight: number): number {
+  return Math.min(
+    BOARD_BASE,
+    Math.max(0, availableWidth),
+    Math.max(0, availableHeight),
+  );
 }
 
 export function getBoardScale(boardSize: number): number {
-  return Math.max(0.55, boardSize / BOARD_BASE);
+  return Math.min(1, Math.max(0, boardSize / BOARD_BASE));
 }
 
 export function findMyPlayerIndex(

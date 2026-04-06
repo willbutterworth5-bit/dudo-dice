@@ -19,6 +19,7 @@ import {
   BOARD_BASE,
   buildSectorPlayerIndexes,
   findMyPlayerIndex,
+  getBoardSizeForAvailableSpace,
   getBoardScale,
   getResponsiveBoardSize,
   isMyPlayer as isMyPlayerForBoard,
@@ -133,20 +134,49 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   const animationTimeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [modalClosing, setModalClosing] = useState(false);
   const [isCalzaRound, setIsCalzaRound] = useState(false);
+  const boardAreaRef = useRef<HTMLDivElement | null>(null);
 
   // Responsive board scaling for mobile
-  // Only constrain board size on narrow screens; desktop always gets full 450px
   const [boardSize, setBoardSize] = useState(() => {
     if (typeof window === 'undefined') return BOARD_BASE;
     return getResponsiveBoardSize(window.innerWidth, window.innerHeight);
   });
   useEffect(() => {
     const updateSize = () => {
-      setBoardSize(getResponsiveBoardSize(window.innerWidth, window.innerHeight));
+      const viewportWidth = window.innerWidth;
+
+      if (viewportWidth < 640) {
+        setBoardSize(getResponsiveBoardSize(viewportWidth, window.innerHeight));
+        return;
+      }
+
+      const boardArea = boardAreaRef.current;
+      if (!boardArea) {
+        setBoardSize(BOARD_BASE);
+        return;
+      }
+
+      setBoardSize(getBoardSizeForAvailableSpace(
+        boardArea.clientWidth - 24,
+        boardArea.clientHeight - 24,
+      ));
     };
+
+    const boardArea = boardAreaRef.current;
+    const resizeObserver = typeof ResizeObserver !== 'undefined' && boardArea
+      ? new ResizeObserver(updateSize)
+      : null;
+
+    if (boardArea && resizeObserver) {
+      resizeObserver.observe(boardArea);
+    }
+
     window.addEventListener('resize', updateSize);
     updateSize();
-    return () => window.removeEventListener('resize', updateSize);
+    return () => {
+      window.removeEventListener('resize', updateSize);
+      resizeObserver?.disconnect();
+    };
   }, []);
   const boardScale = getBoardScale(boardSize);
 
@@ -699,7 +729,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
   return (
     <div className="h-dvh flex flex-col relative" style={{ minWidth: '0', overflow: 'hidden', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full relative pt-14 sm:pt-14">
+      <div className="flex-1 min-h-0 flex flex-col max-w-4xl mx-auto w-full relative pt-14 sm:pt-14">
         {/* Back button - fixed top left */}
         <button
           onClick={() => {
@@ -765,7 +795,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         </div>
 
         {/* Redesigned Game Board - Segmented Circle */}
-        <div className="relative flex-1 w-full" style={{ overflow: 'visible', minHeight: `${Math.round(BOARD_BASE * boardScale)}px` }}>
+        <div ref={boardAreaRef} className="relative flex-1 min-h-0 w-full" style={{ overflow: 'visible' }}>
           {/* Table Container */}
           <div className={`absolute inset-0 flex items-center justify-center ${boardShaking ? 'animate-board-shake' : ''}`} style={{ overflow: 'visible', padding: '0' }}>
             <div className="relative" style={{ width: '450px', height: '450px', overflow: 'visible', flexShrink: 0, transform: `scale(${boardScale})`, transformOrigin: 'center center' }}>
