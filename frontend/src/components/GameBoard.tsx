@@ -1311,7 +1311,6 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               return (
                 <div
                   className="animate-fade-slide-up bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl px-4 py-2.5 shadow-2xl flex items-center justify-center"
-                  style={{ minHeight: '9.5rem' }}
                 >
                   <div className="flex items-center justify-center gap-1.5 flex-wrap text-sm">
                     <div className="flex items-center gap-1">
@@ -1353,7 +1352,6 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               <div
                 key={`waiting-${gameState.currentPlayerIndex}`}
                 className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-1.5 sm:p-3 shadow-2xl animate-fade-slide-up flex items-center justify-center"
-                style={{ minHeight: '9.5rem' }}
               >
                 <div className="flex items-center justify-center gap-2">
                   <div
