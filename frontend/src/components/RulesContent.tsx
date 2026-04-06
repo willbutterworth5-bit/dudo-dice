@@ -4,9 +4,9 @@ export function RulesContent() {
   return (
     <div className="space-y-6">
       <section>
-        <h3 className="text-2xl font-semibold mb-3 text-white">Objective</h3>
+        <h3 className="text-2xl font-semibold mb-3 text-white">Winning</h3>
         <p className="text-lg text-white/85">
-          Be the last player with dice remaining. Players take turns bidding on the total number of dice showing a particular face value across all players' dice.
+          The last player with dice remaining wins the game!
         </p>
       </section>
 
@@ -63,12 +63,6 @@ export function RulesContent() {
         </ul>
       </section>
 
-      <section>
-        <h3 className="text-2xl font-semibold mb-3 text-white">Winning</h3>
-        <p className="text-lg text-white/85">
-          The last player with dice remaining wins the game!
-        </p>
-      </section>
     </div>
   );
 }

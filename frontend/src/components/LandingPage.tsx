@@ -80,6 +80,21 @@ export default function LandingPage() {
               <span className="text-2xl">☁️</span>
               Play Online
             </button>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex-1 py-2.5 text-white font-bold rounded-xl btn-glass flex items-center justify-center gap-2"
+              >
+                <span>👤</span> Profile
+              </button>
+              <button
+                onClick={() => navigate('/rules')}
+                className="flex-1 py-2.5 text-white font-bold rounded-xl btn-glass flex items-center justify-center gap-2"
+              >
+                <span>📖</span> Rules
+              </button>
+            </div>
           </div>
         </div>
 
