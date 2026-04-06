@@ -92,6 +92,11 @@ export async function syncProfileToSupabase(userId: string, profile: PlayerProfi
   if (!supabase) return;
 
   try {
+    const achievementRows = profile.achievements.map(id => ({
+      user_id: userId,
+      achievement_id: id,
+    }));
+
     await Promise.all([
       supabase.from('profiles').upsert({
         id: userId,
@@ -117,6 +122,10 @@ export async function syncProfileToSupabase(userId: string, profile: PlayerProfi
         online_successful_calls_against: profile.onlineStats.successfulCallsAgainst,
         updated_at: new Date().toISOString(),
       }),
+      // Bulk-sync all local achievements so any that failed to sync individually are caught here
+      achievementRows.length > 0
+        ? supabase.from('player_achievements').upsert(achievementRows, { onConflict: 'user_id,achievement_id', ignoreDuplicates: true })
+        : Promise.resolve(),
     ]);
   } catch (err) {
     console.warn('supabaseSync.syncProfileToSupabase error:', err);

@@ -7,23 +7,34 @@ export default function RulesPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-700 to-purple-900 font-nunito">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-indigo-800/80 backdrop-blur border-b border-white/20 px-4 py-3 flex items-center gap-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="text-white/80 hover:text-white transition-colors flex items-center gap-1.5 text-sm font-semibold"
-        >
-          <span className="text-lg leading-none">←</span> Back
-        </button>
-        <h1 className="text-white font-bold text-xl flex-1 text-center pr-12">
-          {tab === 'rules' ? 'Game Rules' : 'FAQ'}
-        </h1>
-      </div>
+    <div className="min-h-dvh flex flex-col items-center justify-center p-4 sm:p-8 relative" style={{ overflowY: 'auto' }}>
+      {/* Back button - fixed top left, matches ProfileScreen */}
+      <button
+        onClick={() => navigate(-1)}
+        className="fixed text-sm font-bold z-50 text-white rounded-xl px-2 py-1 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 transition-colors"
+        style={{ left: '0.75rem', top: '0.75rem' }}
+      >
+        ← Back
+      </button>
 
-      <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="max-w-2xl w-full pt-12 sm:pt-0">
+        {/* Logo and title */}
+        <div className="flex items-center justify-center gap-4 mb-5 pl-16 sm:pl-0">
+          <img
+            src="/Logo.webp"
+            alt="Dudo Dice Logo"
+            className="flex-shrink-0"
+            style={{ width: '60px', height: '60px' }}
+          />
+          <div className="flex flex-col">
+            <h1 className="text-2xl sm:text-4xl font-bold text-white">
+              {tab === 'rules' ? 'Game Rules' : 'FAQ'}
+            </h1>
+          </div>
+        </div>
+
         {/* Tab switcher */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-4">
           <button
             onClick={() => setTab('rules')}
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${tab === 'rules' ? 'btn-3d-accent text-white' : 'btn-glass'}`}
@@ -38,7 +49,10 @@ export default function RulesPage() {
           </button>
         </div>
 
-        {tab === 'rules' ? <RulesContent /> : <FaqContent />}
+        {/* Content card */}
+        <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl shadow-2xl p-4 sm:p-8 mb-6">
+          {tab === 'rules' ? <RulesContent /> : <FaqContent />}
+        </div>
       </div>
     </div>
   );
