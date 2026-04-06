@@ -101,7 +101,7 @@ export default function BidInput({
   const canBidNonOnes = !palificoMode.active || (palificoMode.lockedFaceValue !== null && faceValue === palificoMode.lockedFaceValue);
 
   return (
-    <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-1.5 sm:p-3 shadow-2xl animate-fade-slide-up">
+    <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-3 shadow-2xl animate-fade-slide-up">
       {error && (
         <div className="bg-red-500/30 border border-red-400/40 text-red-100 px-2 py-1 rounded mb-1.5 text-xs">
           {error}

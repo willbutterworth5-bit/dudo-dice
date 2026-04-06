@@ -699,14 +699,14 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
   return (
     <div className="h-dvh flex flex-col relative" style={{ minWidth: '0', overflow: 'hidden', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full relative pt-12 sm:pt-14">
+      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full relative pt-14 sm:pt-14">
         {/* Back button - fixed top left */}
         <button
           onClick={() => {
             if (!winner) fireSession('abandoned');
             onBackToHome();
           }}
-          className="fixed h-7 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-1.5 sm:px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
+          className="fixed h-10 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-2 sm:px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
           style={{ left: 'max(0.75rem, env(safe-area-inset-left, 0px))', top: 'max(0.75rem, env(safe-area-inset-top, 0px))' }}
         >
           ← Back
@@ -717,7 +717,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           <div className="relative">
             <button
               onClick={() => setShowDiceBreakdown(v => !v)}
-              className="h-8 sm:h-8 text-white px-2.5 sm:px-2 rounded-xl flex items-center gap-1 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 min-w-[3rem] justify-center"
+              className="h-10 sm:h-8 text-white px-2.5 sm:px-2 rounded-xl flex items-center gap-1 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 min-w-[3rem] justify-center"
             >
               <span className="text-xs">🎲</span>
               <span className="font-bold text-xs sm:text-sm">x{totalDice}</span>
@@ -750,14 +750,14 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           {gameState.palificoMode.active && (
             <button
               onClick={() => setShowPalificoInfo(true)}
-              className="h-7 sm:h-8 text-white px-1.5 sm:px-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
+              className="h-10 sm:h-8 text-white px-2 sm:px-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
             >
               <span className="hidden sm:inline">Palifico</span><span className="sm:hidden">P!</span>
             </button>
           )}
           <button
             onClick={() => setShowGameLog(v => !v)}
-            className="h-7 sm:h-8 text-white px-1.5 sm:px-2 rounded-xl text-xs font-semibold shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
+            className="h-10 sm:h-8 text-white px-2 sm:px-2 rounded-xl text-xs font-semibold shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
             title="Game Log"
           >
             📋
@@ -767,8 +767,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         {/* Redesigned Game Board - Segmented Circle */}
         <div className="relative flex-1 w-full" style={{ overflow: 'visible', minHeight: `${Math.round(BOARD_BASE * boardScale)}px` }}>
           {/* Table Container */}
-          <div className="absolute inset-0 flex items-end sm:items-center justify-center" style={{ overflow: 'visible', padding: '0' }}>
-            <div className={`relative ${boardShaking ? 'animate-board-shake' : ''}`} style={{ width: '450px', height: '450px', overflow: 'visible', flexShrink: 0, transform: `scale(${boardScale})`, transformOrigin: 'center bottom' }}>
+          <div className="absolute inset-0 flex items-center justify-center" style={{ overflow: 'visible', padding: '0' }}>
+            <div className={`relative ${boardShaking ? 'animate-board-shake' : ''}`} style={{ width: '450px', height: '450px', overflow: 'visible', flexShrink: 0, transform: `scale(${boardScale})`, transformOrigin: 'center center' }}>
               {/* Base Circle */}
               <div
                 className="absolute inset-0 rounded-full"
@@ -1239,7 +1239,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
         {/* Player Color Legend */}
         <div className="px-3 flex-shrink-0">
-          <div className="max-w-2xl mx-auto flex flex-wrap gap-1 sm:gap-1.5 mt-1 sm:mt-2 mb-1">
+          <div className="max-w-2xl mx-auto flex flex-wrap gap-1 sm:gap-1.5 mt-2 sm:mt-2 mb-3 sm:mb-1">
             {gameState.players.map((player, playerIdx) => {
               const color = PLAYER_COLOR_MAP[player.color] || '#6B7280';
               const isCurrentTurn = playerIdx === gameState.currentPlayerIndex && gameState.gamePhase === 'bidding' && !lastRoundResult && !showDice;
@@ -1251,7 +1251,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               return (
                 <div
                   key={player.id}
-                  className="flex-1 min-w-0 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md h-6 sm:h-7"
+                  className="flex-1 min-w-0 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md h-9 sm:h-7"
                   style={{
                     background: `linear-gradient(to bottom right, ${color}, ${color}dd)`,
                     boxShadow: isCurrentTurn
@@ -1279,27 +1279,28 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               const challColor  = PLAYER_COLOR_MAP[challPlayer?.color ?? ''] || '#6B7280';
               const bidColor    = PLAYER_COLOR_MAP[bidPlayer?.color   ?? ''] || '#6B7280';
               return (
-                <div className="animate-fade-slide-up mb-1.5">
-                  <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl px-4 py-2.5 shadow-2xl">
-                    <div className="flex items-center justify-center gap-1.5 flex-wrap text-sm">
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: challColor }} />
-                        <span className="font-bold text-white">{challPlayer?.name ?? 'Player'}</span>
-                      </div>
-                      {isCalzaRound ? (
-                        <span className="text-white/65">called <span className="font-bold text-yellow-300">CALZA</span> on</span>
-                      ) : (
-                        <span className="text-white/65">called <span className="font-bold text-red-300">DUDO</span> on</span>
-                      )}
-                      <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: bidColor }} />
-                        <span className="font-bold text-white">{bidPlayer?.name ?? 'Player'}<span className="font-normal text-white/65">'s bid of</span></span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="font-bold text-white">{lastRoundResult.challengedBid.quantity}×</span>
-                        <div className="w-5 h-5 bg-white rounded flex items-center justify-center flex-shrink-0">
-                          <DiceFace value={lastRoundResult.challengedBid.faceValue} size="sm" />
-                        </div>
+                <div
+                  className="animate-fade-slide-up bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl px-4 py-2.5 shadow-2xl flex items-center justify-center"
+                  style={{ minHeight: '9.5rem' }}
+                >
+                  <div className="flex items-center justify-center gap-1.5 flex-wrap text-sm">
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: challColor }} />
+                      <span className="font-bold text-white">{challPlayer?.name ?? 'Player'}</span>
+                    </div>
+                    {isCalzaRound ? (
+                      <span className="text-white/65">called <span className="font-bold text-yellow-300">CALZA</span> on</span>
+                    ) : (
+                      <span className="text-white/65">called <span className="font-bold text-red-300">DUDO</span> on</span>
+                    )}
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: bidColor }} />
+                      <span className="font-bold text-white">{bidPlayer?.name ?? 'Player'}<span className="font-normal text-white/65">'s bid of</span></span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="font-bold text-white">{lastRoundResult.challengedBid.quantity}×</span>
+                      <div className="w-5 h-5 bg-white rounded flex items-center justify-center flex-shrink-0">
+                        <DiceFace value={lastRoundResult.challengedBid.faceValue} size="sm" />
                       </div>
                     </div>
                   </div>
@@ -1322,7 +1323,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               <div
                 key={`waiting-${gameState.currentPlayerIndex}`}
                 className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-1.5 sm:p-3 shadow-2xl animate-fade-slide-up flex items-center justify-center"
-                style={{ minHeight: '8.5rem' }}
+                style={{ minHeight: '9.5rem' }}
               >
                 <div className="flex items-center justify-center gap-2">
                   <div
