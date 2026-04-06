@@ -795,7 +795,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         </div>
 
         {/* Redesigned Game Board - Segmented Circle */}
-        <div ref={boardAreaRef} className="relative flex-1 min-h-0 sm:min-h-[450px] w-full" style={{ overflow: 'visible' }}>
+        <div ref={boardAreaRef} className="relative flex-1 min-h-0 w-full" style={{ overflow: 'visible' }}>
           {/* Table Container */}
           <div className={`absolute inset-0 flex items-center justify-center ${boardShaking ? 'animate-board-shake' : ''}`} style={{ overflow: 'visible', padding: '0' }}>
             <div className="relative" style={{ width: '450px', height: '450px', overflow: 'visible', flexShrink: 0, transform: `scale(${boardScale})`, transformOrigin: 'center center' }}>
@@ -1269,7 +1269,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
         {/* Player Color Legend */}
         <div className="px-3 flex-shrink-0">
-          <div className="max-w-2xl mx-auto flex flex-wrap gap-1 sm:gap-1.5 mt-2 sm:mt-2 mb-3 sm:mb-1">
+          <div className="max-w-4xl mx-auto flex flex-wrap gap-1 sm:gap-1.5 mt-2 sm:mt-2 mb-3 sm:mb-1">
             {gameState.players.map((player, playerIdx) => {
               const color = PLAYER_COLOR_MAP[player.color] || '#6B7280';
               const isCurrentTurn = playerIdx === gameState.currentPlayerIndex && gameState.gamePhase === 'bidding' && !lastRoundResult && !showDice;
