@@ -1269,7 +1269,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
         {/* Player Color Legend */}
         <div className="px-3 flex-shrink-0">
-          <div className="max-w-4xl mx-auto flex flex-wrap gap-1 sm:gap-1.5 mt-2 sm:mt-2 mb-3 sm:mb-1">
+          <div className="max-w-2xl mx-auto flex flex-wrap gap-1 sm:gap-1.5 mt-2 sm:mt-2 mb-3 sm:mb-1">
             {gameState.players.map((player, playerIdx) => {
               const color = PLAYER_COLOR_MAP[player.color] || '#6B7280';
               const isCurrentTurn = playerIdx === gameState.currentPlayerIndex && gameState.gamePhase === 'bidding' && !lastRoundResult && !showDice;
@@ -1301,7 +1301,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
         {/* Bid Input Section */}
         <div className="px-3 pb-2 sm:pb-4 relative z-10 flex-shrink-0">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto min-h-[9.5rem] sm:min-h-[7.5rem] flex flex-col justify-center">
             {/* Challenge Context Banner — who called who and what the bid was */}
             {lastRoundResult && !showDice && !modalClosing && (() => {
               const challPlayer = gameState.players.find(p => p.id === lastRoundResult.challengerId);
