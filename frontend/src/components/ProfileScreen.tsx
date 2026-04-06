@@ -174,7 +174,7 @@ export default function ProfileScreen() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8 relative">
+    <div className="min-h-dvh flex flex-col items-center justify-center p-4 sm:p-8 relative" style={{ overflowY: 'auto' }}>
       {/* Back button - fixed top left */}
       <button
         onClick={handleBack}
@@ -184,14 +184,14 @@ export default function ProfileScreen() {
         ← Back
       </button>
 
-      <div className="max-w-2xl w-full">
+      <div className="max-w-2xl w-full pt-12 sm:pt-0">
         {/* Logo and title */}
-        <div className="flex items-center justify-center gap-4 mb-5">
+        <div className="flex items-center justify-center gap-4 mb-5 pl-16 sm:pl-0">
           <img
             src="/Logo.webp"
             alt="Dudo Dice Logo"
             className="flex-shrink-0"
-            style={{ width: '72px', height: '72px' }}
+            style={{ width: '60px', height: '60px' }}
           />
           <div className="flex flex-col">
             <h1 className="text-2xl sm:text-4xl font-bold text-white">Player Profile</h1>

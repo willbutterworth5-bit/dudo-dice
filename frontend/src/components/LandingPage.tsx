@@ -40,7 +40,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
+    <div className="min-h-dvh flex flex-col items-center justify-center p-4 sm:p-8" style={{ overflowY: 'auto' }}>
       <div className="max-w-md w-full">
         {/* Logo and title */}
         <div className="flex items-center justify-center gap-4 mb-8">
@@ -60,11 +60,26 @@ export default function LandingPage() {
 
         {/* Mode selection card */}
         <div className={`bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl p-6 transition-opacity duration-200 ${!consentGiven ? 'opacity-40 pointer-events-none select-none' : ''}`}>
-          <h2 className="text-xl font-bold text-white text-center mb-6">
-            Choose Game Mode
-          </h2>
-
           <div className="flex flex-col gap-4">
+            <div className="flex gap-3">
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex-1 py-2.5 text-white font-bold rounded-xl btn-glass flex items-center justify-center gap-2"
+              >
+                <span>👤</span> Profile
+              </button>
+              <button
+                onClick={() => navigate('/rules')}
+                className="flex-1 py-2.5 text-white font-bold rounded-xl btn-glass flex items-center justify-center gap-2"
+              >
+                <span>📖</span> Rules
+              </button>
+            </div>
+
+            <h2 className="text-xl font-bold text-white text-center">
+              Choose Game Mode
+            </h2>
+
             <button
               onClick={() => navigate('/play')}
               className="w-full py-4 text-white font-extrabold text-lg rounded-xl transition-colors btn-3d-accent flex items-center justify-center gap-3"
@@ -80,21 +95,6 @@ export default function LandingPage() {
               <span className="text-2xl">☁️</span>
               Play Online
             </button>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => navigate('/profile')}
-                className="flex-1 py-2.5 text-white font-bold rounded-xl btn-glass flex items-center justify-center gap-2"
-              >
-                <span>👤</span> Profile
-              </button>
-              <button
-                onClick={() => navigate('/rules')}
-                className="flex-1 py-2.5 text-white font-bold rounded-xl btn-glass flex items-center justify-center gap-2"
-              >
-                <span>📖</span> Rules
-              </button>
-            </div>
           </div>
         </div>
 

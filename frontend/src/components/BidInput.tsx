@@ -101,20 +101,20 @@ export default function BidInput({
   const canBidNonOnes = !palificoMode.active || (palificoMode.lockedFaceValue !== null && faceValue === palificoMode.lockedFaceValue);
 
   return (
-    <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-2 sm:p-3 shadow-2xl animate-fade-slide-up">
+    <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-1.5 sm:p-3 shadow-2xl animate-fade-slide-up">
       {error && (
-        <div className="bg-red-500/30 border border-red-400/40 text-red-100 px-3 py-1.5 rounded mb-2 text-sm">
+        <div className="bg-red-500/30 border border-red-400/40 text-red-100 px-2 py-1 rounded mb-1.5 text-xs">
           {error}
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {/* Horizontal Container for Face Value and Quantity */}
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-4 justify-center">
-          {/* Face Value - Left Side */}
-          <div className="flex-1 flex flex-col items-center">
-            <label className="block text-xs font-medium text-white mb-1 text-center">Face Value</label>
-            <div className="flex gap-1.5 flex-wrap justify-center">
+        <div className="flex items-center gap-3 justify-center">
+          {/* Face Value */}
+          <div className="flex flex-col items-center">
+            <label className="block text-[10px] font-medium text-white mb-1 text-center">Face Value</label>
+            <div className="flex gap-1 flex-wrap justify-center" style={{ maxWidth: '112px' }}>
               {[1, 2, 3, 4, 5, 6].map((value) => {
                 const isDisabled = value === 1 ? !canBidOnes : !canBidNonOnes;
                 const isLocked = palificoMode.active && palificoMode.lockedFaceValue !== value;
@@ -142,7 +142,7 @@ export default function BidInput({
                     }}
                     disabled={disabled || isDisabled || isLocked}
                     className={`
-                      w-9 h-9 sm:w-10 sm:h-10 rounded-xl transition-colors flex items-center justify-center relative
+                      w-8 h-8 rounded-lg transition-colors flex items-center justify-center relative
                       ${faceValue === value
                         ? 'bg-white/30 ring-2 ring-white shadow-sm'
                         : 'bg-white/15 border border-white/25'
@@ -151,7 +151,7 @@ export default function BidInput({
                       ${disabled ? 'opacity-50' : ''}
                     `}
                   >
-                    <div className="w-7 h-7 bg-white rounded">
+                    <div className="w-6 h-6 bg-white rounded">
                       <DiceFace value={value} size="sm" />
                     </div>
                   </button>
@@ -160,12 +160,10 @@ export default function BidInput({
             </div>
           </div>
 
-          {/* Quantity - Right Side */}
-          <div className="flex-1 flex flex-col items-center">
-            <label className="block text-xs font-medium text-white mb-1 text-center">
-              Quantity
-            </label>
-            <div className="flex items-center justify-center gap-2">
+          {/* Quantity */}
+          <div className="flex flex-col items-center">
+            <label className="block text-[10px] font-medium text-white mb-1 text-center">Quantity</label>
+            <div className="flex items-center justify-center gap-1.5">
               <button
                 onClick={() => {
                   const minQty = getMinQuantity();
@@ -175,12 +173,12 @@ export default function BidInput({
                   }
                 }}
                 disabled={disabled || quantity <= getMinQuantity()}
-                className="w-9 h-9 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-base flex items-center justify-center btn-glass"
+                className="w-8 h-8 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-base flex items-center justify-center btn-glass"
               >
                 −
               </button>
-              <div className="w-14 h-10 bg-white/20 border border-white/30 rounded-xl flex items-center justify-center">
-                <span className="text-xl font-bold text-white">{quantity}</span>
+              <div className="w-12 h-8 bg-white/20 border border-white/30 rounded-lg flex items-center justify-center">
+                <span className="text-lg font-bold text-white">{quantity}</span>
               </div>
               <button
                 onClick={() => {
@@ -191,7 +189,7 @@ export default function BidInput({
                   }
                 }}
                 disabled={disabled || quantity >= getMaxQuantity()}
-                className="w-9 h-9 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-base flex items-center justify-center btn-glass"
+                className="w-8 h-8 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-base flex items-center justify-center btn-glass"
               >
                 +
               </button>
@@ -199,29 +197,29 @@ export default function BidInput({
           </div>
         </div>
 
-        {/* Action Buttons - Below both sections */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={handleBid}
-            disabled={disabled}
-            className="flex-1 bg-accent hover:bg-accent-hover disabled:bg-gray-300 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors text-sm btn-3d-accent"
-          >
-            Bid
-          </button>
+        {/* Action Buttons */}
+        <div className="flex gap-1.5">
           {currentBid && (
             <button
               onClick={onChallenge}
               disabled={disabled}
-              className="flex-1 bg-accent-danger hover:bg-accent-danger-hover disabled:bg-gray-300 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors text-sm btn-3d-danger"
+              className="flex-1 bg-accent-danger hover:bg-accent-danger-hover disabled:bg-gray-300 text-white font-semibold py-2 px-3 rounded-xl transition-colors text-sm btn-3d-danger"
             >
               Dudo
             </button>
           )}
+          <button
+            onClick={handleBid}
+            disabled={disabled}
+            className="flex-1 bg-accent hover:bg-accent-hover disabled:bg-gray-300 text-white font-semibold py-2 px-3 rounded-xl transition-colors text-sm btn-3d-accent"
+          >
+            Bid
+          </button>
           {currentBid && calzaEnabled && (
             <button
               onClick={onCalza}
               disabled={disabled}
-              className="px-3 py-2.5 text-white font-semibold rounded-xl transition-colors text-xs btn-3d-calza disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-2 text-white font-semibold rounded-xl transition-colors text-xs btn-3d-calza disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Calza
             </button>

@@ -698,8 +698,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
 
   return (
-    <div className="min-h-screen relative" style={{ padding: '0.5rem', paddingTop: '0', minWidth: '0', overflowX: 'hidden' }}>
-      <div className="max-w-4xl mx-auto relative">
+    <div className="h-dvh flex flex-col relative" style={{ minWidth: '0', overflow: 'hidden', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full relative pt-12 sm:pt-14">
         {/* Back button - fixed top left */}
         <button
           onClick={() => {
@@ -765,7 +765,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         </div>
 
         {/* Redesigned Game Board - Segmented Circle */}
-        <div className="relative w-full max-w-4xl mx-auto mt-8 sm:mt-10" style={{ height: `${Math.round(BOARD_BASE * boardScale)}px`, overflow: 'visible' }}>
+        <div className="relative flex-shrink-0 sm:flex-1 w-full" style={{ overflow: 'visible', minHeight: `${Math.round(BOARD_BASE * boardScale)}px` }}>
           {/* Table Container */}
           <div className="absolute inset-0 flex items-center justify-center" style={{ overflow: 'visible', padding: '0' }}>
             <div className={`relative ${boardShaking ? 'animate-board-shake' : ''}`} style={{ width: '450px', height: '450px', overflow: 'visible', flexShrink: 0, transform: `scale(${boardScale})`, transformOrigin: 'center center' }}>
@@ -1236,12 +1236,12 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           </div>
         </div>
 
-        {/* Player Legend + Bid Input */}
-        <div className="px-3 relative z-10 mt-0 sm:mt-1">
-          {/* Bid Input Section */}
-          <div className="max-w-2xl mx-auto">
-          {/* Player Color Legend */}
-          <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-1.5 mt-1 sm:mt-2">
+        {/* Mobile spacer: centers names+bid below board */}
+        <div className="flex-1 sm:hidden" style={{ minHeight: '1rem' }} />
+
+        {/* Player Color Legend */}
+        <div className="px-3 flex-shrink-0">
+          <div className="max-w-2xl mx-auto flex flex-wrap gap-1 sm:gap-1.5 mt-1 sm:mt-2 mb-1">
             {gameState.players.map((player, playerIdx) => {
               const color = PLAYER_COLOR_MAP[player.color] || '#6B7280';
               const isCurrentTurn = playerIdx === gameState.currentPlayerIndex && gameState.gamePhase === 'bidding' && !lastRoundResult && !showDice;
@@ -1269,6 +1269,11 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               );
             })}
           </div>
+        </div>
+
+        {/* Bid Input Section */}
+        <div className="px-3 pb-2 relative z-10 flex-shrink-0">
+          <div className="max-w-2xl mx-auto">
             {/* Challenge Context Banner — who called who and what the bid was */}
             {lastRoundResult && !showDice && !modalClosing && (() => {
               const challPlayer = gameState.players.find(p => p.id === lastRoundResult.challengerId);

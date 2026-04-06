@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { PLAYER_COLOR_MAP, Player, RoundResult } from '../game/GameState';
 import { alternativeBids, probColour, probabilityFromRecord } from '../utils/probability';
 import DiceFace from './DiceFace';
@@ -398,6 +398,12 @@ export default function GameAnalysisModal({ roundHistory, players, onClose }: Ga
     roundHistory[roundHistory.length - 1]?.round ?? 1,
   );
   const [subPage, setSubPage] = useState<SubPage>('main');
+  const roundScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (roundScrollRef.current) {
+      roundScrollRef.current.scrollLeft = roundScrollRef.current.scrollWidth;
+    }
+  }, []);
 
   const stats = computeSummaryStats(roundHistory, players);
   const selectedResult = roundHistory.find(round => round.round === selectedRound) ?? roundHistory[0] ?? null;
@@ -456,7 +462,7 @@ export default function GameAnalysisModal({ roundHistory, players, onClose }: Ga
             {/* Round by round section */}
             <div className="flex-shrink-0 border-b border-white/20 px-4 pt-3 pb-2">
               <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">Round by Round</p>
-              <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+              <div ref={roundScrollRef} className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                 {roundHistory.map(round => (
                   <button
                     key={round.round}

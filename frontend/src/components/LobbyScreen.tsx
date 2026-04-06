@@ -59,7 +59,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8">
+    <div className="min-h-dvh flex flex-col items-center justify-center p-4 sm:p-8" style={{ overflowY: 'auto' }}>
       {/* Back button - fixed top left */}
       <button
         onClick={() => { mp.disconnect(); navigate('/'); }}
@@ -68,9 +68,9 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
       >
         ← Back
       </button>
-      <div className="max-w-lg w-full">
+      <div className="max-w-lg w-full pt-12 sm:pt-0">
         {/* Header */}
-        <div className="flex items-center justify-center gap-4 mb-5 pl-16">
+        <div className="flex items-center justify-center gap-4 mb-5 pl-16 sm:pl-0">
           <picture><source srcSet="/Logo.webp" type="image/webp" /><img src="/Logo.png" alt="Dudo Dice Logo" className="flex-shrink-0" style={{ width: '56px', height: '56px' }} /></picture>
           <div className="flex flex-col">
             <h1 className="text-3xl font-bold text-white">Play Online</h1>

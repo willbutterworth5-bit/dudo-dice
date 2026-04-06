@@ -33,12 +33,12 @@ export default function GameOverModal({
           >
             🎉
           </div>
-          <h2 className="text-3xl font-bold mb-2 text-white">Game Over!</h2>
+          <h2 className="text-3xl font-bold mb-2 text-white">Game Over</h2>
           <p className="text-xl text-white mb-1">
             <span className="font-semibold">{winner.name}</span> wins!
           </p>
           <p className="text-sm text-white/70 mb-4">
-            {winner.isHuman ? 'Congratulations!' : 'Better luck next time!'}
+            {winner.isHuman ? 'Congratulations' : 'Better luck next time'}
           </p>
 
           {/* Ranked rating change */}

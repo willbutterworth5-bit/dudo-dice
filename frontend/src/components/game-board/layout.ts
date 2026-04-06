@@ -5,7 +5,7 @@ export const BOARD_BASE = 450;
 export function getResponsiveBoardSize(viewportWidth: number, viewportHeight: number): number {
   const isMobile = viewportWidth < 640;
   const widthBased = viewportWidth - 48;
-  const heightBased = isMobile ? viewportHeight - 300 : BOARD_BASE;
+  const heightBased = isMobile ? viewportHeight - 240 : BOARD_BASE;
   return Math.min(BOARD_BASE, widthBased, heightBased);
 }
 

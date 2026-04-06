@@ -9,11 +9,20 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background: #4E82B0;
   color: #2C2C2C;
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 #root {
-  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.h-dvh {
+  height: 100dvh;
+  max-height: 100dvh;
+}
+
+.min-h-dvh {
+  min-height: 100dvh;
 }
 
 /* 3D Transform Utilities */
