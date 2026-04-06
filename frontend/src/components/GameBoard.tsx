@@ -602,7 +602,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   if (!gameState || (!isMultiplayer && !gameEngine)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-text-primary">Loading game...</div>
+        <div className="text-xl text-white">Loading game...</div>
       </div>
     );
   }
@@ -610,7 +610,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   if (!gameState.players || gameState.players.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-text-primary">Initializing players...</div>
+        <div className="text-xl text-white">Initializing players...</div>
       </div>
     );
   }
@@ -619,7 +619,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   if (!currentPlayer) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-text-primary">Setting up game...</div>
+        <div className="text-xl text-white">Setting up game...</div>
       </div>
     );
   }

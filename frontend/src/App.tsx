@@ -17,8 +17,9 @@ const RulesPage = lazy(() => import('./components/RulesPage'))
 
 function PageLoader() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-3">
       <div className="animate-spin w-8 h-8 border-2 border-white border-t-transparent rounded-full" />
+      <span className="text-white/70 text-sm font-medium">Loading…</span>
     </div>
   )
 }
