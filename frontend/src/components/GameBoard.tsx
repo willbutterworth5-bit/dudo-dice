@@ -767,8 +767,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         {/* Redesigned Game Board - Segmented Circle */}
         <div className="relative flex-1 w-full" style={{ overflow: 'visible', minHeight: `${Math.round(BOARD_BASE * boardScale)}px` }}>
           {/* Table Container */}
-          <div className="absolute inset-0 flex items-center justify-center" style={{ overflow: 'visible', padding: '0' }}>
-            <div className={`relative ${boardShaking ? 'animate-board-shake' : ''}`} style={{ width: '450px', height: '450px', overflow: 'visible', flexShrink: 0, transform: `scale(${boardScale})`, transformOrigin: 'center center' }}>
+          <div className={`absolute inset-0 flex items-center justify-center ${boardShaking ? 'animate-board-shake' : ''}`} style={{ overflow: 'visible', padding: '0' }}>
+            <div className="relative" style={{ width: '450px', height: '450px', overflow: 'visible', flexShrink: 0, transform: `scale(${boardScale})`, transformOrigin: 'center center' }}>
               {/* Base Circle */}
               <div
                 className="absolute inset-0 rounded-full"
