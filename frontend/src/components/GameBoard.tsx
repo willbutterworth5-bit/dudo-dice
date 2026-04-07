@@ -1268,7 +1268,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
 
         {/* Player Color Legend */}
-        <div className="px-3 flex-shrink-0">
+        <div className="px-3 flex-shrink-0 relative z-10">
           <div className="max-w-2xl mx-auto flex flex-wrap gap-1 sm:gap-1.5 mt-2 sm:mt-2 mb-3 sm:mb-1">
             {gameState.players.map((player, playerIdx) => {
               const color = PLAYER_COLOR_MAP[player.color] || '#6B7280';
@@ -1301,7 +1301,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
 
         {/* Bid Input Section */}
         <div className="px-3 pb-2 sm:pb-4 relative z-10 flex-shrink-0">
-          <div className="max-w-2xl mx-auto min-h-[9.5rem] sm:min-h-[7.5rem] flex flex-col justify-center">
+          <div className="max-w-2xl mx-auto min-h-[9.5rem] sm:min-h-[7.5rem] flex flex-col">
             {/* Challenge Context Banner — who called who and what the bid was */}
             {lastRoundResult && !showDice && !modalClosing && (() => {
               const challPlayer = gameState.players.find(p => p.id === lastRoundResult.challengerId);
@@ -1310,7 +1310,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               const bidColor    = PLAYER_COLOR_MAP[bidPlayer?.color   ?? ''] || '#6B7280';
               return (
                 <div
-                  className="animate-fade-slide-up bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl px-4 py-2.5 shadow-2xl flex items-center justify-center"
+                  className="animate-fade-slide-up bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl px-4 py-2.5 shadow-2xl flex flex-1 items-center justify-center"
                 >
                   <div className="flex items-center justify-center gap-1.5 flex-wrap text-sm">
                     <div className="flex items-center gap-1">
@@ -1351,7 +1351,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
             {!isMyTurn && gameState.gamePhase === 'bidding' && !lastRoundResult && !innerCircleChallenge && (
               <div
                 key={`waiting-${gameState.currentPlayerIndex}`}
-                className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-1.5 sm:p-3 shadow-2xl animate-fade-slide-up flex items-center justify-center"
+                className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl p-1.5 sm:p-3 shadow-2xl animate-fade-slide-up flex flex-1 items-center justify-center"
               >
                 <div className="flex items-center justify-center gap-2">
                   <div
