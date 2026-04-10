@@ -11,7 +11,7 @@ export default function RulesPage() {
       {/* Back button - fixed top left, matches ProfileScreen */}
       <button
         onClick={() => navigate(-1)}
-        className="fixed text-sm font-bold z-50 text-white rounded-xl px-2 py-1 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 transition-colors"
+        className="fixed h-10 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
         style={{ left: '0.75rem', top: '0.75rem' }}
       >
         ← Back
@@ -28,7 +28,7 @@ export default function RulesPage() {
           />
           <div className="flex flex-col">
             <h1 className="text-2xl sm:text-4xl font-bold text-white">
-              {tab === 'rules' ? 'Game Rules' : 'FAQ'}
+              {tab === 'rules' ? 'Perudo Rules' : 'FAQ'}
             </h1>
           </div>
         </div>

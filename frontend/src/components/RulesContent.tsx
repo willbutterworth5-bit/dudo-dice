@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 export function RulesContent() {
   return (
     <div className="space-y-6">
+      <p className="text-white/70 text-base">Perudo (also known as liar's dice or dudo) is a bluffing dice game where the last player with dice remaining wins.</p>
       <section>
         <h3 className="text-2xl font-semibold mb-3 text-white">Winning</h3>
         <p className="text-lg text-white/85">
@@ -152,7 +153,10 @@ export function FaqContent() {
     {
       q: 'Is my profile saved?',
       a: (
-        <p>Your profile (name, avatar, stats, achievements, and Elo rating) is stored in your browser's local storage. It persists across sessions but is tied to your device and browser. Clearing your browser data will reset your profile.</p>
+        <>
+          <p className="mb-2">Your profile (name, avatar, stats, achievements, and Elo rating) is stored in your browser's local storage by default. It persists across sessions but is tied to your device and browser — clearing your browser data will reset it.</p>
+          <p>To keep your profile safe and sync it across devices, create a free account with your email address. Hit <strong>Sign In / Create Account</strong> on the Profile screen, sign up with your email, then confirm the link sent to your inbox. Once signed in, your profile syncs to your account automatically.</p>
+        </>
       ),
     },
     {

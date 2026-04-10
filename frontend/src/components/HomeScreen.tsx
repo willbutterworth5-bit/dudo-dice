@@ -31,14 +31,14 @@ export default function HomeScreen() {
       {/* Back button - fixed top left */}
       <button
         onClick={() => navigate('/')}
-        className="fixed text-white text-sm font-semibold z-50 rounded-xl px-2 py-1 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900"
+        className="fixed h-10 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
         style={{ left: '0.75rem', top: '0.75rem' }}
       >
         ← Back
       </button>
       <div className="max-w-2xl sm:max-w-4xl w-full pt-12 sm:pt-0">
         {/* Logo and title side by side */}
-        <div className="flex items-center justify-center gap-4 mb-5 pl-16 sm:pl-0">
+        <div className="flex items-center justify-center gap-4 mb-5">
           <picture>
             <source srcSet="/Logo.webp" type="image/webp" />
             <img src="/Logo.png" alt="Dudo Dice Logo" className="flex-shrink-0" style={{ width: '72px', height: '72px' }} />

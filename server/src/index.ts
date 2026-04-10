@@ -127,8 +127,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Feedback endpoint
-const feedbackLog: { message: string; category: string; email?: string; timestamp: string }[] = [];
-app.post('/api/feedback', (req, res) => {
+app.post('/api/feedback', async (req, res) => {
   const { message, category, email } = req.body as { message?: string; category?: string; email?: string };
   if (!message || typeof message !== 'string' || !message.trim()) {
     res.status(400).json({ error: 'Message is required' });
@@ -138,10 +137,42 @@ app.post('/api/feedback', (req, res) => {
     message: message.trim(),
     category: (typeof category === 'string' && category.trim()) ? category.trim() : 'general',
     email: (typeof email === 'string' && email.trim()) ? email.trim() : undefined,
-    timestamp: new Date().toISOString(),
   };
-  feedbackLog.push(entry);
   console.log('📝 Feedback received:', JSON.stringify(entry));
+
+  // Save to Supabase
+  if (supabase) {
+    const { error } = await supabase.from('feedback').insert(entry);
+    if (error) console.error('Failed to save feedback to Supabase:', error.message);
+  }
+
+  // Send email via Resend
+  const resendKey = process.env.RESEND_API_KEY;
+  if (resendKey) {
+    const fromEmail = process.env.RESEND_FROM ?? 'Dudo Dice <onboarding@resend.dev>';
+    const body = [
+      `Category: ${entry.category}`,
+      `From: ${entry.email ?? '(no email provided)'}`,
+      '',
+      entry.message,
+    ].join('\n');
+    try {
+      const r = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: ['willbutterworth5@gmail.com'],
+          subject: `[Dudo Dice Feedback] ${entry.category}`,
+          text: body,
+        }),
+      });
+      if (!r.ok) console.error('Resend error:', await r.text());
+    } catch (err) {
+      console.error('Failed to send feedback email:', (err as Error).message);
+    }
+  }
+
   res.json({ ok: true });
 });
 
