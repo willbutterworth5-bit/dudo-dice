@@ -18,7 +18,7 @@ const en: Translations = {
     or: 'or',
   },
   landing: {
-    tagline: 'The Classic Perudo Game',
+    tagline: "The Classic Liar's Dice Game",
     profile: '👤 Profile',
     rules: '📖 Rules',
     chooseModeHeading: 'Choose Game Mode',
