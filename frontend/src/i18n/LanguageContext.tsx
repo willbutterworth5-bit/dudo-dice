@@ -28,7 +28,8 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
     const stored = ProfileStorage.getProfile().language;
-    return stored === 'es' ? 'es' : 'en';
+    if (stored === 'es' || stored === 'en') return stored;
+    return navigator.language?.toLowerCase().startsWith('es') ? 'es' : 'en';
   });
 
   const setLanguage = useCallback((lang: Language) => {

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 export function RulesContent() {
   return (
     <div className="space-y-6">
-      <p className="text-white/70 text-base">Perudo (also known as liar's dice or dudo) is a bluffing dice game where the last player with dice remaining wins.</p>
+      <p className="text-white/70 text-base">Liar's Dice (also known as Perudo or Dudo) is a bluffing dice game where the last player with dice remaining wins.</p>
       <section>
         <h3 className="text-2xl font-semibold mb-3 text-white">Winning</h3>
         <p className="text-lg text-white/85">
