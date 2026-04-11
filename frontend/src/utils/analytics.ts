@@ -50,6 +50,7 @@ function updateConsentMode(granted: boolean): void {
 }
 
 export function applyAnalyticsConsent(consent: CookieConsent | null): void {
+  if (!import.meta.env.PROD) return;
   ensureGtagStub();
 
   if (!window.__dudoAnalyticsConfigured) {
@@ -68,6 +69,7 @@ export function applyAnalyticsConsent(consent: CookieConsent | null): void {
 }
 
 export function trackPageView(path: string, title: string): void {
+  if (!import.meta.env.PROD) return;
   if (!window.__dudoAnalyticsConfigured || !window.gtag) {
     return;
   }

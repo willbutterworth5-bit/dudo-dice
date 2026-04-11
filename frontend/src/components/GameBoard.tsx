@@ -111,8 +111,11 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   const [pendingAchievements, setPendingAchievements] = useState<string[]>([]);
 
   // Fire-and-forget session recording for Supabase analytics
+  const sessionFired = useRef(false);
   const fireSession = (result: 'win' | 'loss' | 'abandoned') => {
     if (!gameState) return;
+    if (sessionFired.current) return;
+    sessionFired.current = true;
     recordGameSession(user?.id ?? null, {
       session_type: isMultiplayer ? 'online' : 'vs_ai',
       difficulty: isMultiplayer ? undefined : difficulty,
@@ -739,7 +742,14 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         {/* Back button - fixed top left */}
         <button
           onClick={() => {
-            if (!winner) fireSession('abandoned');
+            if (winner) {
+              const humanPlayer = isMultiplayer
+                ? gameState.players.find(p => p.id === multiplayerMode?.playerId)
+                : gameState.players.find(p => p.isHuman);
+              fireSession(humanPlayer && winner.id === humanPlayer.id ? 'win' : 'loss');
+            } else {
+              fireSession('abandoned');
+            }
             onBackToHome();
           }}
           className="fixed h-10 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-2 sm:px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
@@ -1511,6 +1521,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               consecutiveValidBids.current = 0;
               gameStartHour.current = new Date().getHours();
               gameStartTime.current = Date.now();
+              sessionFired.current = false;
 
               const settings: GameSettings = {
                 playerCount,

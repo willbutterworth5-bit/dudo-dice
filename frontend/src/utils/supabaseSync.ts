@@ -150,14 +150,16 @@ export interface GameSessionData {
  * userId is null for guests. Never throws — silently swallows errors.
  */
 export async function recordGameSession(userId: string | null, session: GameSessionData): Promise<void> {
+  if (!import.meta.env.PROD) return;
   if (!supabase) return;
   try {
-    await supabase.from('game_sessions').insert({
+    const { error } = await supabase.from('game_sessions').insert({
       user_id: userId,
       ...session,
       played_at: new Date().toISOString(),
     });
-  } catch {
+    if (error) console.error('[Supabase] game_sessions insert failed:', error.message, error.code);
+  } catch (e) {
     // never block the game
   }
 }
