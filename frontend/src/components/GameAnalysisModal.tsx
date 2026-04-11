@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { PLAYER_COLOR_MAP, Player, RoundResult } from '../game/GameState';
 import { alternativeBids, probColour, probabilityFromRecord } from '../utils/probability';
 import DiceFace from './DiceFace';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface GameAnalysisModalProps {
   roundHistory: RoundResult[];
@@ -62,6 +63,7 @@ function MissedDudosPage({
   players: Player[];
   onBack: () => void;
 }) {
+  const { t } = useLanguage();
   const human = players.find(p => p.isHuman);
   const items: { round: number; bidderName: string; bidderColor: string; bid: { quantity: number; faceValue: number }; actualCount: number }[] = [];
 
@@ -97,24 +99,24 @@ function MissedDudosPage({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-2 border-b border-white/20 px-4 py-2">
-        <button onClick={onBack} className="text-sm text-white/60 hover:text-white">&larr; Back</button>
-        <h3 className="text-sm font-bold text-white">Missed DUDOs</h3>
+        <button onClick={onBack} className="text-sm text-white/60 hover:text-white">{t('gameAnalysis.back')}</button>
+        <h3 className="text-sm font-bold text-white">{t('gameAnalysis.missedDudosTitle')}</h3>
       </div>
       <div className="scrollbar-indigo flex-1 overflow-y-auto px-4 py-3">
         {items.length === 0 ? (
-          <p className="text-center text-xs italic text-white/40">No missed DUDO opportunities.</p>
+          <p className="text-center text-xs italic text-white/40">{t('gameAnalysis.noMissed')}</p>
         ) : (
           <div className="space-y-2">
             {items.map((item, idx) => (
               <div key={idx} className="rounded-lg bg-amber-500/15 ring-1 ring-amber-400/30 p-2.5">
-                <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-amber-300/70">Round {item.round}</p>
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-amber-300/70">{t('gameAnalysis.roundLabel', { round: item.round })}</p>
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: item.bidderColor }} />
-                  <span className="text-xs font-semibold text-white/80">{item.bidderName} bid</span>
+                  <span className="text-xs font-semibold text-white/80">{t('gameAnalysis.playerBid', { name: item.bidderName })}</span>
                   <BidDisplay quantity={item.bid.quantity} faceValue={item.bid.faceValue} />
                 </div>
                 <p className="mt-1 text-[11px] text-amber-300/80">
-                  Only {item.actualCount}x were on the board — you could have called DUDO.
+                  {t('gameAnalysis.couldHaveCalled', { count: item.actualCount })}
                 </p>
               </div>
             ))}
@@ -134,18 +136,19 @@ function DudoCallsPage({
   players: Player[];
   onBack: () => void;
 }) {
+  const { t } = useLanguage();
   const human = players.find(p => p.isHuman);
   const calls = roundHistory.filter(r => r.challengerId === human?.id && r.challengeType === 'dudo');
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-2 border-b border-white/20 px-4 py-2">
-        <button onClick={onBack} className="text-sm text-white/60 hover:text-white">&larr; Back</button>
-        <h3 className="text-sm font-bold text-white">Your DUDO Calls</h3>
+        <button onClick={onBack} className="text-sm text-white/60 hover:text-white">{t('gameAnalysis.back')}</button>
+        <h3 className="text-sm font-bold text-white">{t('gameAnalysis.yourDudoCalls')}</h3>
       </div>
       <div className="scrollbar-indigo flex-1 overflow-y-auto px-4 py-3">
         {calls.length === 0 ? (
-          <p className="text-center text-xs italic text-white/40">You made no DUDO calls this game.</p>
+          <p className="text-center text-xs italic text-white/40">{t('gameAnalysis.noCalls')}</p>
         ) : (
           <div className="space-y-2">
             {calls.map((round, idx) => {
@@ -165,20 +168,20 @@ function DudoCallsPage({
                 >
                   <div className="flex items-center justify-between mb-1">
                     <p className={`text-[10px] font-bold uppercase tracking-wider ${won ? 'text-green-300/70' : 'text-red-300/70'}`}>
-                      Round {round.round} — {won ? 'Correct ✓' : 'Wrong ✗'}
+                      {t('gameAnalysis.roundLabel', { round: round.round })} — {won ? t('gameAnalysis.correct') : t('gameAnalysis.wrong')}
                     </p>
                     {prob !== null && <ProbBadge prob={prob} />}
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: bidderColor }} />
                     <span className="text-xs text-white/70">
-                      {bidder?.isHuman ? 'You' : bidder?.name ?? 'Unknown'} bid
+                      {t('gameAnalysis.playerBid', { name: bidder?.isHuman ? t('game.you') : (bidder?.name ?? 'Unknown') })}
                     </span>
                     <BidDisplay quantity={round.challengedBid.quantity} faceValue={round.challengedBid.faceValue} />
                   </div>
                   <p className="mt-1 text-[11px] text-white/60">
-                    Actual: <span className="font-bold text-white">{round.actualCount}x</span>{' '}
-                    {won ? '— bid was a bluff.' : '— bid was real, you lost a die.'}
+                    {t('gameAnalysis.actual', { count: round.actualCount })}{' '}
+                    {won ? t('gameAnalysis.bidWasBluff') : t('gameAnalysis.bidWasReal')}
                   </p>
                 </div>
               );
@@ -197,6 +200,7 @@ function RoundDetail({
   round: RoundResult;
   players: Player[];
 }) {
+  const { t } = useLanguage();
   const humanPlayer = players.find(player => player.isHuman);
   const humanWasChallenger = humanPlayer?.id === round.challengerId;
   const humanLost = humanPlayer?.id === round.loserId;
@@ -216,25 +220,24 @@ function RoundDetail({
         <div className="flex flex-col gap-1.5 rounded-lg bg-white/10 p-2.5">
           <div className="flex items-center gap-1.5">
             <p className="text-xs font-bold uppercase tracking-wider text-white/50">
-              {round.challengeType === 'calza' ? 'Calza Outcome' : 'Challenge Outcome'}
+              {round.challengeType === 'calza' ? t('gameAnalysis.calzaOutcome') : t('gameAnalysis.challengeOutcome')}
             </p>
             <InfoTooltip
               text={
                 round.challengeType === 'calza'
-                  ? 'Summary of the Calza call and whether the exact table count matched the bid.'
-                  : 'Summary of the Dudo call, including the bid, the actual table count, and whether the challenge was strong at the time.'
+                  ? t('gameAnalysis.calzaTooltip')
+                  : t('gameAnalysis.challengeTooltip')
               }
             />
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-white/70">
             <span>
-              {challenger?.isHuman ? 'You' : challenger?.name}{' '}
-              {round.challengeType === 'calza' ? 'called CALZA on' : 'called DUDO on'}
+              {challenger?.isHuman ? t('game.you') : challenger?.name}{' '}
+              {round.challengeType === 'calza' ? t('gameAnalysis.calledCalza') : t('gameAnalysis.calledDudo')}
             </span>
             <BidDisplay quantity={round.challengedBid.quantity} faceValue={round.challengedBid.faceValue} />
             <span className="flex items-center gap-1">
-              Actual:
-              <span className="font-bold text-white">{round.actualCount}x</span>
+              {t('gameAnalysis.actual', { count: round.actualCount })}
               <span className="inline-block h-4 w-4 rounded bg-white">
                 <DiceFace value={round.challengedBid.faceValue} size="sm" />
               </span>
@@ -243,25 +246,24 @@ function RoundDetail({
           {round.challengeType === 'calza' ? (
             round.calzaSuccess ? (
               <p className="text-xs text-yellow-300">
-                Exact count. {challenger?.isHuman ? 'You' : challenger?.name} gained a die.
+                {t('gameAnalysis.exactCount')} {t('gameAnalysis.gainedDie', { name: challenger?.isHuman ? t('game.you') : (challenger?.name ?? '') })}
               </p>
             ) : (
               <p className="text-xs text-amber-300">
-                {loser?.isHuman ? 'You' : loser?.name} lost a die because the count was off.
+                {t('gameAnalysis.lostDue', { name: loser?.isHuman ? t('game.you') : (loser?.name ?? '') })}
               </p>
             )
           ) : (
             <>
               <div className="flex items-center gap-1.5 text-xs">
-                <span className="text-white/60">Bid was</span>
+                <span className="text-white/60">{t('gameAnalysis.bidWasProb', { prob: Math.round(challengedBidProb * 100) })}</span>
                 <ProbBadge prob={challengedBidProb} />
-                <span className="text-white/60">likely</span>
                 <span className="text-white/60">
-                  {loser?.isHuman ? 'You' : loser?.name} lost a die
+                  {t('gameAnalysis.lostDue', { name: loser?.isHuman ? t('game.you') : (loser?.name ?? '') })}
                 </span>
               </div>
               {humanWasChallenger && !humanLost && (
-                <p className="text-xs text-green-300">Good DUDO call.</p>
+                <p className="text-xs text-green-300">{t('gameAnalysis.goodDudoCall')}</p>
               )}
             </>
           )}
@@ -270,14 +272,14 @@ function RoundDetail({
 
       <div className="rounded-lg bg-white/10 p-3">
         <div className="mb-1.5 flex items-center gap-1.5">
-          <p className="text-xs font-bold uppercase tracking-wider text-white/50">Bid Timeline</p>
-          <InfoTooltip text="Every bid in order. The percentage reflects how likely the bid was from your perspective using your known dice and the remaining dice in play." />
+          <p className="text-xs font-bold uppercase tracking-wider text-white/50">{t('gameAnalysis.bidTimeline')}</p>
+          <InfoTooltip text={t('gameAnalysis.bidTimelineTooltip')} />
         </div>
         <div className="space-y-0.5">
           {round.bids.map((record, index) => {
             const player = players.find(candidate => candidate.id === record.playerId);
             const color = player ? PLAYER_COLOR_MAP[player.color] || '#6B7280' : '#6B7280';
-            const name = player?.isHuman ? 'You' : player?.name ?? 'Unknown';
+            const name = player?.isHuman ? t('game.you') : player?.name ?? 'Unknown';
             const prob = probabilityFromRecord(record);
             const isFinal = index === round.bids.length - 1;
             return (
@@ -296,26 +298,26 @@ function RoundDetail({
             );
           })}
           {round.bids.length === 0 && (
-            <p className="text-xs italic text-white/30">No bids recorded.</p>
+            <p className="text-xs italic text-white/30">{t('gameAnalysis.noBids')}</p>
           )}
         </div>
       </div>
 
       {humanWasChallenger && humanLost && (
         <div className="rounded-lg bg-white/10 p-2.5">
-          <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-white/50">What You Could Have Bid</p>
+          <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-white/50">{t('gameAnalysis.couldHaveBid')}</p>
           {alternatives.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {alternatives.map((alternative, index) => (
                 <div key={index} className="flex items-center gap-1">
                   <BidDisplay quantity={alternative.quantity} faceValue={alternative.faceValue} />
-                  <span className="text-xs text-white/50">({alternative.actualCount} on board)</span>
+                  <span className="text-xs text-white/50">{t('gameAnalysis.onBoard', { count: alternative.actualCount })}</span>
                 </div>
               ))}
             </div>
           ) : (
             <p className="text-xs italic text-white/50">
-              No valid bids above the challenge were true. DUDO was your only option.
+              {t('gameAnalysis.noValidBids')}
             </p>
           )}
         </div>
@@ -323,15 +325,15 @@ function RoundDetail({
 
       <div className="rounded-lg bg-white/10 p-2.5">
         <div className="mb-1.5 flex items-center gap-1.5">
-          <p className="text-xs font-bold uppercase tracking-wider text-white/50">Actual Dice</p>
-          <InfoTooltip text="The dice each player held at the end of the round, revealed after the challenge." />
+          <p className="text-xs font-bold uppercase tracking-wider text-white/50">{t('gameAnalysis.actualDice')}</p>
+          <InfoTooltip text={t('gameAnalysis.actualDiceTooltip')} />
         </div>
         <div className="space-y-1">
           {round.allDice.map(({ playerId, dice }) => {
             const player = players.find(candidate => candidate.id === playerId);
             if (!player || dice.length === 0) return null;
             const color = PLAYER_COLOR_MAP[player.color] || '#6B7280';
-            const name = player.isHuman ? 'You' : player.name;
+            const name = player.isHuman ? t('game.you') : player.name;
             return (
               <div key={playerId} className="flex items-center gap-2">
                 <div className="h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: color }} />
@@ -394,6 +396,7 @@ function computeSummaryStats(roundHistory: RoundResult[], players: Player[]) {
 type SubPage = 'main' | 'missed' | 'dudos';
 
 export default function GameAnalysisModal({ roundHistory, players, onClose }: GameAnalysisModalProps) {
+  const { t } = useLanguage();
   const [selectedRound, setSelectedRound] = useState(
     roundHistory[roundHistory.length - 1]?.round ?? 1,
   );
@@ -416,7 +419,7 @@ export default function GameAnalysisModal({ roundHistory, players, onClose }: Ga
       >
         {/* Header */}
         <div className="flex flex-shrink-0 items-center justify-between border-b border-white/20 px-4 py-3">
-          <h2 className="text-base font-bold text-white">Game Analysis</h2>
+          <h2 className="text-base font-bold text-white">{t('gameAnalysis.title')}</h2>
           <button onClick={onClose} className="px-1 text-lg leading-none text-white/60 hover:text-white">×</button>
         </div>
 
@@ -429,12 +432,12 @@ export default function GameAnalysisModal({ roundHistory, players, onClose }: Ga
             {/* Game Analysis summary */}
             {stats && (
               <div className="flex-shrink-0 border-b border-white/20 px-4 py-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">Summary</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">{t('gameAnalysis.summary')}</p>
                 <div className="flex gap-3 items-stretch">
                   {stats.avgProb !== null && (
                     <div className="flex-1 rounded-lg bg-white/10 p-2 text-center flex flex-col items-center justify-center">
                       <p className="text-lg font-bold text-white leading-tight">{Math.round(stats.avgProb * 100)}%</p>
-                      <p className="text-[11px] text-white/50 leading-tight mt-0.5">Avg bid probability</p>
+                      <p className="text-[11px] text-white/50 leading-tight mt-0.5">{t('gameAnalysis.avgBidProb')}</p>
                     </div>
                   )}
                   <button
@@ -444,7 +447,7 @@ export default function GameAnalysisModal({ roundHistory, players, onClose }: Ga
                     <p className="text-lg font-bold text-white leading-tight">
                       {stats.correctChallenges}/{stats.totalChallenges}
                     </p>
-                    <p className="text-[11px] text-white/50 leading-tight mt-0.5">DUDO calls</p>
+                    <p className="text-[11px] text-white/50 leading-tight mt-0.5">{t('gameAnalysis.dudoCalls')}</p>
                   </button>
                   <button
                     className={`flex-1 rounded-lg p-2 text-center flex flex-col items-center justify-center transition-colors ${
@@ -453,7 +456,7 @@ export default function GameAnalysisModal({ roundHistory, players, onClose }: Ga
                     onClick={() => { if (stats.missedOpportunities > 0) setSubPage('missed'); }}
                   >
                     <p className="text-lg font-bold text-white leading-tight">{stats.missedOpportunities}</p>
-                    <p className="text-[11px] text-white/50 leading-tight mt-0.5">Missed DUDOs</p>
+                    <p className="text-[11px] text-white/50 leading-tight mt-0.5">{t('gameAnalysis.missedDudos')}</p>
                   </button>
                 </div>
               </div>
@@ -461,7 +464,7 @@ export default function GameAnalysisModal({ roundHistory, players, onClose }: Ga
 
             {/* Round by round section */}
             <div className="flex-shrink-0 border-b border-white/20 px-4 pt-3 pb-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">Round by Round</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">{t('gameAnalysis.roundByRound')}</p>
               <div ref={roundScrollRef} className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                 {roundHistory.map(round => (
                   <button
@@ -481,7 +484,7 @@ export default function GameAnalysisModal({ roundHistory, players, onClose }: Ga
               {selectedResult ? (
                 <RoundDetail round={selectedResult} players={players} />
               ) : (
-                <p className="text-xs italic text-white/40">No data for this round.</p>
+                <p className="text-xs italic text-white/40">{t('gameAnalysis.noData')}</p>
               )}
             </div>
           </>
@@ -489,7 +492,7 @@ export default function GameAnalysisModal({ roundHistory, players, onClose }: Ga
 
         <div className="flex-shrink-0 border-t border-white/20 px-4 py-3">
           <button onClick={onClose} className="btn-3d-accent w-full rounded-xl py-2 text-sm font-bold text-white">
-            Close
+            {t('gameAnalysis.close')}
           </button>
         </div>
       </div>

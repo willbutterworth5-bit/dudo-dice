@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import RulesModal from './RulesModal';
 import { Difficulty } from '../game/AIPlayer';
 import type { GameConfig } from '../types/routes';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export default function HomeScreen() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [playerCount, setPlayerCount] = useState(6);
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [startingDice, setStartingDice] = useState(5);
@@ -26,6 +28,12 @@ export default function HomeScreen() {
     navigate('/game', { state: config });
   };
 
+  const difficultyLabel = (diff: Difficulty) => {
+    if (diff === 'easy') return t('home.easy');
+    if (diff === 'medium') return t('home.medium');
+    return t('home.hard');
+  };
+
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center p-4 sm:p-8 relative" style={{ overflowY: 'auto' }}>
       {/* Back button - fixed top left */}
@@ -34,7 +42,7 @@ export default function HomeScreen() {
         className="fixed h-10 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
         style={{ left: '0.75rem', top: '0.75rem' }}
       >
-        ← Back
+        {t('common.back')}
       </button>
       <div className="max-w-2xl sm:max-w-4xl w-full pt-12 sm:pt-0">
         {/* Logo and title side by side */}
@@ -48,7 +56,7 @@ export default function HomeScreen() {
               Dudo Dice
             </h1>
             <p className="text-sm text-white mt-1">
-              The Classic Perudo Game
+              {t('landing.tagline')}
             </p>
           </div>
         </div>
@@ -56,23 +64,23 @@ export default function HomeScreen() {
         <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl overflow-hidden mb-4 relative">
           {/* Header */}
           <div className="bg-white/10 border-b border-white/20 px-5 py-4 flex justify-between items-center">
-            <h2 className="text-xl font-bold text-white">Game Setup</h2>
+            <h2 className="text-xl font-bold text-white">{t('home.gameSetup')}</h2>
             <div className="flex flex-wrap gap-2 items-center">
               <button
                 onClick={() => navigate('/profile')}
                 className="h-9 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"
               >
-                Profile
+                {t('profile.title').split(' ')[0]}
               </button>
               <button
                 onClick={() => setShowRules(true)}
                 className="h-9 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"
               >
-                Rules
+                {t('rules.rulesTab')}
               </button>
               <button
                 onClick={() => setShowAdvancedSettings(true)}
-                title="Advanced Settings"
+                title={t('home.advancedSettings')}
                 className="h-9 w-9 flex items-center justify-center rounded-xl transition-colors btn-glass text-base text-white"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53a7.76 7.76 0 0 0 .07-1 7.76 7.76 0 0 0-.07-.97l2.11-1.63a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a7.15 7.15 0 0 0-1.69-.98l-.38-2.65A.49.49 0 0 0 14 2h-4a.49.49 0 0 0-.49.42l-.38 2.65a7.15 7.15 0 0 0-1.69.98l-2.49-1a.5.5 0 0 0-.61.22l-2 3.46a.49.49 0 0 0 .12.64L4.57 11a7.9 7.9 0 0 0 0 1.97l-2.11 1.66a.49.49 0 0 0-.12.64l2 3.46a.5.5 0 0 0 .61.22l2.49-1c.52.4 1.08.72 1.69.98l.38 2.65c.05.24.26.42.49.42h4c.23 0 .44-.18.49-.42l.38-2.65a7.15 7.15 0 0 0 1.69-.98l2.49 1a.5.5 0 0 0 .61-.22l2-3.46a.49.49 0 0 0-.12-.64l-2.11-1.66Z"/></svg>
@@ -86,7 +94,7 @@ export default function HomeScreen() {
             <div className="py-3">
               <div className="flex gap-4">
                 <div className="flex-1 flex flex-col items-center">
-                  <label className="block text-sm font-semibold text-white mb-2">Players</label>
+                  <label className="block text-sm font-semibold text-white mb-2">{t('common.players')}</label>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setPlayerCount(Math.max(2, playerCount - 1))}
@@ -105,7 +113,7 @@ export default function HomeScreen() {
                 </div>
 
                 <div className="flex-1 flex flex-col items-center">
-                  <label className="block text-sm font-semibold text-white mb-2">Starting Dice</label>
+                  <label className="block text-sm font-semibold text-white mb-2">{t('home.startingDice')}</label>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setStartingDice(Math.max(1, startingDice - 1))}
@@ -127,7 +135,7 @@ export default function HomeScreen() {
 
             {/* Difficulty */}
             <div className="py-3">
-              <label className="block text-sm font-semibold text-white mb-2">Difficulty</label>
+              <label className="block text-sm font-semibold text-white mb-2">{t('home.difficulty')}</label>
               <div className="grid grid-cols-3 gap-2">
                 {(['easy', 'medium', 'hard'] as Difficulty[]).map((diff) => {
                   const isSelected = difficulty === diff;
@@ -137,7 +145,7 @@ export default function HomeScreen() {
                       onClick={() => setDifficulty(diff)}
                       className={`py-2 rounded-xl font-bold transition-colors text-sm ${isSelected ? 'text-white btn-3d-accent' : 'btn-glass'}`}
                     >
-                      {diff.charAt(0).toUpperCase() + diff.slice(1)}
+                      {difficultyLabel(diff)}
                     </button>
                   );
                 })}
@@ -147,14 +155,14 @@ export default function HomeScreen() {
             {/* Round Analysis */}
             <div className="py-3">
               <div className="flex items-center gap-2 mb-2">
-                <label className="text-sm font-semibold text-white">Round Analysis</label>
+                <label className="text-sm font-semibold text-white">{t('home.roundAnalysis')}</label>
                 <div className="relative group">
                   <div className="w-5 h-5 rounded-full bg-white/20 group-hover:bg-white/30 text-white text-xs font-bold flex items-center justify-center transition-colors cursor-help">
                     i
                   </div>
                   <div className="absolute left-0 bottom-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                     <p className="text-xs text-white/90 bg-indigo-900 border border-white/20 rounded-lg p-2 shadow-lg">
-                      When enabled, you'll see insights and probability analysis after each round to help improve your strategy.
+                      {t('home.roundAnalysisTooltip')}
                     </p>
                   </div>
                 </div>
@@ -169,7 +177,7 @@ export default function HomeScreen() {
                       style={{ width: 'calc((100% - 1rem) / 3)' }}
                       className={`py-2 rounded-xl font-bold transition-colors text-sm ${isSelected ? 'text-white btn-3d-accent' : 'btn-glass'}`}
                     >
-                      {val.charAt(0).toUpperCase() + val.slice(1)}
+                      {val === 'on' ? t('common.on') : t('common.off')}
                     </button>
                   );
                 })}
@@ -182,7 +190,7 @@ export default function HomeScreen() {
                 onClick={handleStart}
                 className="px-6 py-2.5 text-white font-extrabold text-base rounded-xl transition-colors btn-3d-accent"
               >
-                Start Game
+                {t('home.startGame')}
               </button>
             </div>
           </div>
@@ -202,7 +210,7 @@ export default function HomeScreen() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-5">
-                <h2 className="text-lg font-bold text-white">Advanced Rules</h2>
+                <h2 className="text-lg font-bold text-white">{t('home.advancedRules')}</h2>
                 <button
                   onClick={() => setShowAdvancedSettings(false)}
                   className="text-white/60 hover:text-white text-xl leading-none px-1"
@@ -216,7 +224,7 @@ export default function HomeScreen() {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <label className="text-sm font-semibold text-white">
-                      Palifico
+                      {t('home.palifico')}
                     </label>
                     <div className="relative group">
                       <div className="w-5 h-5 rounded-full bg-white/20 group-hover:bg-white/30 text-white text-xs font-bold flex items-center justify-center transition-colors cursor-help">
@@ -224,7 +232,7 @@ export default function HomeScreen() {
                       </div>
                       <div className="absolute left-0 top-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                         <p className="text-xs text-white/90 bg-indigo-900 border border-white/20 rounded-lg p-2 shadow-lg">
-                          When a player is down to their last die, that round becomes a Palifico round. Ones are not wild and all bids must use the same face value as the first bid.
+                          {t('home.palificoTooltip')}
                         </p>
                       </div>
                     </div>
@@ -239,7 +247,7 @@ export default function HomeScreen() {
                           style={{ width: 'calc((100% - 1rem) / 3)' }}
                           className={`py-2 rounded-xl font-bold transition-colors text-sm ${isSelected ? 'text-white btn-3d-accent' : 'btn-glass'}`}
                         >
-                          {val.charAt(0).toUpperCase() + val.slice(1)}
+                          {val === 'on' ? t('common.on') : t('common.off')}
                         </button>
                       );
                     })}
@@ -252,7 +260,7 @@ export default function HomeScreen() {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <label className="text-sm font-semibold text-white">
-                      Calza
+                      {t('home.calza')}
                     </label>
                     <div className="relative group">
                       <div className="w-5 h-5 rounded-full bg-white/20 group-hover:bg-white/30 text-white text-xs font-bold flex items-center justify-center transition-colors cursor-help">
@@ -260,7 +268,7 @@ export default function HomeScreen() {
                       </div>
                       <div className="absolute left-0 top-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                         <p className="text-xs text-white/90 bg-indigo-900 border border-white/20 rounded-lg p-2 shadow-lg">
-                          Instead of raising the bid or calling Dudo, call Calza to claim the bid is exactly right. If correct, gain a die back. If wrong, lose a die.
+                          {t('home.calzaTooltip')}
                         </p>
                       </div>
                     </div>
@@ -275,7 +283,7 @@ export default function HomeScreen() {
                           style={{ width: 'calc((100% - 1rem) / 3)' }}
                           className={`py-2 rounded-xl font-bold transition-colors text-sm ${isSelected ? 'text-white btn-3d-accent' : 'btn-glass'}`}
                         >
-                          {val.charAt(0).toUpperCase() + val.slice(1)}
+                          {val === 'on' ? t('common.on') : t('common.off')}
                         </button>
                       );
                     })}
@@ -287,7 +295,7 @@ export default function HomeScreen() {
                 onClick={() => setShowAdvancedSettings(false)}
                 className="mt-5 w-full py-2 text-white font-bold rounded-xl text-sm btn-3d-accent"
               >
-                Done
+                {t('common.done')}
               </button>
             </div>
           </div>

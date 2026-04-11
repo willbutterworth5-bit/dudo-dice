@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { setConsent } from '../utils/cookieConsent';
 import PrivacyPolicyModal from './PrivacyPolicyModal';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface Props {
   onAccept: () => void;
 }
 
 export default function CookieConsentModal({ onAccept }: Props) {
+  const { t } = useLanguage();
   const [showDetails, setShowDetails] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
 
@@ -27,18 +29,16 @@ export default function CookieConsentModal({ onAccept }: Props) {
             <div className="flex items-start gap-3 mb-3">
               <span className="text-2xl flex-shrink-0">🍪</span>
               <div>
-                <h2 className="text-base font-bold text-white">Cookie Preferences</h2>
+                <h2 className="text-base font-bold text-white">{t('cookie.title').replace('🍪 ', '')}</h2>
                 <p className="text-sm text-white/70 mt-1">
-                  We use storage to keep the game working. We also use limited, cookie-free measurement,
-                  and with your permission we use analytics cookies to better understand how people use
-                  Dudo Dice so we can improve it. Read our{' '}
+                  {t('cookie.description')}{' '}
                   <button
                     onClick={() => setShowPrivacy(true)}
                     className="underline text-white/80 hover:text-white transition-colors"
                   >
-                    Privacy Policy
+                    {t('landing.privacyPolicy')}
                   </button>{' '}
-                  for full details.
+                  {t('cookie.fullDetails')}
                 </p>
               </div>
             </div>
@@ -48,15 +48,15 @@ export default function CookieConsentModal({ onAccept }: Props) {
                 <div className="flex gap-3">
                   <div className="mt-0.5 w-4 h-4 rounded-full bg-green-400 flex-shrink-0" />
                   <div>
-                    <p className="font-semibold text-white">Essential cookies <span className="font-normal text-white/50">(always on)</span></p>
-                    <p className="text-white/60">Required for login, game state, and profile storage. Includes limited cookie-free measurement so we can monitor basic usage without analytics cookies.</p>
+                    <p className="font-semibold text-white">{t('cookie.essentialLabel')} <span className="font-normal text-white/50">(always on)</span></p>
+                    <p className="text-white/60">{t('cookie.essentialDesc')}</p>
                   </div>
                 </div>
                 <div className="flex gap-3">
                   <div className="mt-0.5 w-4 h-4 rounded-full bg-blue-400 flex-shrink-0" />
                   <div>
-                    <p className="font-semibold text-white">Analytics cookies <span className="font-normal text-white/50">(optional)</span></p>
-                    <p className="text-white/60">Allow Google Analytics cookies for better measurement of repeat visits and player journeys. No personal data is sold.</p>
+                    <p className="font-semibold text-white">{t('cookie.analyticsLabel')} <span className="font-normal text-white/50">(optional)</span></p>
+                    <p className="text-white/60">{t('cookie.analyticsDesc')}</p>
                   </div>
                 </div>
               </div>
@@ -66,21 +66,20 @@ export default function CookieConsentModal({ onAccept }: Props) {
               onClick={() => setShowDetails(v => !v)}
               className="text-xs text-white/50 hover:text-white/80 transition-colors mb-4"
             >
-              {showDetails ? 'Hide details ▲' : 'Show details ▼'}
+              {showDetails ? t('cookie.hideDetails') : t('cookie.showDetails')}
             </button>
 
-            {/* Equal-weight buttons — no visual bias toward either choice */}
             <div className="flex flex-col sm:flex-row gap-2">
               <button onClick={() => handleChoice('essential')} className={btnOutline}>
-                Essential only
+                {t('cookie.essentialOnly')}
               </button>
               <button onClick={() => handleChoice('all')} className={btnFilled}>
-                Accept all
+                {t('cookie.acceptAll')}
               </button>
             </div>
 
             <p className="text-xs text-white/30 text-center mt-3">
-              You can change this any time via Cookie Preferences in the footer.
+              {t('cookie.changeNote')}
             </p>
           </div>
         </div>

@@ -4,6 +4,7 @@ import LandingPage from './components/LandingPage'
 import AnalyticsManager from './components/AnalyticsManager'
 import { GameProvider } from './context/GameContext'
 import { AuthProvider } from './context/AuthContext'
+import { LanguageProvider } from './i18n/LanguageContext'
 import { useMultiplayerConnection } from './hooks/useMultiplayerConnection'
 import type { GameConfig } from './types/routes'
 
@@ -185,7 +186,9 @@ function App() {
 function AppWithAuth() {
   return (
     <AuthProvider>
-      <App />
+      <LanguageProvider>
+        <App />
+      </LanguageProvider>
     </AuthProvider>
   )
 }

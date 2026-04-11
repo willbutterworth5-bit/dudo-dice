@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Player, RoundResult, PLAYER_COLOR_MAP } from '../game/GameState';
 import { probabilityFromRecord, alternativeBids, probColour } from '../utils/probability';
 import DiceFace from './DiceFace';
+import { useLanguage } from '../i18n/LanguageContext';
 
 
 interface RoundAnalysisModalProps {
@@ -51,6 +52,7 @@ function BidDisplay({ quantity, faceValue }: { quantity: number; faceValue: numb
 }
 
 export default function RoundAnalysisModal({ result, players, onClose }: RoundAnalysisModalProps) {
+  const { t } = useLanguage();
   const [highlightedFace, setHighlightedFace] = useState<number | null>(null);
   const humanPlayer = players.find(p => p.isHuman);
   const challengerPlayer = players.find(p => p.id === result.challengerId);
@@ -78,7 +80,7 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/20 flex-shrink-0">
-          <h2 className="text-base font-bold text-white">Round {result.round} Analysis</h2>
+          <h2 className="text-base font-bold text-white">{t('roundAnalysis.title', { n: result.round })}</h2>
           <button onClick={onClose} className="text-white/60 hover:text-white text-lg leading-none px-1">✕</button>
         </div>
 
@@ -90,44 +92,48 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
             <div className="bg-white/10 rounded-lg p-3 space-y-2">
               <div className="flex items-center gap-1.5">
                 <p className="text-xs font-bold text-white/50 uppercase tracking-wider">
-                  {result.challengeType === 'calza' ? 'Calza Outcome' : 'Challenge Outcome'}
+                  {result.challengeType === 'calza' ? t('roundAnalysis.calzaOutcome') : t('roundAnalysis.challengeOutcome')}
                 </p>
                 <InfoTooltip text={
                   result.challengeType === 'calza'
-                    ? "A summary of the CALZA call — whether the exact count matched the bid."
-                    : "A summary of the DUDO call — what was bid, the actual count on the table, and whether the challenge was the right move based on the probabilities at the time."
+                    ? t('roundAnalysis.calzaTooltip')
+                    : t('roundAnalysis.challengeTooltip')
                 } />
               </div>
 
               <div className="flex items-center gap-2">
                 <BidDisplay quantity={result.challengedBid.quantity} faceValue={result.challengedBid.faceValue} />
                 <span className="text-xs text-white/60">
-                  {result.challengeType === 'calza' ? 'calza by' : 'challenged by'}
+                  {result.challengeType === 'calza' ? t('roundAnalysis.calzaBy') : t('roundAnalysis.challengedBy')}
                 </span>
                 <span className="text-xs font-semibold text-white">
-                  {challengerPlayer?.isHuman ? 'You' : challengerPlayer?.name}
+                  {challengerPlayer?.isHuman ? t('game.you') : challengerPlayer?.name}
                 </span>
               </div>
 
               <div className="flex items-center gap-1 text-xs text-white/70">
-                <span>Actual count</span>
+                <span>{t('roundResult.actualCount')}</span>
                 <span className="font-bold text-white">{result.actualCount}×</span>
                 <span className="inline-block w-4 h-4 bg-white rounded"><DiceFace value={result.challengedBid.faceValue} size="sm" /></span>
               </div>
               {result.challengeType !== 'calza' && (
                 <div className="text-xs text-white/70">
-                  Bid probability was <span className="font-bold text-white">{Math.round(challengedBidProb * 100)}%</span>
+                  {t('roundAnalysis.probability', { probability: Math.round(challengedBidProb * 100) })}
                 </div>
               )}
 
               {result.challengeType === 'calza' ? (
                 result.calzaSuccess ? (
                   <p className="text-xs text-yellow-300 font-semibold">
-                    🎯 Exact count! {humanWasChallenger ? 'You gained' : `${challengerPlayer?.name} gained`} a die.
+                    {humanWasChallenger
+                      ? t('roundAnalysis.exactGainYou')
+                      : t('roundAnalysis.exactGainOther', { name: challengerPlayer?.name ?? '' })}
                   </p>
                 ) : (
                   <p className="text-xs text-amber-300 font-semibold">
-                    Count was {result.actualCount}, not {result.challengedBid.quantity}. {humanWasChallenger ? 'You lost' : `${challengerPlayer?.name} lost`} a die.
+                    {humanWasChallenger
+                      ? t('roundAnalysis.wrongLoseYou', { actual: result.actualCount, quantity: result.challengedBid.quantity })
+                      : t('roundAnalysis.wrongLoseOther', { actual: result.actualCount, quantity: result.challengedBid.quantity, name: challengerPlayer?.name ?? '' })}
                   </p>
                 )
               ) : (
@@ -135,40 +141,40 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
                   {humanWasChallenger && !humanLost && (
                     <p className="text-xs text-green-300 font-semibold">
                       {challengedBidProb < 0.35
-                        ? `✓ Good call — the bid was only ${Math.round(challengedBidProb * 100)}% likely to be true.`
-                        : `✓ Lucky — the bid was ${Math.round(challengedBidProb * 100)}% likely, but it wasn't true.`}
+                        ? t('roundAnalysis.goodCall', { probability: Math.round(challengedBidProb * 100) })
+                        : t('roundAnalysis.luckyCall', { probability: Math.round(challengedBidProb * 100) })}
                     </p>
                   )}
 
                   {humanWasChallenger && humanLost && (
                     <p className="text-xs text-amber-300 font-semibold">
                       {challengedBidProb < 0.35
-                        ? `Unlucky — the bid was only ${Math.round(challengedBidProb * 100)}% likely but turned out to be true. DUDO was the right call statistically.`
-                        : `The bid was ${Math.round(challengedBidProb * 100)}% likely to be true. DUDO was risky here.`}
+                        ? t('roundAnalysis.unluckyCall', { probability: Math.round(challengedBidProb * 100) })
+                        : t('roundAnalysis.riskyCall', { probability: Math.round(challengedBidProb * 100) })}
                     </p>
                   )}
 
                   {!humanWasChallenger && humanWasBidder && !humanLost && (
                     <p className="text-xs text-green-300 font-semibold">
                       {challengedBidProb >= 0.35
-                        ? `✓ Your bid held up (${Math.round(challengedBidProb * 100)}% likely) — ${challengerPlayer?.name} was wrong to challenge.`
-                        : `✓ Your bluff worked — only ${Math.round(challengedBidProb * 100)}% likely, but it was true!`}
+                        ? t('roundAnalysis.bidHeldUp', { probability: Math.round(challengedBidProb * 100), name: challengerPlayer?.name ?? '' })
+                        : t('roundAnalysis.bluffWorked', { probability: Math.round(challengedBidProb * 100) })}
                     </p>
                   )}
 
                   {!humanWasChallenger && humanWasBidder && humanLost && (
                     <p className="text-xs text-amber-300 font-semibold">
                       {challengedBidProb < 0.35
-                        ? `Your bid was only ${Math.round(challengedBidProb * 100)}% likely — ${challengerPlayer?.name} was right to challenge.`
-                        : `Unlucky — your bid was ${Math.round(challengedBidProb * 100)}% likely but wasn't true.`}
+                        ? t('roundAnalysis.rightChallenge', { probability: Math.round(challengedBidProb * 100), name: challengerPlayer?.name ?? '' })
+                        : t('roundAnalysis.unluckyBid', { probability: Math.round(challengedBidProb * 100) })}
                     </p>
                   )}
 
                   {!humanWasChallenger && !humanWasBidder && (
                     <p className="text-xs text-white/60">
                       {challengedBidProb < 0.35
-                        ? `DUDO would have been ${Math.round((1 - challengedBidProb) * 100)}% likely to succeed from your perspective.`
-                        : `The bid appeared likely — challenging would have been risky.`}
+                        ? t('roundAnalysis.dudoWouldHave', { probability: Math.round((1 - challengedBidProb) * 100) })
+                        : t('roundAnalysis.bidAppeared')}
                     </p>
                   )}
                 </>
@@ -179,14 +185,14 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
           {/* Bid timeline */}
           <div className="bg-white/10 rounded-lg p-3">
             <div className="flex items-center gap-1.5 mb-2">
-              <p className="text-xs font-bold text-white/50 uppercase tracking-wider">Bid Timeline</p>
-              <InfoTooltip text="Every bid made this round in order. The % shows how likely the bid was true from your perspective — using your dice and the total dice still in play at that moment." />
+              <p className="text-xs font-bold text-white/50 uppercase tracking-wider">{t('roundAnalysis.bidTimeline')}</p>
+              <InfoTooltip text={t('roundAnalysis.bidTimelineTooltip')} />
             </div>
             <div className="space-y-0.5">
               {result.bids.map((record, i) => {
                 const player = players.find(p => p.id === record.playerId);
                 const color = player ? (PLAYER_COLOR_MAP[player.color] || '#6B7280') : '#6B7280';
-                const name = player?.isHuman ? 'You' : (player?.name ?? 'Unknown');
+                const name = player?.isHuman ? t('game.you') : (player?.name ?? 'Unknown');
                 const prob = probabilityFromRecord(record);
                 const isFinalBid = i === result.bids.length - 1;
 
@@ -206,7 +212,7 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
               })}
             </div>
             {result.bids.length === 0 && (
-              <p className="text-xs text-white/40 italic">No bids recorded</p>
+              <p className="text-xs text-white/40 italic">{t('roundAnalysis.noBids')}</p>
             )}
           </div>
 
@@ -214,8 +220,8 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
           {humanWasChallenger && humanLost && (
             <div className="bg-white/10 rounded-lg p-3 space-y-2">
               <div className="flex items-center gap-1.5">
-                <p className="text-xs font-bold text-white/50 uppercase tracking-wider">Instead, you could have bid</p>
-                <InfoTooltip align="right" text="Bids that were truthful based on the actual dice on the board — alternatives above the challenged bid that you could have safely made instead of calling DUDO." />
+                <p className="text-xs font-bold text-white/50 uppercase tracking-wider">{t('roundAnalysis.couldHaveBid')}</p>
+                <InfoTooltip align="right" text={t('roundAnalysis.couldHaveBidTooltip')} />
               </div>
               {alternatives.length > 0 ? (
                 <div className="space-y-1.5">
@@ -237,7 +243,7 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
                 </div>
               ) : (
                 <p className="text-xs text-white/50 italic">
-                  No valid bids above the challenge were true — DUDO was your only option.
+                  {t('roundAnalysis.noValidBids')}
                 </p>
               )}
             </div>
@@ -246,8 +252,8 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
           {/* Actual dice per player */}
           <div className="bg-white/10 rounded-lg p-3">
             <div className="flex items-center gap-1.5 mb-2">
-              <p className="text-xs font-bold text-white/50 uppercase tracking-wider">Actual Dice</p>
-              <InfoTooltip text="The dice each player was actually holding at the end of this round, revealed after the challenge." />
+              <p className="text-xs font-bold text-white/50 uppercase tracking-wider">{t('roundAnalysis.actualDice')}</p>
+              <InfoTooltip text={t('roundAnalysis.actualDiceTooltip')} />
             </div>
             {(() => {
               // Pre-compute total counts for each face value across all dice
@@ -271,10 +277,10 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
                 if (highlightedFace === null) return '';
                 const exact = faceCounts[highlightedFace] || 0;
                 if (palificoMode || highlightedFace === 1) {
-                  return `${exact}× total`;
+                  return t('roundAnalysis.total', { exact });
                 }
                 const total = exact + wildsCount;
-                return `${total}× total (${exact} + ${wildsCount} wild)`;
+                return t('roundAnalysis.totalWithWild', { total, exact, wilds: wildsCount });
               };
 
               return (
@@ -291,7 +297,7 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
                       const player = players.find(p => p.id === playerId);
                       if (!player || dice.length === 0) return null;
                       const color = PLAYER_COLOR_MAP[player.color] || '#6B7280';
-                      const name = player.isHuman ? 'You' : player.name;
+                      const name = player.isHuman ? t('game.you') : player.name;
                       return (
                         <div key={playerId} className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
@@ -329,7 +335,7 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
             onClick={onClose}
             className="w-full py-2 btn-3d-accent text-white font-bold rounded-xl text-sm"
           >
-            Close
+            {t('common.close')}
           </button>
         </div>
       </div>

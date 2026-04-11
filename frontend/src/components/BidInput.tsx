@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Bid } from '../game/GameState';
 import { BidValidator } from '../game/BidValidator';
 import DiceFace from './DiceFace';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface BidInputProps {
   currentBid: Bid | null;
@@ -28,6 +29,7 @@ export default function BidInput({
   const [faceValue, setFaceValue] = useState(2);
   const [error, setError] = useState<string | null>(null);
   const [manuallyAdjusted, setManuallyAdjusted] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (palificoMode.active && palificoMode.lockedFaceValue !== null) {
@@ -113,7 +115,7 @@ export default function BidInput({
         <div className="flex gap-1.5">
           {/* Face Value — aligns with Dudo button */}
           <div className="flex-1 flex flex-col items-center">
-            <label className="block text-[10px] font-medium text-white mb-1 text-center">Face Value</label>
+            <label className="block text-[10px] font-medium text-white mb-1 text-center">{t('game.faceValue')}</label>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-1">
               {[1, 2, 3, 4, 5, 6].map((value) => {
                 const isDisabled = value === 1 ? !canBidOnes : !canBidNonOnes;
@@ -162,7 +164,7 @@ export default function BidInput({
 
           {/* Quantity — aligns with Bid button */}
           <div className="flex-1 flex flex-col items-center justify-center">
-            <label className="block text-[10px] font-medium text-white mb-1 text-center">Quantity</label>
+            <label className="block text-[10px] font-medium text-white mb-1 text-center">{t('game.quantity')}</label>
             <div className="flex items-center justify-center gap-1.5">
               <button
                 onClick={() => {
@@ -205,7 +207,7 @@ export default function BidInput({
               disabled={disabled}
               className="flex-1 bg-accent-danger hover:bg-accent-danger-hover disabled:bg-gray-300 text-white font-semibold py-2 px-3 rounded-xl transition-colors text-sm btn-3d-danger"
             >
-              Dudo
+              {t('game.dudo')}
             </button>
           )}
           <button
@@ -213,7 +215,7 @@ export default function BidInput({
             disabled={disabled}
             className="flex-1 bg-accent hover:bg-accent-hover disabled:bg-gray-300 text-white font-semibold py-2 px-3 rounded-xl transition-colors text-sm btn-3d-accent"
           >
-            Bid
+            {t('game.bid')}
           </button>
           {currentBid && calzaEnabled && (
             <button
@@ -221,7 +223,7 @@ export default function BidInput({
               disabled={disabled}
               className="px-3 py-2 text-white font-semibold rounded-xl transition-colors text-xs btn-3d-calza disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Calza
+              {t('game.calza')}
             </button>
           )}
         </div>

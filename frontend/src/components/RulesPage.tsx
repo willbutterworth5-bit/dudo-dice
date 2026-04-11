@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RulesContent, FaqContent } from './RulesContent';
+import { RulesContentEs, FaqContentEs } from './RulesContentEs';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export default function RulesPage() {
   const [tab, setTab] = useState<'rules' | 'faq'>('rules');
   const navigate = useNavigate();
+  const { t, language } = useLanguage();
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center p-4 sm:p-8 relative" style={{ overflowY: 'auto' }}>
@@ -14,7 +17,7 @@ export default function RulesPage() {
         className="fixed h-10 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
         style={{ left: '0.75rem', top: '0.75rem' }}
       >
-        ← Back
+        {t('common.back')}
       </button>
 
       <div className="max-w-2xl w-full pt-12 sm:pt-0">
@@ -28,7 +31,7 @@ export default function RulesPage() {
           />
           <div className="flex flex-col">
             <h1 className="text-2xl sm:text-4xl font-bold text-white">
-              {tab === 'rules' ? 'Perudo Rules' : 'FAQ'}
+              {tab === 'rules' ? t('rules.pageTitle') : t('rules.faqTitle')}
             </h1>
           </div>
         </div>
@@ -39,19 +42,22 @@ export default function RulesPage() {
             onClick={() => setTab('rules')}
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${tab === 'rules' ? 'btn-3d-accent text-white' : 'btn-glass'}`}
           >
-            Rules
+            {t('rules.rulesTab')}
           </button>
           <button
             onClick={() => setTab('faq')}
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${tab === 'faq' ? 'btn-3d-accent text-white' : 'btn-glass'}`}
           >
-            FAQ
+            {t('rules.faqTab')}
           </button>
         </div>
 
         {/* Content card */}
         <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl shadow-2xl p-4 sm:p-8 mb-6">
-          {tab === 'rules' ? <RulesContent /> : <FaqContent />}
+          {tab === 'rules'
+            ? (language === 'es' ? <RulesContentEs /> : <RulesContent />)
+            : (language === 'es' ? <FaqContentEs /> : <FaqContent />)
+          }
         </div>
       </div>
     </div>

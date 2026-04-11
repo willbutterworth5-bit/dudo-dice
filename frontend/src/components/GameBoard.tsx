@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { useLanguage } from '../i18n/LanguageContext';
 import { useGameContext } from '../hooks/useGameContext';
 import { AIPlayer, Difficulty } from '../game/AIPlayer';
 import { Bid, GameSettings, GameState, RoundResult, PLAYER_COLOR_MAP } from '../game/GameState';
@@ -68,6 +69,7 @@ function darkenHex(hex: string, amount: number): string {
 
 export default function GameBoard({ playerCount, difficulty, startingDice, analysisEnabled, palificoEnabled, calzaEnabled, onBackToHome, multiplayerMode }: GameBoardProps) {
   const isMultiplayer = !!multiplayerMode;
+  const { t } = useLanguage();
   const { user } = useAuth();
   const { gameEngine, gameState: localGameState, initializeGame, makeBid: localMakeBid, challengeBid: localChallengeBid, callCalza: localCallCalza, updateGameState } = useGameContext();
   const [aiPlayer, setAiPlayer] = useState(() => new AIPlayer(difficulty));
@@ -681,6 +683,10 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   const isMyPlayer = (playerId: string) =>
     isMyPlayerForBoard(gameState.players, playerId, isMultiplayer, multiplayerMode?.playerId);
 
+  // Translate the human player's default "You" name; leave custom names and bot names as-is
+  const playerDisplayName = (p: { name: string; isHuman: boolean }) =>
+    p.isHuman && p.name === 'You' ? t('game.you') : p.name;
+
   // Is it my turn?
   const isMyTurn = gameState.players[gameState.currentPlayerIndex]
     ? isMyPlayer(gameState.players[gameState.currentPlayerIndex].id)
@@ -739,7 +745,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           className="fixed h-10 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-2 sm:px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
           style={{ left: 'max(0.75rem, env(safe-area-inset-left, 0px))', top: 'max(0.75rem, env(safe-area-inset-top, 0px))' }}
         >
-          ← Back
+          {t('common.back')}
         </button>
 
         {/* Dice count + Round + Palifico + Log - fixed top right, aligned with back button */}
@@ -758,7 +764,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                 <div className="absolute right-0 top-full mt-1 z-50 bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl shadow-lg border border-white/20 p-2.5 min-w-[140px]">
                   {gameState.players.filter(p => p.diceCount > 0).map(p => {
                     const color = PLAYER_COLOR_MAP[p.color] || '#6B7280';
-                    const displayName = p.isHuman ? 'You' : p.name;
+                    const displayName = playerDisplayName(p);
                     return (
                       <div key={p.id} className="flex items-center justify-between gap-2 py-0.5">
                         <div className="flex items-center gap-1.5 min-w-0">
@@ -782,7 +788,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               onClick={() => setShowPalificoInfo(true)}
               className="h-10 sm:h-8 text-white px-2 sm:px-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
             >
-              <span className="hidden sm:inline">Palifico</span><span className="sm:hidden">P!</span>
+              <span className="hidden sm:inline">{t('game.palifico')}</span><span className="sm:hidden">{t('game.palificoShort')}</span>
             </button>
           )}
           <button
@@ -1240,8 +1246,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                   <div className="text-center flex flex-col items-center justify-center w-full px-2 gap-0 select-none">
                     {isMyTurn ? (
                       <>
-                        <div className="text-[9px] font-bold tracking-widest text-white/75 uppercase leading-none">Your</div>
-                        <div className="text-xl font-bold text-white leading-tight" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>Turn!</div>
+                        <div className="text-xl font-bold text-white leading-tight" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>{t('game.yourTurn')}</div>
                         {isMultiplayer && (
                           <div className="text-[9px] text-white/60 mt-0.5">{Math.ceil((multiplayerMode?.turnTimeRemaining ?? 0) / 1000)}s</div>
                         )}
@@ -1249,7 +1254,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                     ) : (
                       <>
                         <div className="text-[9px] text-white/70 uppercase tracking-wide leading-none">
-                          {isMultiplayer ? currentPlayer.name : 'Thinking'}
+                          {isMultiplayer ? currentPlayer.name : t('game.thinking')}
                         </div>
                         <div className="text-lg font-bold text-white leading-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
                           {isMultiplayer ? `${Math.ceil((multiplayerMode?.turnTimeRemaining ?? 0) / 1000)}s` : '…'}
@@ -1291,7 +1296,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                   }}
                 >
                   <span className="text-[9px] sm:text-[11px] font-bold text-white text-center truncate px-1 sm:px-2.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
-                    {player.name}
+                    {playerDisplayName(player)}
                   </span>
                 </div>
               );
@@ -1315,16 +1320,16 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                   <div className="flex items-center justify-center gap-1.5 flex-wrap text-sm">
                     <div className="flex items-center gap-1">
                       <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: challColor }} />
-                      <span className="font-bold text-white">{challPlayer?.name ?? 'Player'}</span>
+                      <span className="font-bold text-white">{challPlayer ? playerDisplayName(challPlayer) : t('game.player')}</span>
                     </div>
                     {isCalzaRound ? (
-                      <span className="text-white/65">called <span className="font-bold text-yellow-300">CALZA</span> on</span>
+                      <span className="text-white/65">{t('game.calledCalzaOn')}</span>
                     ) : (
-                      <span className="text-white/65">called <span className="font-bold text-red-300">DUDO</span> on</span>
+                      <span className="text-white/65">{t('game.calledDudoOn')}</span>
                     )}
                     <div className="flex items-center gap-1">
                       <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: bidColor }} />
-                      <span className="font-bold text-white">{bidPlayer?.name ?? 'Player'}<span className="font-normal text-white/65">'s bid of</span></span>
+                      <span className="font-bold text-white">{bidPlayer ? playerDisplayName(bidPlayer) : t('game.player')}<span className="font-normal text-white/65">{t('game.bidOf')}</span></span>
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="font-bold text-white">{lastRoundResult.challengedBid.quantity}×</span>
@@ -1359,9 +1364,9 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                     style={{ backgroundColor: PLAYER_COLOR_MAP[currentPlayer.color] || '#6B7280' }}
                   />
                   <span className="text-sm font-semibold text-white">
-                    {currentPlayer.name}
+                    {playerDisplayName(currentPlayer)}
                   </span>
-                  <span className="text-white/70 text-sm">is thinking</span>
+                  <span className="text-white/70 text-sm">{t('game.isThinking')}</span>
                   <span className="flex gap-0.5 items-end pb-0.5">
                     {[0, 1, 2].map(i => (
                       <span

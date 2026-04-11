@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { RoundResult } from '../game/GameState';
 import DiceFace from './DiceFace';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface RoundResultModalProps {
   result: RoundResult;
@@ -29,6 +30,8 @@ export default function RoundResultModal({
   onSkipToEnd,
   onLeaveGame,
 }: RoundResultModalProps) {
+  const { t } = useLanguage();
+
   // In multiplayer, auto-close after 3 seconds once reveal is complete
   useEffect(() => {
     if (autoClose && revealComplete) {
@@ -51,11 +54,11 @@ export default function RoundResultModal({
         className={`bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl shadow-2xl p-4 max-w-xs w-full mx-4 pointer-events-auto ${closing ? 'animate-modal-exit' : 'animate-modal-enter'}`}
       >
         <div className="text-center">
-          <h2 className="text-xl font-bold mb-3 text-white">Round Result</h2>
+          <h2 className="text-xl font-bold mb-3 text-white">{t('roundResult.title')}</h2>
 
           <div className="mb-3 space-y-2">
             <div className="bg-white/10 rounded-lg p-2">
-              <p className="text-xs text-white/65 mb-1 font-semibold">{isCalza ? 'Calza Claimed' : 'Bid Made'}</p>
+              <p className="text-xs text-white/65 mb-1 font-semibold">{isCalza ? t('roundResult.calzaClaimed') : t('roundResult.bidMade')}</p>
               <div className="flex items-center justify-center gap-1.5">
                 <p className="text-lg font-bold text-white">
                   {result.challengedBid.quantity}x
@@ -67,7 +70,7 @@ export default function RoundResultModal({
             </div>
 
             <div className="bg-white/10 rounded-lg p-2">
-              <p className="text-xs text-white/65 mb-1 font-semibold">Actual Count</p>
+              <p className="text-xs text-white/65 mb-1 font-semibold">{t('roundResult.actualCount')}</p>
               {revealComplete ? (
                 <div className="flex items-center justify-center gap-1.5">
                   <p className="text-xl font-bold text-white">{result.actualCount}×</p>
@@ -82,18 +85,18 @@ export default function RoundResultModal({
 
             {isCalza ? (
               <div className={`${calzaSuccess ? 'bg-yellow-500/30' : 'bg-red-500/30'} rounded-lg p-2`}>
-                <p className={`text-xs font-semibold mb-0.5 ${calzaSuccess ? 'text-yellow-200' : 'text-red-200'}`}>Result</p>
+                <p className={`text-xs font-semibold mb-0.5 ${calzaSuccess ? 'text-yellow-200' : 'text-red-200'}`}>{t('roundResult.result')}</p>
                 <p className={`text-sm font-bold ${calzaSuccess ? 'text-yellow-100' : 'text-red-100'}`}>
                   {calzaSuccess
-                    ? (isHumanWinner ? '🎯 Exact! You gain a die' : `🎯 Exact! ${winnerName} gains a die`)
-                    : (isHumanLoser ? 'Wrong count — you lose a die' : `Wrong count — ${loserName} loses a die`)}
+                    ? (isHumanWinner ? t('roundResult.exactGainYou') : t('roundResult.exactGainOther', { name: winnerName }))
+                    : (isHumanLoser ? t('roundResult.wrongLoseYou') : t('roundResult.wrongLoseOther', { name: loserName }))}
                 </p>
               </div>
             ) : (
               <div className="bg-red-500/30 rounded-lg p-2">
-                <p className="text-xs font-semibold text-red-200 mb-0.5">Result</p>
+                <p className="text-xs font-semibold text-red-200 mb-0.5">{t('roundResult.result')}</p>
                 <p className="text-sm font-bold text-red-100">
-                  {isHumanLoser ? 'You lose a die' : `${loserName} loses a die`}
+                  {isHumanLoser ? t('roundResult.dudoLoseYou') : t('roundResult.dudoLoseOther', { name: loserName })}
                 </p>
               </div>
             )}
@@ -105,27 +108,27 @@ export default function RoundResultModal({
                 onClick={onViewAnalysis}
                 className="flex-1 px-3 py-2 btn-glass text-white font-bold rounded-xl text-sm"
               >
-                Analysis
+                {t('roundResult.analysis')}
               </button>
             )}
             <button
               onClick={onClose}
               className={`px-4 py-2 text-white font-bold rounded-xl transition-colors text-sm btn-3d-accent ${analysisEnabled ? 'flex-1' : 'w-full'}`}
             >
-              Continue
+              {t('roundResult.continue')}
             </button>
           </div>
 
           {/* Human eliminated — offer skip/leave actions */}
           {(onSkipToEnd || onLeaveGame) && (
             <div className="mt-2 pt-2 border-t border-white/15">
-              <p className="text-xs text-white/60 mb-2 text-center">You&apos;ve been eliminated</p>
+              <p className="text-xs text-white/60 mb-2 text-center">{t('roundResult.eliminated')}</p>
               {onSkipToEnd && (
                 <button
                   onClick={onSkipToEnd}
                   className="w-full px-4 py-2 text-white font-bold rounded-xl text-sm btn-3d-accent mb-1.5"
                 >
-                  Skip to End
+                  {t('roundResult.skipToEnd')}
                 </button>
               )}
               {onLeaveGame && (
@@ -133,7 +136,7 @@ export default function RoundResultModal({
                   onClick={onLeaveGame}
                   className="w-full px-4 py-2 btn-glass text-white font-bold rounded-xl text-sm"
                 >
-                  Leave Game
+                  {t('roundResult.leaveGame')}
                 </button>
               )}
             </div>

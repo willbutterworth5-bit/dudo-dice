@@ -4,9 +4,11 @@ import PrivacyPolicyModal from './PrivacyPolicyModal';
 import CookieConsentModal from './CookieConsentModal';
 import { APP_VERSION } from '../version';
 import { hasConsent } from '../utils/cookieConsent';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { t, language, setLanguage } = useLanguage();
   const [consentGiven, setConsentGiven] = useState(hasConsent);
   const [showCookiePrefs, setShowCookiePrefs] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
@@ -53,7 +55,7 @@ export default function LandingPage() {
               Dudo Dice
             </h1>
             <p className="text-base text-white/80 mt-1">
-              The Classic Perudo Game
+              {t('landing.tagline')}
             </p>
           </div>
         </div>
@@ -66,55 +68,61 @@ export default function LandingPage() {
                 onClick={() => navigate('/profile')}
                 className="flex-1 py-2.5 text-white font-bold rounded-xl btn-glass flex items-center justify-center gap-2"
               >
-                <span>👤</span> Profile
+                {t('landing.profile')}
               </button>
               <button
                 onClick={() => navigate('/rules')}
                 className="flex-1 py-2.5 text-white font-bold rounded-xl btn-glass flex items-center justify-center gap-2"
               >
-                <span>📖</span> Rules
+                {t('landing.rules')}
               </button>
             </div>
 
             <h2 className="text-xl font-bold text-white text-center">
-              Choose Game Mode
+              {t('landing.chooseModeHeading')}
             </h2>
 
             <button
               onClick={() => navigate('/play')}
               className="w-full py-4 text-white font-extrabold text-lg rounded-xl transition-colors btn-3d-accent flex items-center justify-center gap-3"
             >
-              <span className="text-2xl">🎲</span>
-              Play vs Computer
+              {t('landing.playVsComputer')}
             </button>
 
             <button
               onClick={() => navigate('/online')}
               className="w-full py-4 text-white font-extrabold text-lg rounded-xl transition-colors btn-3d-accent flex items-center justify-center gap-3"
             >
-              <span className="text-2xl">☁️</span>
-              Play Online
+              {t('landing.playOnline')}
             </button>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-center gap-3 mt-5 text-xs text-white/40">
-          <span>{APP_VERSION}</span>
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mt-5 text-xs text-white/40 text-center">
+          <span className="whitespace-nowrap">{APP_VERSION}</span>
           <span>·</span>
-          <button onClick={() => setShowPrivacy(true)} className="hover:text-white/70 transition-colors">
-            Privacy Policy
+          <button onClick={() => setShowPrivacy(true)} className="hover:text-white/70 transition-colors whitespace-nowrap">
+            {t('landing.privacyPolicy')}
           </button>
           <span>·</span>
-          <button onClick={() => setShowCookiePrefs(true)} className="hover:text-white/70 transition-colors">
-            Cookie Preferences
+          <button onClick={() => setShowCookiePrefs(true)} className="hover:text-white/70 transition-colors whitespace-nowrap">
+            {t('landing.cookiePreferences')}
           </button>
           <span>·</span>
-          <button onClick={() => setShowFeedback(true)} className="hover:text-white/70 transition-colors">
-            Share feedback
+          <button onClick={() => setShowFeedback(true)} className="hover:text-white/70 transition-colors whitespace-nowrap">
+            {t('landing.shareFeedback')}
           </button>
         </div>
       </div>
+
+      <button
+        onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
+        className="fixed top-3 right-3 z-50 py-2 px-2.5 text-lg rounded-xl btn-glass text-white"
+        title={language === 'en' ? 'Cambiar a español' : 'Switch to English'}
+      >
+        {language === 'en' ? '🇪🇸' : '🇬🇧'}
+      </button>
 
       {(!consentGiven || showCookiePrefs) && (
         <CookieConsentModal onAccept={() => { setConsentGiven(true); setShowCookiePrefs(false); }} />
@@ -132,7 +140,7 @@ export default function LandingPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-white">Share Feedback</h2>
+              <h2 className="text-lg font-bold text-white">{t('landing.feedbackTitle')}</h2>
               <button
                 onClick={() => { if (feedbackStatus !== 'sending') setShowFeedback(false); }}
                 className="text-white/60 hover:text-white text-xl leading-none px-1"
@@ -144,12 +152,12 @@ export default function LandingPage() {
             {feedbackStatus === 'sent' ? (
               <div className="text-center py-6">
                 <div className="text-3xl mb-2">✓</div>
-                <p className="text-white font-semibold">Thanks for your feedback!</p>
+                <p className="text-white font-semibold">{t('landing.feedbackThanks')}</p>
               </div>
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-white mb-2">Type</label>
+                  <label className="block text-sm font-semibold text-white mb-2">{t('landing.feedbackType')}</label>
                   <div className="grid grid-cols-3 gap-2">
                     {(['bug', 'suggestion', 'other'] as const).map((cat) => (
                       <button
@@ -157,36 +165,36 @@ export default function LandingPage() {
                         onClick={() => setFeedbackCategory(cat)}
                         className={`py-1.5 rounded-xl font-bold text-sm ${feedbackCategory === cat ? 'text-white btn-3d-accent' : 'btn-glass'}`}
                       >
-                        {cat === 'bug' ? 'Bug' : cat === 'suggestion' ? 'Idea' : 'Other'}
+                        {cat === 'bug' ? t('landing.feedbackBug') : cat === 'suggestion' ? t('landing.feedbackIdea') : t('landing.feedbackOther')}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-white mb-2">Message</label>
+                  <label className="block text-sm font-semibold text-white mb-2">{t('landing.feedbackMessage')}</label>
                   <textarea
                     value={feedbackMessage}
                     onChange={(e) => setFeedbackMessage(e.target.value)}
-                    placeholder="What's on your mind?"
+                    placeholder={t('landing.feedbackMessagePlaceholder')}
                     rows={4}
                     className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-white/30 resize-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-white mb-2">Email <span className="font-normal text-white/50">(optional)</span></label>
+                  <label className="block text-sm font-semibold text-white mb-2">{t('landing.feedbackEmail')} <span className="font-normal text-white/50">(optional)</span></label>
                   <input
                     type="email"
                     value={feedbackEmail}
                     onChange={(e) => setFeedbackEmail(e.target.value)}
-                    placeholder="So we can follow up"
+                    placeholder={t('landing.feedbackEmailPlaceholder')}
                     className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-white/30"
                   />
                 </div>
 
                 {feedbackStatus === 'error' && (
-                  <p className="text-red-300 text-sm text-center">Something went wrong. Please try again.</p>
+                  <p className="text-red-300 text-sm text-center">{t('landing.feedbackErrorMsg')}</p>
                 )}
 
                 <button
@@ -194,7 +202,7 @@ export default function LandingPage() {
                   disabled={!feedbackMessage.trim() || feedbackStatus === 'sending'}
                   className="w-full py-2.5 text-white font-extrabold rounded-xl btn-3d-accent disabled:opacity-50"
                 >
-                  {feedbackStatus === 'sending' ? 'Sending...' : 'Submit Feedback'}
+                  {feedbackStatus === 'sending' ? t('landing.feedbackSubmitting') : t('landing.feedbackSubmit')}
                 </button>
               </div>
             )}

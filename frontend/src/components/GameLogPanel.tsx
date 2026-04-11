@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Bid, BidRecord, Player, RoundResult, PLAYER_COLOR_MAP } from '../game/GameState';
 import { probabilityFromRecord, probColour } from '../utils/probability';
 import DiceFace from './DiceFace';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface GameLogPanelProps {
   isOpen: boolean;
@@ -19,9 +20,12 @@ function BidRow({ bid, players, record, analysisEnabled }: {
   record?: BidRecord;
   analysisEnabled: boolean;
 }) {
+  const { t } = useLanguage();
   const player = players.find(p => p.id === bid.playerId);
   const color = player ? (PLAYER_COLOR_MAP[player.color] || '#6B7280') : '#6B7280';
-  const name = player?.isHuman ? 'You' : (player?.name ?? 'Unknown');
+  const name = player?.isHuman
+    ? (player.name === 'You' ? t('game.you') : player.name)
+    : (player?.name ?? t('game.unknown'));
 
   let probEl = null;
   if (analysisEnabled && record) {
@@ -54,9 +58,12 @@ function PreviousRound({ round, players, analysisEnabled }: {
   players: Player[];
   analysisEnabled: boolean;
 }) {
+  const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const loser = players.find(p => p.id === round.loserId);
-  const loserName = loser?.isHuman ? 'You' : (loser?.name ?? 'Unknown');
+  const loserName = loser?.isHuman
+    ? (loser.name === 'You' ? t('game.you') : loser.name)
+    : (loser?.name ?? t('game.unknown'));
   const loserColor = loser ? (PLAYER_COLOR_MAP[loser.color] || '#6B7280') : '#6B7280';
 
   return (
@@ -67,7 +74,7 @@ function PreviousRound({ round, players, analysisEnabled }: {
       >
         <span className="text-xs font-bold text-white/60">R{round.round}</span>
         <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: loserColor }} />
-        <span className="text-xs text-white/70 flex-1 truncate">{loserName} −1 die</span>
+        <span className="text-xs text-white/70 flex-1 truncate">{t('game.lostDie', { name: loserName })}</span>
         <span className="text-white/40 text-xs">{expanded ? '▲' : '▼'}</span>
       </button>
       {expanded && (
@@ -96,6 +103,8 @@ export default function GameLogPanel({
   roundNumber,
   analysisEnabled,
 }: GameLogPanelProps) {
+  const { t } = useLanguage();
+
   return (
     <>
       {/* Backdrop */}
@@ -119,7 +128,7 @@ export default function GameLogPanel({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-3 py-3 border-b border-white/20 flex-shrink-0">
-          <span className="text-sm font-bold text-white">Game Log</span>
+          <span className="text-sm font-bold text-white">{t('game.logTitle')}</span>
           <button
             onClick={onClose}
             className="text-white/60 hover:text-white text-lg leading-none px-1"
@@ -133,10 +142,10 @@ export default function GameLogPanel({
           {/* Current round */}
           <div className="mb-3">
             <p className="text-xs font-bold text-white/50 uppercase tracking-wider mb-1">
-              Round {roundNumber}
+              {t('game.round')} {roundNumber}
             </p>
             {currentRoundBids.length === 0 ? (
-              <p className="text-xs text-white/30 italic">No bids yet</p>
+              <p className="text-xs text-white/30 italic">{t('game.noBidsYet')}</p>
             ) : (
               currentRoundBids.map((bid, i) => (
                 <BidRow
@@ -154,7 +163,7 @@ export default function GameLogPanel({
           {roundHistory.length > 0 && (
             <div>
               <p className="text-xs font-bold text-white/50 uppercase tracking-wider mb-1">
-                Previous Rounds
+                {t('game.previousRounds')}
               </p>
               {[...roundHistory].reverse().map((round) => (
                 <PreviousRound

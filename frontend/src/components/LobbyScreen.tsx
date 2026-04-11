@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ProfileStorage } from '../utils/profileStorage';
 import RulesModal from './RulesModal';
 import type { useMultiplayerConnection, PublicRoom } from '../hooks/useMultiplayerConnection';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface LobbyScreenProps {
   mp: ReturnType<typeof useMultiplayerConnection>;
@@ -12,6 +13,7 @@ type Tab = 'join' | 'create' | 'browse';
 
 export default function LobbyScreen({ mp }: LobbyScreenProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { isConnected, publicRooms, error, connect, createRoom, joinRoom, quickMatch, listRooms } = mp;
 
   const [activeTab, setActiveTab] = useState<Tab>('create');
@@ -66,16 +68,16 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
         className="fixed h-10 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
         style={{ left: '0.75rem', top: '0.75rem' }}
       >
-        ← Back
+        {t('common.back')}
       </button>
       <div className="max-w-lg sm:max-w-4xl w-full pt-12 sm:pt-0">
         {/* Header */}
         <div className="flex items-center justify-center gap-4 mb-5 pl-16 sm:pl-0">
           <picture><source srcSet="/Logo.webp" type="image/webp" /><img src="/Logo.png" alt="Dudo Dice Logo" className="flex-shrink-0" style={{ width: '56px', height: '56px' }} /></picture>
           <div className="flex flex-col">
-            <h1 className="text-3xl font-bold text-white">Play Online</h1>
+            <h1 className="text-3xl font-bold text-white">{t('lobby.title')}</h1>
             <p className="text-sm text-white/70">
-              {isConnected ? '🟢 Connected' : '🔴 Connecting...'}
+              {isConnected ? t('lobby.connected') : t('lobby.connecting')}
             </p>
           </div>
         </div>
@@ -96,7 +98,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
                 activeTab === tab ? 'text-white btn-3d-accent' : 'btn-glass'
               }`}
             >
-              {tab === 'join' ? 'Join Game' : tab === 'create' ? 'Create Room' : 'Browse'}
+              {tab === 'join' ? t('lobby.tabJoin') : tab === 'create' ? t('lobby.tabCreate') : t('lobby.tabBrowse')}
             </button>
           ))}
         </div>
@@ -106,12 +108,12 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
           {activeTab === 'join' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-white mb-2">Room Code</label>
+                <label className="block text-sm font-semibold text-white mb-2">{t('lobby.roomCode')}</label>
                 <input
                   type="text"
                   value={roomCode}
                   onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                  placeholder="ABCD"
+                  placeholder={t('lobby.roomCodePlaceholder')}
                   maxLength={4}
                   className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-center text-2xl font-bold tracking-widest focus:outline-none focus:ring-2 focus:ring-white/30"
                 />
@@ -121,12 +123,12 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
                 disabled={!isConnected || !roomCode.trim()}
                 className="w-full py-2.5 text-white font-extrabold rounded-xl btn-3d-accent disabled:opacity-50"
               >
-                Join Room
+                {t('lobby.joinRoom')}
               </button>
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/20" /></div>
-                <div className="relative flex justify-center text-sm"><span className="bg-indigo-800 px-2 text-white/60">or</span></div>
+                <div className="relative flex justify-center text-sm"><span className="bg-indigo-800 px-2 text-white/60">{t('common.or')}</span></div>
               </div>
 
               <button
@@ -134,7 +136,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
                 disabled={!isConnected}
                 className="w-full py-2.5 text-white font-bold rounded-xl btn-glass disabled:opacity-50"
               >
-                ⚡ Quick Match
+                {t('lobby.quickMatch')}
               </button>
             </div>
           )}
@@ -144,19 +146,19 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
             <div className="-m-5 overflow-visible rounded-2xl">
               {/* Header */}
               <div className="bg-white/10 border-b border-white/20 px-5 py-4 rounded-t-2xl flex justify-between items-center">
-                <h2 className="text-lg font-bold text-white">Create Room</h2>
+                <h2 className="text-lg font-bold text-white">{t('lobby.createRoomHeading')}</h2>
                 <div className="flex gap-2">
                   <button
                     onClick={() => navigate('/profile')}
                     className="h-8 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"
                   >
-                    Profile
+                    {t('profile.title').split(' ')[0]}
                   </button>
                   <button
                     onClick={() => setShowRules(true)}
                     className="h-8 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"
                   >
-                    Rules
+                    {t('rules.rulesTab')}
                   </button>
                 </div>
               </div>
@@ -167,7 +169,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
                 <div className="py-3">
                   <div className="flex gap-4">
                     <div className="flex-1 flex flex-col items-center">
-                      <label className="block text-sm font-semibold text-white mb-2">Max Players</label>
+                      <label className="block text-sm font-semibold text-white mb-2">{t('lobby.maxPlayers')}</label>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => setMaxPlayers(Math.max(2, maxPlayers - 1))}
@@ -186,7 +188,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
                     </div>
 
                     <div className="flex-1 flex flex-col items-center">
-                      <label className="block text-sm font-semibold text-white mb-2">Starting Dice</label>
+                      <label className="block text-sm font-semibold text-white mb-2">{t('lobby.startingDice')}</label>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => setStartingDice(Math.max(1, startingDice - 1))}
@@ -211,14 +213,14 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
                   {/* Palifico */}
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <label className="text-sm font-semibold text-white">Palifico</label>
+                      <label className="text-sm font-semibold text-white">{t('home.palifico')}</label>
                       <div className="relative group">
                         <div className="w-5 h-5 rounded-full bg-white/20 group-hover:bg-white/30 text-white text-xs font-bold flex items-center justify-center transition-colors cursor-help">
                           i
                         </div>
                         <div className="absolute left-0 top-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                           <p className="text-xs text-white/90 bg-indigo-900 border border-white/20 rounded-lg p-2 shadow-lg">
-                            When a player is down to their last die, that round becomes a Palifico round. Ones are not wild and all bids must use the same face value as the first bid.
+                            {t('home.palificoTooltip')}
                           </p>
                         </div>
                       </div>
@@ -233,7 +235,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
                             palificoEnabled === (val === 'on') ? 'text-white btn-3d-accent' : 'btn-glass'
                           }`}
                         >
-                          {val.charAt(0).toUpperCase() + val.slice(1)}
+                          {val === 'on' ? t('common.on') : t('common.off')}
                         </button>
                       ))}
                     </div>
@@ -242,14 +244,14 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
                   {/* Calza */}
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <label className="text-sm font-semibold text-white">Calza</label>
+                      <label className="text-sm font-semibold text-white">{t('home.calza')}</label>
                       <div className="relative group">
                         <div className="w-5 h-5 rounded-full bg-white/20 group-hover:bg-white/30 text-white text-xs font-bold flex items-center justify-center transition-colors cursor-help">
                           i
                         </div>
                         <div className="absolute left-0 top-7 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                           <p className="text-xs text-white/90 bg-indigo-900 border border-white/20 rounded-lg p-2 shadow-lg">
-                            Instead of raising the bid or calling Dudo, call Calza to claim the bid is exactly right. If correct, gain a die back. If wrong, lose a die.
+                            {t('home.calzaTooltip')}
                           </p>
                         </div>
                       </div>
@@ -264,7 +266,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
                             calzaEnabled === (val === 'on') ? 'text-white btn-3d-accent' : 'btn-glass'
                           }`}
                         >
-                          {val.charAt(0).toUpperCase() + val.slice(1)}
+                          {val === 'on' ? t('common.on') : t('common.off')}
                         </button>
                       ))}
                     </div>
@@ -273,7 +275,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
 
                 {/* Visibility */}
                 <div className="py-3">
-                  <label className="block text-sm font-semibold text-white mb-2">Visibility</label>
+                  <label className="block text-sm font-semibold text-white mb-2">{t('lobby.visibility')}</label>
                   <div className="flex justify-center gap-2">
                     {([true, false] as const).map((val) => (
                       <button
@@ -284,7 +286,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
                           isPublic === val ? 'text-white btn-3d-accent' : 'btn-glass'
                         }`}
                       >
-                        {val ? 'Public' : 'Private'}
+                        {val ? t('lobby.public') : t('lobby.private')}
                       </button>
                     ))}
                   </div>
@@ -297,7 +299,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
                     disabled={!isConnected}
                     className="w-full py-2.5 text-white font-extrabold rounded-xl btn-3d-accent disabled:opacity-50"
                   >
-                    Create Room
+                    {t('lobby.createRoom')}
                   </button>
                 </div>
               </div>
@@ -308,15 +310,15 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
           {activeTab === 'browse' && (
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-white/70">{publicRooms.length} room{publicRooms.length !== 1 ? 's' : ''} available</span>
+                <span className="text-sm text-white/70">{t('lobby.roomsAvailable', { n: publicRooms.length })}</span>
                 <button onClick={listRooms} className="text-sm btn-glass px-3 py-1 rounded-lg font-bold">
-                  Refresh
+                  {t('lobby.refresh')}
                 </button>
               </div>
 
               {publicRooms.length === 0 ? (
                 <p className="text-center text-white/50 py-6 text-sm">
-                  No open rooms. Create one or try Quick Match!
+                  {t('lobby.noRooms')}
                 </p>
               ) : (
                 (publicRooms as PublicRoom[]).map((room) => (
@@ -324,15 +326,15 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
                     <div>
                       <span className="font-bold text-white text-sm">{room.code}</span>
                       <span className="text-white/50 text-xs ml-2">
-                        by {room.hostName}
+                        {t('lobby.by')} {room.hostName}
                         {room.hostRating != null && (
                           <span className="ml-1 text-white/40 font-mono">
-                            ({room.hostRating}{room.hostProvisional ? '?' : ''})
+                            ({room.hostRating}{room.hostProvisional ? t('lobby.ratingProvisional').replace('(rating provisionally)', '?') : ''})
                           </span>
                         )}
                       </span>
                       <div className="text-xs text-white/40 mt-0.5">
-                        {room.playerCount}/{room.maxPlayers} players · {room.settings.startingDice} dice
+                        {room.playerCount}/{room.maxPlayers} {t('common.players').toLowerCase()} · {room.settings.startingDice} {t('common.dice')}
                         {room.settings.palificoEnabled && ' · Palifico'}
                         {room.settings.calzaEnabled && ' · Calza'}
                       </div>
@@ -342,7 +344,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
                       disabled={!isConnected}
                       className="px-4 py-1.5 text-sm font-bold rounded-xl btn-3d-accent disabled:opacity-50"
                     >
-                      Join
+                      {t('lobby.join')}
                     </button>
                   </div>
                 ))

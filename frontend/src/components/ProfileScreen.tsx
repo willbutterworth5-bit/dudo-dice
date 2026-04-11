@@ -6,10 +6,12 @@ import { COUNTRIES } from '../utils/countries';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from './AuthModal';
 import PrivacyPolicyModal from './PrivacyPolicyModal';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
   const { user, session, signOut } = useAuth();
+  const { t, language } = useLanguage();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -181,7 +183,7 @@ export default function ProfileScreen() {
         className="fixed h-10 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
         style={{ left: '0.75rem', top: '0.75rem' }}
       >
-        ← Back
+        {t('common.back')}
       </button>
 
       <div className="max-w-2xl sm:max-w-4xl w-full pt-12 sm:pt-0">
@@ -194,28 +196,28 @@ export default function ProfileScreen() {
             style={{ width: '60px', height: '60px' }}
           />
           <div className="flex flex-col">
-            <h1 className="text-2xl sm:text-4xl font-bold text-white">Player Profile</h1>
+            <h1 className="text-2xl sm:text-4xl font-bold text-white">{t('profile.title')}</h1>
           </div>
         </div>
 
         {/* Profile Settings Card */}
         <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl shadow-2xl p-4 sm:p-8 mb-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold text-white">Profile Settings</h2>
+            <h2 className="text-2xl font-semibold text-white">{t('profile.settings')}</h2>
             {user ? (
               <div className="flex items-center gap-2 text-right">
                 <div>
                   <p className="text-white/60 text-xs truncate max-w-[160px]">{user.email}</p>
-                  <button onClick={signOut} className="text-white/40 hover:text-white/70 text-xs underline transition-colors">Sign out</button>
+                  <button onClick={signOut} className="text-white/40 hover:text-white/70 text-xs underline transition-colors">{t('profile.signOut')}</button>
                 </div>
-                <div className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" title="Synced to account" />
+                <div className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" title={t('profile.synced')} />
               </div>
             ) : (
               <button
                 onClick={() => setShowAuthModal(true)}
                 className="btn-3d-accent text-white text-xs font-bold px-3 py-1.5 rounded-lg"
               >
-                Sign In / Create Account
+                {t('profile.signIn')}
               </button>
             )}
           </div>
@@ -225,7 +227,7 @@ export default function ProfileScreen() {
               {/* Photo Upload */}
               <div className="flex flex-col items-center">
                 <label className="block text-base font-medium text-white mb-2 self-start">
-                  Profile Photo
+                  {t('profile.photo')}
                 </label>
                 <input
                   ref={fileInputRef}
@@ -263,14 +265,14 @@ export default function ProfileScreen() {
                 )}
                 {/* Elo rating below photo */}
                 <div className="flex items-center justify-center mt-2">
-                  <span className="text-white/40 text-sm">Ranking:</span>
+                  <span className="text-white/40 text-sm">{t('profile.ranking')}</span>
                   <span className="text-white font-bold text-base ml-1">{profile.rankedRating ?? 1500}</span>
-                  {user && <span className="w-1.5 h-1.5 rounded-full bg-green-400 ml-1.5" title="Synced" />}
+                  {user && <span className="w-1.5 h-1.5 rounded-full bg-green-400 ml-1.5" title={t('profile.synced')} />}
                   <span className="relative group inline-flex items-center ml-1">
                     <span className="w-3.5 h-3.5 rounded-full bg-white/20 text-white/60 text-[9px] font-bold flex items-center justify-center cursor-help">i</span>
                     <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none">
                       <span className="block text-xs text-white/90 bg-indigo-900 border border-white/20 rounded-lg p-2 shadow-lg text-left">
-                        This is an Elo ranking based on your results online versus other players, taking into account their rating.
+                        {t('profile.rankingTooltip')}
                       </span>
                     </span>
                   </span>
@@ -287,7 +289,7 @@ export default function ProfileScreen() {
                 {/* Name Input */}
                 <div>
                   <label className="block text-base font-medium text-white mb-2">
-                    Player Name
+                    {t('profile.playerName')}
                   </label>
                   <input
                     type="text"
@@ -297,7 +299,7 @@ export default function ProfileScreen() {
                       setName(nextName);
                       ProfileStorage.updateName(nextName);
                     }}
-                    placeholder="Enter your name"
+                    placeholder={t('profile.playerNamePlaceholder')}
                     maxLength={20}
                     className="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-white/40 border border-white/30 focus:border-white/60 focus:outline-none text-lg"
                   />
@@ -306,7 +308,7 @@ export default function ProfileScreen() {
                 {/* Country Picker */}
                 <div>
                   <label className="block text-base font-medium text-white mb-2">
-                    Country
+                    {t('profile.country')}
                   </label>
                   <div className="relative">
                     {/* Trigger button */}
@@ -326,7 +328,7 @@ export default function ProfileScreen() {
                             <span className="text-white font-medium truncate">{selectedCountryName}</span>
                           </>
                         ) : (
-                          <span className="text-white/50">🌍 Select country</span>
+                          <span className="text-white/50">{t('profile.countryPlaceholder')}</span>
                         )}
                         <span className="ml-auto text-white/40 text-xs">{countryPickerOpen ? '▲' : '▼'}</span>
                       </button>
@@ -349,7 +351,7 @@ export default function ProfileScreen() {
                             type="text"
                             value={countrySearch}
                             onChange={(e) => setCountrySearch(e.target.value)}
-                            placeholder="Search countries…"
+                            placeholder={t('profile.countrySearch')}
                             className="w-full px-3 py-1.5 rounded-lg bg-white/15 text-white placeholder-white/40 border border-white/20 focus:border-white/50 focus:outline-none text-sm"
                           />
                         </div>
@@ -370,7 +372,7 @@ export default function ProfileScreen() {
                               </button>
                             </li>
                           )) : (
-                            <li className="px-3 py-3 text-sm text-white/40 italic text-center">No countries found</li>
+                            <li className="px-3 py-3 text-sm text-white/40 italic text-center">{t('profile.countryNone')}</li>
                           )}
                         </ul>
                       </div>
@@ -394,7 +396,7 @@ export default function ProfileScreen() {
                   activeTab === tab ? 'text-white btn-3d-accent' : 'btn-glass'
                 }`}
               >
-                {tab === 'vs-computer' ? 'vs Computer' : tab === 'online' ? 'Online' : 'Achievements'}
+                {tab === 'vs-computer' ? t('profile.tabVsComputer') : tab === 'online' ? t('profile.tabOnline') : t('profile.tabAchievements')}
               </button>
             ))}
           </div>
@@ -405,33 +407,33 @@ export default function ProfileScreen() {
               const s = profile.vsComputerStats;
               return (
                 <>
-                  <p className="text-white font-bold text-sm mb-3">vs Computer Statistics</p>
+                  <p className="text-white font-bold text-sm mb-3">{t('profile.vsComputerStats')}</p>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                    <div className="text-white/65 text-sm mb-1">Games Played</div>
+                    <div className="text-white/65 text-sm mb-1">{t('profile.gamesPlayed')}</div>
                     <div className="text-3xl font-bold text-white">{s.gamesPlayed}</div>
                   </div>
                   <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                    <div className="text-white/65 text-sm mb-1">Games Won</div>
+                    <div className="text-white/65 text-sm mb-1">{t('profile.gamesWon')}</div>
                     <div className="text-3xl font-bold text-white">{s.gamesWon}</div>
                   </div>
                   <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                    <div className="text-white/65 text-sm mb-1">Win Rate</div>
+                    <div className="text-white/65 text-sm mb-1">{t('profile.winRate')}</div>
                     <div className="text-3xl font-bold text-white">{winRate}%</div>
                   </div>
                   <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                    <div className="text-white/65 text-sm mb-1">Dudo Calls</div>
+                    <div className="text-white/65 text-sm mb-1">{t('profile.dudoCalls')}</div>
                     <div className="text-3xl font-bold text-white">{s.dudoCalls}</div>
                   </div>
                   <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                    <div className="text-white/65 text-sm mb-1">Dudo Success Rate</div>
+                    <div className="text-white/65 text-sm mb-1">{t('profile.dudoSuccessRate')}</div>
                     <div className="text-3xl font-bold text-white">{dudoSuccessRate}%</div>
                     <div className="text-xs text-white/50 mt-1">
                       {s.successfulDudoCalls} / {s.dudoCalls} calls
                     </div>
                   </div>
                   <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                    <div className="text-white/65 text-sm mb-1">Called Against Rate</div>
+                    <div className="text-white/65 text-sm mb-1">{t('profile.calledAgainstRate')}</div>
                     <div className="text-3xl font-bold text-white">{calledAgainstSuccessRate}%</div>
                     <div className="text-xs text-white/50 mt-1">
                       {s.successfulCallsAgainst} / {s.timesCalledAgainst} times
@@ -450,10 +452,10 @@ export default function ProfileScreen() {
               const cr = statsCalledAgainstRate(s);
               return (
                 <>
-                  <p className="text-white font-bold text-sm mb-3">Online Statistics</p>
+                  <p className="text-white font-bold text-sm mb-3">{t('profile.onlineStats')}</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                      <div className="text-white/65 text-sm mb-1">Ranking</div>
+                      <div className="text-white/65 text-sm mb-1">{t('profile.ranking')}</div>
                       <div className="text-3xl font-bold text-white">{profile.rankedRating ?? 1500}</div>
                       {(profile.lastRatingChange ?? 0) !== 0 && (
                         <div className={`text-xs font-semibold mt-1 ${(profile.lastRatingChange ?? 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -462,37 +464,37 @@ export default function ProfileScreen() {
                       )}
                     </div>
                     <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                      <div className="text-white/65 text-sm mb-1">Games Played</div>
+                      <div className="text-white/65 text-sm mb-1">{t('profile.gamesPlayed')}</div>
                       <div className="text-3xl font-bold text-white">{s.gamesPlayed}</div>
                     </div>
                     <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                      <div className="text-white/65 text-sm mb-1">Games Won</div>
+                      <div className="text-white/65 text-sm mb-1">{t('profile.gamesWon')}</div>
                       <div className="text-3xl font-bold text-white">{s.gamesWon}</div>
                     </div>
                     <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                      <div className="text-white/65 text-sm mb-1">Win Rate</div>
+                      <div className="text-white/65 text-sm mb-1">{t('profile.winRate')}</div>
                       <div className="text-3xl font-bold text-white">{wr}%</div>
                     </div>
                     <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                      <div className="text-white/65 text-sm mb-1">Dudo Calls</div>
+                      <div className="text-white/65 text-sm mb-1">{t('profile.dudoCalls')}</div>
                       <div className="text-3xl font-bold text-white">{s.dudoCalls}</div>
                     </div>
                     <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                      <div className="text-white/65 text-sm mb-1">Dudo Success Rate</div>
+                      <div className="text-white/65 text-sm mb-1">{t('profile.dudoSuccessRate')}</div>
                       <div className="text-3xl font-bold text-white">{dr}%</div>
                       <div className="text-xs text-white/50 mt-1">
                         {s.successfulDudoCalls} / {s.dudoCalls} calls
                       </div>
                     </div>
                     <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                      <div className="text-white/65 text-sm mb-1">Called Against Rate</div>
+                      <div className="text-white/65 text-sm mb-1">{t('profile.calledAgainstRate')}</div>
                       <div className="text-3xl font-bold text-white">{cr}%</div>
                       <div className="text-xs text-white/50 mt-1">
                         {s.successfulCallsAgainst} / {s.timesCalledAgainst} times
                       </div>
                     </div>
                   </div>
-                  <p className="text-white/40 text-xs text-center mt-4">Online stats are tracked during multiplayer games</p>
+                  <p className="text-white/40 text-xs text-center mt-4">{t('profile.onlineStatsNote')}</p>
                 </>
               );
             })()}
@@ -501,11 +503,13 @@ export default function ProfileScreen() {
             {activeTab === 'achievements' && (
               <>
                 <p className="text-white/60 text-sm text-center mb-4 font-medium">
-                  {unlockedCount} / {ACHIEVEMENTS.length} Unlocked
+                  {t('profile.achievementsUnlocked', { unlocked: unlockedCount, total: ACHIEVEMENTS.length })}
                 </p>
                 <div className="grid grid-cols-3 gap-3">
                   {ACHIEVEMENTS.map((a) => {
                     const unlocked = unlockedIds.includes(a.id);
+                    const displayName = language === 'es' ? a.nameEs : a.name;
+                    const displayDesc = language === 'es' ? a.descriptionEs : a.description;
                     return (
                       <div
                         key={a.id}
@@ -522,10 +526,10 @@ export default function ProfileScreen() {
                           {a.icon}
                         </span>
                         <span className={`text-xs font-bold leading-tight ${unlocked ? 'text-white' : 'text-white/30'}`}>
-                          {a.name}
+                          {displayName}
                         </span>
                         <span className={`text-xs leading-tight ${unlocked ? 'text-white/60' : 'text-white/20'}`}>
-                          {a.description}
+                          {displayDesc}
                         </span>
                       </div>
                     );
@@ -540,15 +544,15 @@ export default function ProfileScreen() {
       {/* Data & Privacy footer */}
       <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-2 text-xs text-white/30">
         <button onClick={handleExportData} className="hover:text-white/60 transition-colors">
-          Export my data
+          {t('profile.exportData')}
         </button>
         <span>·</span>
         <button onClick={() => setShowPrivacy(true)} className="hover:text-white/60 transition-colors">
-          Privacy Policy
+          {t('landing.privacyPolicy')}
         </button>
         <span>·</span>
         <button onClick={() => setShowDeleteConfirm(true)} className="hover:text-red-400 transition-colors">
-          Delete account
+          {t('profile.deleteAccount')}
         </button>
       </div>
 
@@ -558,12 +562,12 @@ export default function ProfileScreen() {
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => { if (deleteStatus !== 'deleting') setShowDeleteConfirm(false); }}>
           <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl w-full max-w-sm p-5 animate-modal-enter" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-white mb-2">Delete Account</h2>
+            <h2 className="text-lg font-bold text-white mb-2">{t('profile.deleteTitle')}</h2>
             <p className="text-sm text-white/70 mb-4">
-              This will permanently delete your account and all associated data — stats, achievements, and rating. This cannot be undone.
+              {t('profile.deleteConfirm')}
             </p>
             {deleteStatus === 'error' && (
-              <p className="text-red-300 text-sm mb-3">Something went wrong. Please try again.</p>
+              <p className="text-red-300 text-sm mb-3">{t('common.error')}</p>
             )}
             <div className="flex gap-2">
               <button
@@ -571,14 +575,14 @@ export default function ProfileScreen() {
                 disabled={deleteStatus === 'deleting'}
                 className="flex-1 py-2.5 rounded-xl font-bold text-sm btn-glass"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleDeleteAccount}
                 disabled={deleteStatus === 'deleting'}
                 className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-red-500 hover:bg-red-600 text-white transition-colors disabled:opacity-50"
               >
-                {deleteStatus === 'deleting' ? 'Deleting…' : 'Delete'}
+                {deleteStatus === 'deleting' ? t('profile.deleting') : t('profile.delete')}
               </button>
             </div>
           </div>

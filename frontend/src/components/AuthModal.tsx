@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface AuthModalProps {
   onClose: () => void;
@@ -7,6 +8,7 @@ interface AuthModalProps {
 
 export default function AuthModal({ onClose }: AuthModalProps) {
   const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
+  const { t } = useLanguage();
   const [tab, setTab] = useState<'signin' | 'signup'>('signin');
 
   // Sign-in state
@@ -45,30 +47,30 @@ export default function AuthModal({ onClose }: AuthModalProps) {
 
     const newErrors: Record<string, string> = {};
 
-    if (!signUpName.trim()) newErrors.name = 'Please enter your name.';
+    if (!signUpName.trim()) newErrors.name = t('auth.errorNameRequired');
 
     if (!signUpDob) {
-      newErrors.dob = 'Please enter your date of birth.';
+      newErrors.dob = t('auth.errorDobRequired');
     } else {
       const dob = new Date(signUpDob);
       const today = new Date();
       let age = today.getFullYear() - dob.getFullYear();
       const monthDiff = today.getMonth() - dob.getMonth();
       if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) age--;
-      if (age < 13) newErrors.dob = 'You must be at least 13 years old to create an account.';
-      if (age > 120) newErrors.dob = 'Please enter a valid date of birth.';
+      if (age < 13) newErrors.dob = t('auth.errorDobTooYoung');
+      if (age > 120) newErrors.dob = t('auth.errorDobInvalid');
     }
 
     if (!signUpEmail.trim() || !signUpEmail.includes('@')) {
-      newErrors.email = 'Please enter a valid email address.';
+      newErrors.email = t('auth.errorEmailInvalid');
     }
 
     if (signUpPassword.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters.';
+      newErrors.password = t('auth.errorPasswordTooShort');
     }
 
     if (signUpConfirm !== signUpPassword) {
-      newErrors.confirm = 'Passwords do not match.';
+      newErrors.confirm = t('auth.errorPasswordMismatch');
     }
 
     setErrors(newErrors);
@@ -102,7 +104,7 @@ export default function AuthModal({ onClose }: AuthModalProps) {
         {/* Header */}
         <div className="p-5 pb-0 flex justify-between items-center">
           <h2 className="text-xl font-bold text-white">
-            {tab === 'signin' ? 'Sign In' : 'Create Account'}
+            {tab === 'signin' ? t('auth.signIn') : t('auth.createAccount')}
           </h2>
           <button onClick={onClose} className="text-white/60 hover:text-white text-2xl font-bold leading-none">×</button>
         </div>
@@ -113,13 +115,13 @@ export default function AuthModal({ onClose }: AuthModalProps) {
             onClick={() => setTab('signin')}
             className={`flex-1 py-1.5 rounded-lg text-sm font-bold transition-colors ${tab === 'signin' ? 'btn-3d-accent text-white' : 'btn-glass'}`}
           >
-            Sign In
+            {t('auth.signIn')}
           </button>
           <button
             onClick={() => setTab('signup')}
             className={`flex-1 py-1.5 rounded-lg text-sm font-bold transition-colors ${tab === 'signup' ? 'btn-3d-accent text-white' : 'btn-glass'}`}
           >
-            Create Account
+            {t('auth.createAccount')}
           </button>
         </div>
 
@@ -135,12 +137,12 @@ export default function AuthModal({ onClose }: AuthModalProps) {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            Continue with Google
+            {t('auth.continueWithGoogle')}
           </button>
 
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-white/20" />
-            <span className="text-white/40 text-xs">or</span>
+            <span className="text-white/40 text-xs">{t('common.or')}</span>
             <div className="flex-1 h-px bg-white/20" />
           </div>
 
@@ -148,16 +150,16 @@ export default function AuthModal({ onClose }: AuthModalProps) {
           {tab === 'signin' && (
             <form onSubmit={handleSignIn} className="space-y-3">
               <div>
-                <label className={labelClass}>Email</label>
-                <input type="email" required value={signInEmail} onChange={e => setSignInEmail(e.target.value)} className={`${baseInputClass} border-white/25 focus:border-white/60`} placeholder="you@example.com" autoComplete="email" />
+                <label className={labelClass}>{t('auth.email')}</label>
+                <input type="email" required value={signInEmail} onChange={e => setSignInEmail(e.target.value)} className={`${baseInputClass} border-white/25 focus:border-white/60`} placeholder={t('auth.emailPlaceholder')} autoComplete="email" />
               </div>
               <div>
-                <label className={labelClass}>Password</label>
-                <input type="password" required value={signInPassword} onChange={e => setSignInPassword(e.target.value)} className={`${baseInputClass} border-white/25 focus:border-white/60`} placeholder="••••••••" autoComplete="current-password" />
+                <label className={labelClass}>{t('auth.password')}</label>
+                <input type="password" required value={signInPassword} onChange={e => setSignInPassword(e.target.value)} className={`${baseInputClass} border-white/25 focus:border-white/60`} placeholder={t('auth.passwordPlaceholder')} autoComplete="current-password" />
               </div>
               {signInError && <p className="text-red-400 text-xs">{signInError}</p>}
               <button type="submit" disabled={signInLoading} className="w-full btn-3d-accent text-white font-bold py-2.5 rounded-xl text-sm disabled:opacity-60">
-                {signInLoading ? 'Signing in…' : 'Sign In'}
+                {signInLoading ? t('auth.signingIn') : t('auth.signIn')}
               </button>
             </form>
           )}
@@ -166,41 +168,41 @@ export default function AuthModal({ onClose }: AuthModalProps) {
           {tab === 'signup' && (
             signUpSuccess ? (
               <div className="text-center py-4">
-                <p className="text-green-400 font-semibold text-sm mb-1">Check your email!</p>
-                <p className="text-white/70 text-xs">We sent a confirmation link to <strong>{signUpEmail}</strong>. Click it to activate your account.</p>
+                <p className="text-green-400 font-semibold text-sm mb-1">{t('auth.checkEmail')}</p>
+                <p className="text-white/70 text-xs">{t('auth.checkEmailDesc', { email: signUpEmail })}</p>
               </div>
             ) : (
               <form onSubmit={handleSignUp} className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className={labelClass}>Name</label>
-                    <input type="text" required value={signUpName} onChange={e => { setSignUpName(e.target.value); setErrors(p => ({ ...p, name: '' })); }} className={inputClass('name')} placeholder="Your name" maxLength={20} />
+                    <label className={labelClass}>{t('auth.name')}</label>
+                    <input type="text" required value={signUpName} onChange={e => { setSignUpName(e.target.value); setErrors(p => ({ ...p, name: '' })); }} className={inputClass('name')} placeholder={t('auth.namePlaceholder')} maxLength={20} />
                     {errors.name && <p className={fieldErrorClass}>{errors.name}</p>}
                   </div>
                   <div>
-                    <label className={labelClass}>Date of Birth</label>
+                    <label className={labelClass}>{t('auth.dob')}</label>
                     <input type="date" required value={signUpDob} onChange={e => { setSignUpDob(e.target.value); setErrors(p => ({ ...p, dob: '' })); }} className={inputClass('dob')} max={new Date().toISOString().split('T')[0]} />
                     {errors.dob && <p className={fieldErrorClass}>{errors.dob}</p>}
                   </div>
                 </div>
                 <div>
-                  <label className={labelClass}>Email</label>
-                  <input type="text" required value={signUpEmail} onChange={e => { setSignUpEmail(e.target.value); setErrors(p => ({ ...p, email: '' })); }} className={inputClass('email')} placeholder="you@example.com" autoComplete="email" />
+                  <label className={labelClass}>{t('auth.email')}</label>
+                  <input type="text" required value={signUpEmail} onChange={e => { setSignUpEmail(e.target.value); setErrors(p => ({ ...p, email: '' })); }} className={inputClass('email')} placeholder={t('auth.emailPlaceholder')} autoComplete="email" />
                   {errors.email && <p className={fieldErrorClass}>{errors.email}</p>}
                 </div>
                 <div>
-                  <label className={labelClass}>Password</label>
-                  <input type="password" required value={signUpPassword} onChange={e => { setSignUpPassword(e.target.value); setErrors(p => ({ ...p, password: '' })); }} className={inputClass('password')} placeholder="Min. 6 characters" autoComplete="new-password" />
+                  <label className={labelClass}>{t('auth.password')}</label>
+                  <input type="password" required value={signUpPassword} onChange={e => { setSignUpPassword(e.target.value); setErrors(p => ({ ...p, password: '' })); }} className={inputClass('password')} placeholder={t('auth.passwordMin')} autoComplete="new-password" />
                   {errors.password && <p className={fieldErrorClass}>{errors.password}</p>}
                 </div>
                 <div>
-                  <label className={labelClass}>Confirm Password</label>
-                  <input type="password" required value={signUpConfirm} onChange={e => { setSignUpConfirm(e.target.value); setErrors(p => ({ ...p, confirm: '' })); }} className={inputClass('confirm')} placeholder="Repeat password" autoComplete="new-password" />
+                  <label className={labelClass}>{t('auth.confirmPassword')}</label>
+                  <input type="password" required value={signUpConfirm} onChange={e => { setSignUpConfirm(e.target.value); setErrors(p => ({ ...p, confirm: '' })); }} className={inputClass('confirm')} placeholder={t('auth.confirmPasswordPlaceholder')} autoComplete="new-password" />
                   {errors.confirm && <p className={fieldErrorClass}>{errors.confirm}</p>}
                 </div>
                 {errors.submit && <p className="text-red-400 text-xs">{errors.submit}</p>}
                 <button type="submit" disabled={signUpLoading} className="w-full btn-3d-accent text-white font-bold py-2.5 rounded-xl text-sm disabled:opacity-60">
-                  {signUpLoading ? 'Creating account…' : 'Create Account'}
+                  {signUpLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
                 </button>
               </form>
             )

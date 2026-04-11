@@ -1,5 +1,6 @@
 import type { RoomPlayerInfo } from '../hooks/useMultiplayerConnection';
 import { PLAYER_COLOR_MAP, PLAYER_COLORS } from '@dudo-dice/shared';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface WaitingRoomProps {
   roomCode: string;
@@ -31,6 +32,7 @@ export default function WaitingRoom({
   onVoteStartWithBots,
   onLeave,
 }: WaitingRoomProps) {
+  const { t } = useLanguage();
   const humanPlayers = players.filter(p => !p.isAI);
   const canStart = players.length >= 2;
   const isHost = myPlayerId === hostId;
@@ -49,20 +51,20 @@ export default function WaitingRoom({
         className="fixed h-10 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
         style={{ left: '0.75rem', top: '0.75rem' }}
       >
-        ← Back
+        {t('common.back')}
       </button>
       <div className="max-w-md w-full pt-12 sm:pt-0">
         <div className="flex items-center justify-center gap-4 mb-5 pl-16 sm:pl-0">
           <picture><source srcSet="/Logo.webp" type="image/webp" /><img src="/Logo.png" alt="Dudo Dice Logo" className="flex-shrink-0" style={{ width: '56px', height: '56px' }} /></picture>
           <div className="flex flex-col">
-            <h1 className="text-3xl font-bold text-white">Waiting Room</h1>
+            <h1 className="text-3xl font-bold text-white">{t('waitingRoom.title')}</h1>
           </div>
         </div>
 
         <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl p-5 mb-4">
           {/* Room code */}
           <div className="text-center mb-5">
-            <p className="text-sm text-white/60 mb-1">Room Code</p>
+            <p className="text-sm text-white/60 mb-1">{t('waitingRoom.roomCode')}</p>
             <button
               onClick={copyCode}
               className="text-4xl font-black text-white tracking-[0.3em] hover:text-white/80 transition-colors"
@@ -70,14 +72,14 @@ export default function WaitingRoom({
             >
               {roomCode}
             </button>
-            <p className="text-xs text-white/40 mt-1">Click to copy · Share with friends</p>
+            <p className="text-xs text-white/40 mt-1">{t('waitingRoom.shareInstructions')}</p>
           </div>
 
           <div className="h-px bg-white/20 mb-4" />
 
           {/* Settings summary */}
           <div className="flex gap-3 text-xs text-white/60 justify-center mb-4">
-            <span>🎲 {settings.startingDice} dice</span>
+            <span>🎲 {settings.startingDice} {t('common.dice')}</span>
             <span>👥 Up to {settings.maxPlayers}</span>
             {settings.palificoEnabled && <span>🎯 Palifico</span>}
             {settings.calzaEnabled && <span>✋ Calza</span>}
@@ -89,15 +91,13 @@ export default function WaitingRoom({
               ? 'bg-yellow-500/15 text-yellow-300 border border-yellow-500/30'
               : 'bg-white/5 text-white/50 border border-white/10'
           }`}>
-            {isRanked
-              ? 'Ranked Match — Rating changes will apply'
-              : 'Casual Match — 3+ players needed for ranked'}
+            {isRanked ? t('waitingRoom.ranked') : t('waitingRoom.casual')}
           </div>
 
           {/* Player list */}
           <div className="space-y-2 mb-5">
             <p className="text-sm font-semibold text-white">
-              Players ({players.length}/{settings.maxPlayers})
+              {t('waitingRoom.playersHeading')} ({players.length}/{settings.maxPlayers})
             </p>
             {players.map((p, idx) => {
               const colorKey = PLAYER_COLORS[idx % PLAYER_COLORS.length];
@@ -115,7 +115,7 @@ export default function WaitingRoom({
                   </div>
                   <span className="text-white font-semibold text-sm flex-1">
                     {p.name}
-                    {p.id === myPlayerId && <span className="text-white/40 ml-1">(you)</span>}
+                    {p.id === myPlayerId && <span className="text-white/40 ml-1">{t('waitingRoom.you')}</span>}
                   </span>
                   {p.rating != null && !p.isAI && (
                     <span className="text-xs text-white/60 bg-white/10 rounded px-1.5 py-0.5 font-mono">
@@ -123,7 +123,7 @@ export default function WaitingRoom({
                     </span>
                   )}
                   {p.id === hostId && (
-                    <span className="text-xs text-yellow-400 font-bold">HOST</span>
+                    <span className="text-xs text-yellow-400 font-bold">{t('waitingRoom.host')}</span>
                   )}
                 </div>
               );
@@ -135,25 +135,23 @@ export default function WaitingRoom({
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                   <span className="text-white/40 text-sm">?</span>
                 </div>
-                <span className="text-white/40 text-sm">Waiting for player...</span>
+                <span className="text-white/40 text-sm">{t('waitingRoom.waitingForPlayer')}</span>
               </div>
             ))}
           </div>
 
           {/* Actions */}
           <div className="space-y-2">
-            {/* Host start game — only shown when room is full or when host wants to start without bots */}
             {isHost && (
               <button
                 onClick={onStartGame}
                 disabled={!canStart}
                 className="w-full py-2.5 text-white font-extrabold rounded-xl btn-3d-accent disabled:opacity-50"
               >
-                {canStart ? 'Start Game' : 'Need at least 2 players'}
+                {canStart ? t('waitingRoom.startGame') : t('waitingRoom.needMorePlayers')}
               </button>
             )}
 
-            {/* Start with Bots — shown to all players when there are empty slots */}
             {hasEmptySlots && (
               <button
                 onClick={onVoteStartWithBots}
@@ -162,14 +160,14 @@ export default function WaitingRoom({
               >
                 {hasVotedBots ? (
                   <>
-                    <span>Waiting for others</span>
+                    <span>{t('waitingRoom.waitingForOthers')}</span>
                     <span className="text-white/60 text-sm font-normal">
-                      {startWithBotsVotes.length}/{humanPlayers.length} ready
+                      {t('waitingRoom.ready', { x: startWithBotsVotes.length, y: humanPlayers.length })}
                     </span>
                   </>
                 ) : (
                   <>
-                    <span>🤖 Start with Bots</span>
+                    <span>{t('waitingRoom.startWithBots')}</span>
                     {startWithBotsVotes.length > 0 && (
                       <span className="text-white/60 text-sm font-normal">
                         {startWithBotsVotes.length}/{humanPlayers.length}

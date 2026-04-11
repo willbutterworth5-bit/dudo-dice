@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ACHIEVEMENT_MAP } from '../utils/achievements';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface AchievementToastProps {
   ids: string[];
@@ -7,6 +8,7 @@ interface AchievementToastProps {
 }
 
 export default function AchievementToast({ ids, onDismiss }: AchievementToastProps) {
+  const { language } = useLanguage();
   const [exiting, setExiting] = useState(false);
 
   const currentId = ids[0];
@@ -34,6 +36,10 @@ export default function AchievementToast({ ids, onDismiss }: AchievementToastPro
 
   if (!achievement) return null;
 
+  const displayName = language === 'es' ? achievement.nameEs : achievement.name;
+  const displayDesc = language === 'es' ? achievement.descriptionEs : achievement.description;
+  const unlockLabel = language === 'es' ? 'Logro desbloqueado' : 'Achievement Unlocked';
+
   return (
     <div
       className={`fixed bottom-6 left-1/2 z-40 pointer-events-none ${exiting ? 'toast-exit' : 'toast-enter'}`}
@@ -42,9 +48,9 @@ export default function AchievementToast({ ids, onDismiss }: AchievementToastPro
       <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl border border-white/20 px-5 py-3 flex items-center gap-3 min-w-[260px] max-w-xs">
         <span className="text-3xl flex-shrink-0">{achievement.icon}</span>
         <div className="flex flex-col">
-          <span className="text-xs text-white/60 font-medium uppercase tracking-wide">Achievement Unlocked</span>
-          <span className="text-sm font-bold text-white leading-tight">{achievement.name}</span>
-          <span className="text-xs text-white/70 leading-tight mt-0.5">{achievement.description}</span>
+          <span className="text-xs text-white/60 font-medium uppercase tracking-wide">{unlockLabel}</span>
+          <span className="text-sm font-bold text-white leading-tight">{displayName}</span>
+          <span className="text-xs text-white/70 leading-tight mt-0.5">{displayDesc}</span>
         </div>
       </div>
     </div>

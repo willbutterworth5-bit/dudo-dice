@@ -1,5 +1,6 @@
 import { Player } from '../game/GameState';
 import type { RatingUpdate } from '../hooks/useMultiplayerConnection';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface GameOverModalProps {
   winner: Player;
@@ -11,7 +12,8 @@ interface GameOverModalProps {
   isRanked?: boolean;
 }
 
-const PLACEMENT_LABELS = ['', '1st', '2nd', '3rd', '4th', '5th', '6th'];
+const PLACEMENT_LABELS_EN = ['', '1st', '2nd', '3rd', '4th', '5th', '6th'];
+const PLACEMENT_LABELS_ES = ['', '1.°', '2.°', '3.°', '4.°', '5.°', '6.°'];
 
 export default function GameOverModal({
   winner,
@@ -22,7 +24,8 @@ export default function GameOverModal({
   ratingUpdate,
   isRanked,
 }: GameOverModalProps) {
-
+  const { t, language } = useLanguage();
+  const placementLabels = language === 'es' ? PLACEMENT_LABELS_ES : PLACEMENT_LABELS_EN;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -33,19 +36,19 @@ export default function GameOverModal({
           >
             🎉
           </div>
-          <h2 className="text-3xl font-bold mb-2 text-white">Game Over</h2>
+          <h2 className="text-3xl font-bold mb-2 text-white">{t('gameOver.title')}</h2>
           <p className="text-xl text-white mb-1">
-            <span className="font-semibold">{winner.name}</span> wins!
+            {t('gameOver.winnerIs', { name: winner.name })}
           </p>
           <p className="text-sm text-white/70 mb-4">
-            {winner.isHuman ? 'Congratulations' : 'Better luck next time'}
+            {winner.isHuman ? t('gameOver.congratulations') : t('gameOver.betterLuck')}
           </p>
 
           {/* Ranked rating change */}
           {isRanked && ratingUpdate && (
             <div className="bg-white/10 rounded-xl p-3 mb-4 border border-white/20">
               <p className="text-xs text-white/60 mb-1">
-                You placed {PLACEMENT_LABELS[ratingUpdate.placement] ?? `#${ratingUpdate.placement}`}
+                {t('gameOver.placed', { ordinal: placementLabels[ratingUpdate.placement] ?? `#${ratingUpdate.placement}` })}
               </p>
               <div className="flex items-center justify-center gap-3">
                 <span className="text-white/60 text-sm">{ratingUpdate.oldRating}</span>
@@ -64,7 +67,7 @@ export default function GameOverModal({
                 onClick={onNewGame}
                 className="px-6 py-3 text-white font-bold rounded-xl transition-colors text-sm btn-3d-accent"
               >
-                New Game
+                {t('gameOver.newGame')}
               </button>
             )}
             {analysisEnabled && (
@@ -72,14 +75,14 @@ export default function GameOverModal({
                 onClick={onViewGameAnalysis}
                 className="px-6 py-3 btn-glass text-white font-bold rounded-xl transition-colors text-sm"
               >
-                Game Analysis
+                {t('gameOver.gameAnalysis')}
               </button>
             )}
             <button
               onClick={onQuit}
               className="px-6 py-3 btn-glass text-white font-bold rounded-xl transition-colors text-sm"
             >
-              Quit
+              {t('gameOver.quit')}
             </button>
           </div>
         </div>
