@@ -89,12 +89,17 @@ export function alternativeBids(
       return d === fv || d === 1; // 1s are wild in normal mode
     }).length;
 
-    // Minimum valid bid quantity for this face value (must raise the current bid)
-    const minQty = fv === challengedBid.faceValue
-      ? challengedBid.quantity + 1
-      : fv > challengedBid.faceValue
-        ? challengedBid.quantity
-        : challengedBid.quantity + 1;
+    // Minimum valid bid quantity for this face value (must raise the current bid).
+    // Special case: switching TO ones from a non-ones bid uses the half-quantity rule
+    // (same as BidValidator): floor(currentQty / 2) + 1
+    const switchingToOnes = fv === 1 && challengedBid.faceValue !== 1;
+    const minQty = switchingToOnes
+      ? Math.floor(challengedBid.quantity / 2) + 1
+      : fv === challengedBid.faceValue
+        ? challengedBid.quantity + 1
+        : fv > challengedBid.faceValue
+          ? challengedBid.quantity
+          : challengedBid.quantity + 1;
 
     // The bid is only "true" if actual count >= bid quantity
     // The highest true bid is count itself (bidding more than count would be false)

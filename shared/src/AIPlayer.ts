@@ -88,7 +88,7 @@ export class AIPlayer {
     const aggressiveness = this.openingAggressiveness();
     // Floor at ~20% of total dice so opening bids aren't embarrassingly low
     const minQty = Math.max(1, Math.round(totalDice * 0.20));
-    const qty = Math.max(minQty, Math.round(bestEstimate * aggressiveness));
+    const qty = Math.min(totalDice, Math.max(minQty, Math.round(bestEstimate * aggressiveness)));
 
     return { quantity: qty, faceValue: bestFace, playerId: player.id };
   }
@@ -103,9 +103,9 @@ export class AIPlayer {
     const currentBid = gameState.currentBid!;
     const candidates = this.buildCandidateBids(currentBid, gameState.palificoMode, player);
 
-    // Keep only bids the validator accepts
+    // Keep only bids the validator accepts AND that don't exceed total dice on the board
     const valid = candidates.filter(
-      b => BidValidator.validateBid(b, currentBid, gameState.palificoMode).valid
+      b => b.quantity <= totalDice && BidValidator.validateBid(b, currentBid, gameState.palificoMode).valid
     );
 
     if (valid.length === 0) return null;
