@@ -221,11 +221,26 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     // which has already reset). Ones are only wild when palifico was NOT active.
     const wasPalificoRound = result.bids[0]?.palificoMode ?? false;
 
+    // Pre-compute die 0's match so the counter shows the correct value immediately
+    // when the panel appears, avoiding a jarring 0→1 animation for the first die.
+    const bidFaceValue = result.challengedBid?.faceValue;
+    if (orderedDicePositions.length > 0) {
+      const die0 = orderedDicePositions[0];
+      const die0Matches = bidFaceValue
+        ? (wasPalificoRound
+            ? die0.dieValue === bidFaceValue
+            : die0.dieValue === bidFaceValue || die0.dieValue === 1)
+        : false;
+      if (die0Matches) {
+        matchingDice[die0.playerId] = [die0.originalDieIdx];
+      }
+    }
+
     setRevealState({
       playerIndex: -1,
       dieIndex: -1,
       revealed,
-      matchingDice: {}, // pre-initialize so key starts at "found-0", avoiding spurious animation
+      matchingDice: { ...matchingDice },
     });
 
     // Recursive function to reveal dice sequentially clockwise
@@ -259,16 +274,18 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         // Reveal this die
         currentRevealed[playerId] = [...currentRevealed[playerId], diePos.originalDieIdx];
 
-        // Check if this die matches the bid
-        const bidFaceValue = result.challengedBid?.faceValue;
-        const matches = bidFaceValue
-          ? (wasPalificoRound
-              ? diePos.dieValue === bidFaceValue
-              : diePos.dieValue === bidFaceValue || diePos.dieValue === 1)
-          : false;
+        // Check if this die matches the bid.
+        // Die 0 is already pre-computed in matchingDice — skip to avoid double-counting.
+        if (diePositionIdx > 0) {
+          const matches = bidFaceValue
+            ? (wasPalificoRound
+                ? diePos.dieValue === bidFaceValue
+                : diePos.dieValue === bidFaceValue || diePos.dieValue === 1)
+            : false;
 
-        if (matches) {
-          currentMatching[playerId] = [...currentMatching[playerId], diePos.originalDieIdx];
+          if (matches) {
+            currentMatching[playerId] = [...currentMatching[playerId], diePos.originalDieIdx];
+          }
         }
 
         setRevealState({
@@ -1077,37 +1094,87 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
             </div>
           )}
 
-          {/* Dice arranged along outer arc in each sector */}
+          {/* Dice arranged along outer arc in each sector.
+              Two-pass render: pass 1 draws glow halos, pass 2 draws die faces.
+              Because pass 2 is later in the DOM it always paints on top of every
+              glow, so the halo of one die can never bleed in front of an adjacent
+              die's white face. */}
           <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 5 }}>
+
+            {/* Pass 1 — glow halos only (matching dice, rendered beneath all faces) */}
+            {sectorPlayers.map((player, sectorIdx) => {
+              if (!player) return null;
+              const startAngle = sectorAngles[sectorIdx];
+              const outerRadius = 200;
+              const isRevealing = revealState !== null && lastRoundResult !== null;
+              const originalDice = lastRoundResult
+                ? (lastRoundResult.allDice?.find(d => d.playerId === player.id)?.dice ?? player.dice ?? [])
+                : (player.dice ?? []);
+              const diceWithIndices = originalDice && originalDice.length > 0
+                ? originalDice.map((value, originalIdx) => ({ value, originalIdx })).sort((a, b) => a.value - b.value)
+                : [];
+              const { revealedIndices, matchingIndices } = getRevealedDiceForPlayer(revealState, player);
+              const diceCount = (lastRoundResult && originalDice.length > 0) ? originalDice.length : player.diceCount;
+              const diceSpacing = 60 / (diceCount + 1);
+              return (
+                <div key={`glow-sector-${sectorIdx}`}>
+                  {Array.from({ length: diceCount }).map((_, dieIdx) => {
+                    const angleInSector = startAngle + (dieIdx + 1) * diceSpacing;
+                    const angleRad = (angleInSector * Math.PI) / 180;
+                    const x = Math.cos(angleRad) * outerRadius;
+                    const y = Math.sin(angleRad) * outerRadius;
+                    const rotationAngle = angleInSector - 90;
+                    const diceItem = diceWithIndices[dieIdx];
+                    const originalIdx = diceItem?.originalIdx ?? -1;
+                    const hasBeenCounted = isRevealing && originalIdx !== -1 && revealedIndices.includes(originalIdx);
+                    const isMatching = hasBeenCounted && originalIdx !== -1 && matchingIndices.includes(originalIdx);
+                    if (!isMatching) return null;
+                    return (
+                      <div
+                        key={`glow-${sectorIdx}-${dieIdx}`}
+                        className="absolute w-7 h-7 rounded die-matching-glow"
+                        style={{
+                          left: '50%',
+                          top: '50%',
+                          transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${rotationAngle}deg)`,
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              );
+            })}
+
+            {/* Pass 2 — die faces (all dice, rendered on top of all glows) */}
             {sectorPlayers.map((player, sectorIdx) => {
               if (!player) return null; // Skip empty sectors
-              
+
               const startAngle = sectorAngles[sectorIdx];
               const sectorSpan = 60; // 60 degrees per sector
               const outerRadius = 200; // Distance from center for dice (proportional to new board size)
               const playerHexColor = PLAYER_COLOR_MAP[player.color] || '#6B7280';
-              
+
               // During reveal, only show dice that have been revealed sequentially
               // After reveal is complete, show all dice
               const isRevealing = revealState !== null && lastRoundResult !== null;
               // Don't show dice during challenge phases or tallying - only show after reveal starts
               const isLocalPlayer = isMyPlayer(player.id);
               const shouldShowDice = isLocalPlayer || (isRevealing ? true : false);
-              
+
               // Get dice for this player — use the round-result snapshot whenever a
               // result is active so that the human's dice don't briefly flash as the
               // new-round (re-rolled) values during the DUDO/CALZA banner.
               const originalDice = lastRoundResult
                 ? (lastRoundResult.allDice?.find(d => d.playerId === player.id)?.dice ?? player.dice ?? [])
                 : (player.dice ?? []);
-              
+
               // Create sorted dice with mapping to original indices
               const diceWithIndices = originalDice && originalDice.length > 0
                 ? originalDice.map((value, originalIdx) => ({ value, originalIdx })).sort((a, b) => a.value - b.value)
                 : [];
-              
+
               const { revealedIndices, matchingIndices } = getRevealedDiceForPlayer(revealState, player);
-              
+
               // Calculate positions for dice along the arc
               // During reveal, use the pre-round dice count from allDice so the loser's
               // die isn't removed visually before the tally animation finishes.
@@ -1130,7 +1197,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                     const diceItem = diceWithIndices[dieIdx];
                     const die = diceItem?.value;
                     const originalIdx = diceItem?.originalIdx ?? -1;
-                    
+
                     // Whether this die has been sequentially counted in the reveal loop
                     const hasBeenCounted = isRevealing && originalIdx !== -1 && revealedIndices.includes(originalIdx);
 
@@ -1139,9 +1206,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                       ? (isLocalPlayer || hasBeenCounted)
                       : (shouldShowDice && die !== undefined);
 
-                    // Glow only after the die has been sequentially counted — never before
+                    // Glow is rendered in pass 1 — faces here need no glow class
                     const isMatching = hasBeenCounted && originalIdx !== -1 && matchingIndices.includes(originalIdx);
-                    const matches = isMatching;
 
                     // During dice throwing animation, show spinning dice
                     const isThrowing = diceThrowing && !isRevealing && !lastRoundResult;
@@ -1150,7 +1216,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                     // Animate when die is counted — human gets a pop (already visible), others get a flip-in
                     const isCurrentlyRevealing = hasBeenCounted;
                     const isMatchingAndRevealing = isCurrentlyRevealing && isMatching;
-                    
+
                     return (
                       <div
                         key={`die-${sectorIdx}-${dieIdx}`}
@@ -1174,7 +1240,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                           style={isThrowing ? { animationDelay: `${sectorIdx * 10 + dieIdx * 30}ms` } : undefined}
                         >
                           {(isRevealed && !isThrowing) || (isThrowing && showValueDuringThrow) ? (
-                            <div className={`w-7 h-7 bg-white border border-border-medium rounded flex items-center justify-center shadow-sm ${matches ? 'die-matching-glow' : ''}`}>
+                            <div className="w-7 h-7 bg-white border border-border-medium rounded flex items-center justify-center shadow-sm">
                               <DiceFace value={die} size="sm" />
                             </div>
                           ) : (
@@ -1318,7 +1384,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
         <div className="px-3 pb-2 sm:pb-4 relative z-10 flex-shrink-0">
           <div className="max-w-2xl mx-auto min-h-[9.5rem] sm:min-h-[7.5rem] flex flex-col">
             {/* Challenge Context Banner — who called who and what the bid was */}
-            {lastRoundResult && !showDice && !modalClosing && (() => {
+            {lastRoundResult && !modalClosing && (() => {
               const challPlayer = gameState.players.find(p => p.id === lastRoundResult.challengerId);
               const bidPlayer   = gameState.players.find(p => p.id === lastRoundResult.bidderId);
               const challColor  = PLAYER_COLOR_MAP[challPlayer?.color ?? ''] || '#6B7280';

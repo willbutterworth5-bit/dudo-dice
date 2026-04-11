@@ -13,6 +13,7 @@ export default function LandingPage() {
   const [showCookiePrefs, setShowCookiePrefs] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [feedbackCategory, setFeedbackCategory] = useState<'bug' | 'suggestion' | 'other'>('suggestion');
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [feedbackEmail, setFeedbackEmail] = useState('');
@@ -117,12 +118,42 @@ export default function LandingPage() {
       </div>
 
       <button
-        onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
-        className="fixed top-3 right-3 z-50 py-2 px-2.5 text-lg rounded-xl btn-glass text-white"
-        title={language === 'en' ? 'Cambiar a español' : 'Switch to English'}
+        onClick={() => setShowLanguageModal(true)}
+        className="fixed top-3 right-3 z-50 py-2 px-3 text-sm font-semibold rounded-xl btn-glass text-white"
       >
-        {language === 'en' ? '🇪🇸' : '🇬🇧'}
+        {language === 'en' ? 'English' : 'Español'}
       </button>
+
+      {showLanguageModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowLanguageModal(false)}>
+          <div
+            className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl p-5 w-64 mx-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 className="text-white font-bold text-lg text-center mb-4">Language / Idioma</h2>
+            <div className="flex flex-col gap-2">
+              {([['en', '🇬🇧', 'English'], ['es', '🇪🇸', 'Español']] as const).map(([code, flag, label]) => (
+                <button
+                  key={code}
+                  onClick={() => { setLanguage(code); setShowLanguageModal(false); }}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-left transition-all text-white ${
+                    language === code ? 'btn-3d-accent' : 'btn-glass'
+                  }`}
+                >
+                  <span className="text-2xl">{flag}</span>
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowLanguageModal(false)}
+              className="mt-4 w-full py-2 rounded-xl btn-glass text-white text-sm font-semibold"
+            >
+              {language === 'en' ? 'Close' : 'Cerrar'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {(!consentGiven || showCookiePrefs) && (
         <CookieConsentModal onAccept={() => { setConsentGiven(true); setShowCookiePrefs(false); }} />
