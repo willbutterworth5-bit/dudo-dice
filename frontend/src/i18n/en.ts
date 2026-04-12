@@ -2,7 +2,7 @@ import type { Translations } from './types';
 
 const en: Translations = {
   common: {
-    back: '← Back',
+    back: 'Back',
     off: 'Off',
     on: 'On',
     cancel: 'Cancel',
@@ -51,6 +51,7 @@ const en: Translations = {
     roundAnalysis: 'Round Analysis',
     roundAnalysisTooltip: "When enabled, you'll see insights and probability analysis after each round",
     startGame: 'Start Game',
+    profile: 'Profile',
     advancedRules: 'Advanced Rules',
     advancedSettings: 'Advanced Settings',
     palifico: 'Palifico',
@@ -144,7 +145,7 @@ const en: Translations = {
     bid: 'Bid',
     dudo: 'Dudo',
     calza: 'Calza',
-    back: '← Back',
+    back: 'Back',
     faceValue: 'Face Value',
     quantity: 'Quantity',
     round: 'Round',
@@ -275,7 +276,7 @@ const en: Translations = {
     missedDudos: 'Missed DUDOs',
     roundByRound: 'Round by Round',
     close: 'Close',
-    back: '← Back',
+    back: 'Back',
     noMissed: 'No missed DUDO opportunities.',
     noCalls: 'You made no DUDO calls this game.',
     noBids: 'No bids recorded.',

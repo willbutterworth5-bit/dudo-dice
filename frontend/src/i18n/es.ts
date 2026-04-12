@@ -2,7 +2,7 @@ import type { Translations } from './types';
 
 const es: Translations = {
   common: {
-    back: '← Volver',
+    back: 'Volver',
     off: 'No',
     on: 'Sí',
     cancel: 'Cancelar',
@@ -51,6 +51,7 @@ const es: Translations = {
     roundAnalysis: 'Análisis de ronda',
     roundAnalysisTooltip: 'Cuando está activado, verás estadísticas y análisis de probabilidad tras cada ronda',
     startGame: 'Empezar partida',
+    profile: 'Perfil',
     advancedRules: 'Reglas avanzadas',
     advancedSettings: 'Ajustes avanzados',
     palifico: 'Palifico',
@@ -144,7 +145,7 @@ const es: Translations = {
     bid: 'Apostar',
     dudo: 'Dudo',
     calza: 'Calza',
-    back: '← Volver',
+    back: 'Volver',
     faceValue: 'Valor de cara',
     quantity: 'Cantidad',
     round: 'Ronda',
@@ -275,7 +276,7 @@ const es: Translations = {
     missedDudos: 'Dudo perdidos',
     roundByRound: 'Ronda a ronda',
     close: 'Cerrar',
-    back: '← Volver',
+    back: 'Volver',
     noMissed: 'No hay oportunidades de Dudo perdidas.',
     noCalls: 'No realizaste ninguna llamada Dudo en esta partida.',
     noBids: 'No hay apuestas registradas.',

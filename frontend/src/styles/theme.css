@@ -532,6 +532,13 @@ img[alt="Dudo Dice Logo"] {
 .toast-enter { animation: toastSlideUp 0.35s ease-out forwards; }
 .toast-exit  { animation: toastSlideDown 0.3s ease-in forwards; }
 
+/* Center circle — dark-to-bright flash on each player turn change */
+@keyframes circlePlayerEnter {
+  0%   { filter: brightness(0.45); }
+  100% { filter: brightness(1); }
+}
+.animate-circle-enter { animation: circlePlayerEnter 0.45s ease-out forwards; }
+
 @media (min-width: 640px) {
   .animate-board-shake {
     animation: boardShake 0.6s ease-out;

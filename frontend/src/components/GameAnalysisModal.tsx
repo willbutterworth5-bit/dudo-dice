@@ -3,6 +3,7 @@ import { PLAYER_COLOR_MAP, Player, RoundResult } from '../game/GameState';
 import { alternativeBids, probColour, probabilityFromRecord } from '../utils/probability';
 import DiceFace from './DiceFace';
 import { useLanguage } from '../i18n/LanguageContext';
+import BackIcon from './BackIcon';
 
 interface GameAnalysisModalProps {
   roundHistory: RoundResult[];
@@ -99,7 +100,7 @@ function MissedDudosPage({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-2 border-b border-white/20 px-4 py-2">
-        <button onClick={onBack} className="text-sm text-white/60 hover:text-white">{t('gameAnalysis.back')}</button>
+        <button onClick={onBack} className="text-sm text-white/60 hover:text-white flex items-center gap-1"><BackIcon />{t('gameAnalysis.back')}</button>
         <h3 className="text-sm font-bold text-white">{t('gameAnalysis.missedDudosTitle')}</h3>
       </div>
       <div className="scrollbar-indigo flex-1 overflow-y-auto px-4 py-3">
@@ -143,7 +144,7 @@ function DudoCallsPage({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-2 border-b border-white/20 px-4 py-2">
-        <button onClick={onBack} className="text-sm text-white/60 hover:text-white">{t('gameAnalysis.back')}</button>
+        <button onClick={onBack} className="text-sm text-white/60 hover:text-white flex items-center gap-1"><BackIcon />{t('gameAnalysis.back')}</button>
         <h3 className="text-sm font-bold text-white">{t('gameAnalysis.yourDudoCalls')}</h3>
       </div>
       <div className="scrollbar-indigo flex-1 overflow-y-auto px-4 py-3">
@@ -434,12 +435,6 @@ export default function GameAnalysisModal({ roundHistory, players, onClose }: Ga
               <div className="flex-shrink-0 border-b border-white/20 px-4 py-3">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-2">{t('gameAnalysis.summary')}</p>
                 <div className="flex gap-3 items-stretch">
-                  {stats.avgProb !== null && (
-                    <div className="flex-1 rounded-lg bg-white/10 p-2 text-center flex flex-col items-center justify-center">
-                      <p className="text-lg font-bold text-white leading-tight">{Math.round(stats.avgProb * 100)}%</p>
-                      <p className="text-[11px] text-white/50 leading-tight mt-0.5">{t('gameAnalysis.avgBidProb')}</p>
-                    </div>
-                  )}
                   <button
                     className="flex-1 rounded-lg bg-white/10 p-2 text-center flex flex-col items-center justify-center hover:bg-white/20 transition-colors"
                     onClick={() => setSubPage('dudos')}
@@ -458,6 +453,12 @@ export default function GameAnalysisModal({ roundHistory, players, onClose }: Ga
                     <p className="text-lg font-bold text-white leading-tight">{stats.missedOpportunities}</p>
                     <p className="text-[11px] text-white/50 leading-tight mt-0.5">{t('gameAnalysis.missedDudos')}</p>
                   </button>
+                  {stats.avgProb !== null && (
+                    <div className="flex-1 rounded-lg bg-white/10 p-2 text-center flex flex-col items-center justify-center">
+                      <p className="text-lg font-bold text-white leading-tight">{Math.round(stats.avgProb * 100)}%</p>
+                      <p className="text-[11px] text-white/50 leading-tight mt-0.5">{t('gameAnalysis.avgBidProb')}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

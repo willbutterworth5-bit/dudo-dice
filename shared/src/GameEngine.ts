@@ -149,7 +149,8 @@ export class GameEngine {
       return { success: false, reason: validation.reason };
     }
 
-    if (this.state.settings.palificoEnabled && !this.state.palificoMode.active && BidValidator.checkPalificoStart(bid, currentPlayer.diceCount)) {
+    // Palifico only activates on the opening bid of a round (no prior bid this round)
+    if (this.state.settings.palificoEnabled && !this.state.palificoMode.active && this.state.currentBid === null && BidValidator.checkPalificoStart(bid, currentPlayer.diceCount)) {
       this.state.palificoMode = {
         active: true,
         lockedFaceValue: bid.faceValue,

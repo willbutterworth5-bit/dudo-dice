@@ -49,6 +49,7 @@ export interface Translations {
     roundAnalysis: string;
     roundAnalysisTooltip: string;
     startGame: string;
+    profile: string;
     advancedRules: string;
     advancedSettings: string;
     palifico: string;

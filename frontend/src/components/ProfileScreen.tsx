@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import AuthModal from './AuthModal';
 import PrivacyPolicyModal from './PrivacyPolicyModal';
 import { useLanguage } from '../i18n/LanguageContext';
+import BackIcon from './BackIcon';
 
 export default function ProfileScreen() {
   const navigate = useNavigate();
@@ -183,7 +184,7 @@ export default function ProfileScreen() {
         className="fixed h-10 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
         style={{ left: '0.75rem', top: '0.75rem' }}
       >
-        {t('common.back')}
+        <BackIcon />{t('common.back')}
       </button>
 
       <div className="max-w-2xl sm:max-w-4xl w-full pt-12 sm:pt-0">

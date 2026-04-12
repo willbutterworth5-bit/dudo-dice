@@ -121,7 +121,7 @@ export default function LandingPage() {
         onClick={() => setShowLanguageModal(true)}
         className="fixed top-3 right-3 z-50 py-2 px-3 text-sm font-semibold rounded-xl btn-glass text-white"
       >
-        {language === 'en' ? 'English' : 'Español'}
+        {language === 'en' ? 'Language' : 'Idioma'}
       </button>
 
       {showLanguageModal && (
@@ -130,9 +130,9 @@ export default function LandingPage() {
             className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl p-5 w-64 mx-4"
             onClick={e => e.stopPropagation()}
           >
-            <h2 className="text-white font-bold text-lg text-center mb-4">Language / Idioma</h2>
+            <h2 className="text-white font-bold text-lg text-center mb-4">{language === 'en' ? 'Language' : 'Idioma'}</h2>
             <div className="flex flex-col gap-2">
-              {([['en', '🇬🇧', 'English'], ['es', '🇪🇸', 'Español']] as const).map(([code, flag, label]) => (
+              {([['en', 'gb', 'English'], ['es', 'es', 'Español']] as const).map(([code, flagCode, label]) => (
                 <button
                   key={code}
                   onClick={() => { setLanguage(code); setShowLanguageModal(false); }}
@@ -140,7 +140,14 @@ export default function LandingPage() {
                     language === code ? 'btn-3d-accent' : 'btn-glass'
                   }`}
                 >
-                  <span className="text-2xl">{flag}</span>
+                  <img
+                    src={`https://flagcdn.com/32x24/${flagCode}.png`}
+                    srcSet={`https://flagcdn.com/64x48/${flagCode}.png 2x`}
+                    width="32"
+                    height="24"
+                    alt={label}
+                    className="rounded-sm flex-shrink-0"
+                  />
                   <span>{label}</span>
                 </button>
               ))}

@@ -6,6 +6,7 @@ import { Bid, GameSettings, GameState, RoundResult, PLAYER_COLOR_MAP } from '../
 import { ProfileStorage } from '../utils/profileStorage';
 import { useAuth } from '../context/AuthContext';
 import { recordGameSession } from '../utils/supabaseSync';
+import BackIcon from './BackIcon';
 import AchievementToast from './AchievementToast';
 import DiceFace from './DiceFace';
 import BidInput from './BidInput';
@@ -127,6 +128,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
       palifico_enabled: palificoEnabled,
       calza_enabled: calzaEnabled,
       duration_seconds: Math.round((Date.now() - gameStartTime.current) / 1000),
+      persistent_id: ProfileStorage.getPersistentPlayerId(),
     }).catch(() => {});
   };
 
@@ -772,7 +774,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           className="fixed h-10 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-2 sm:px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
           style={{ left: 'max(0.75rem, env(safe-area-inset-left, 0px))', top: 'max(0.75rem, env(safe-area-inset-top, 0px))' }}
         >
-          {t('common.back')}
+          <BackIcon />{t('common.back')}
         </button>
 
         {/* Dice count + Round + Palifico + Log - fixed top right, aligned with back button */}
@@ -1277,7 +1279,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               }}
             >
               <div
-                className="rounded-full flex items-center justify-center overflow-hidden p-2 transition-all duration-500"
+                key={!(innerCircleChallenge || lastRoundResult) ? `circle-${gameState.currentPlayerIndex}-${gameState.roundNumber}` : 'circle-challenge'}
+                className={`rounded-full flex items-center justify-center overflow-hidden p-2 transition-all duration-500${!(innerCircleChallenge || lastRoundResult) ? ' animate-circle-enter' : ''}`}
                 style={{
                   width: '120px',
                   height: '120px',
@@ -1288,7 +1291,6 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                   border: (innerCircleChallenge || lastRoundResult)
                     ? '3px solid white'
                     : '1px solid #E0E0E0',
-                  transition: 'background-color 0.4s ease, border 0.3s ease',
                 }}
               >
                 {(innerCircleChallenge || (lastRoundResult && !revealState)) ? (

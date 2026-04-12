@@ -4,6 +4,7 @@ import { ProfileStorage } from '../utils/profileStorage';
 import RulesModal from './RulesModal';
 import type { useMultiplayerConnection, PublicRoom } from '../hooks/useMultiplayerConnection';
 import { useLanguage } from '../i18n/LanguageContext';
+import BackIcon from './BackIcon';
 
 interface LobbyScreenProps {
   mp: ReturnType<typeof useMultiplayerConnection>;
@@ -23,7 +24,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
   // Create room settings
   const [maxPlayers, setMaxPlayers] = useState(6);
   const [startingDice, setStartingDice] = useState(5);
-  const [palificoEnabled, setPalificoEnabled] = useState(true);
+  const [palificoEnabled, setPalificoEnabled] = useState(false);
   const [calzaEnabled, setCalzaEnabled] = useState(false);
   const [isPublic, setIsPublic] = useState(true);
 
@@ -68,7 +69,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
         className="fixed h-10 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
         style={{ left: '0.75rem', top: '0.75rem' }}
       >
-        {t('common.back')}
+        <BackIcon />{t('common.back')}
       </button>
       <div className="max-w-lg sm:max-w-4xl w-full pt-12 sm:pt-0">
         {/* Header */}

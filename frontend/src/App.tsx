@@ -15,6 +15,7 @@ const LobbyScreen = lazy(() => import('./components/LobbyScreen'))
 const WaitingRoom = lazy(() => import('./components/WaitingRoom'))
 const JoinRedirect = lazy(() => import('./components/JoinRedirect'))
 const RulesPage = lazy(() => import('./components/RulesPage'))
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'))
 
 function PageLoader() {
   return (
@@ -165,6 +166,7 @@ function App() {
           <Route path="/online/game" element={<OnlineGame mp={mp} />} />
           <Route path="/online/join/:roomCode" element={<JoinRedirect mp={mp} />} />
           <Route path="/rules" element={<RulesPage />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

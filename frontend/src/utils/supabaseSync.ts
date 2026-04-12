@@ -143,6 +143,7 @@ export interface GameSessionData {
   palifico_enabled: boolean
   calza_enabled: boolean
   duration_seconds: number
+  persistent_id?: string
 }
 
 /**

@@ -4,6 +4,7 @@ import RulesModal from './RulesModal';
 import { Difficulty } from '../game/AIPlayer';
 import type { GameConfig } from '../types/routes';
 import { useLanguage } from '../i18n/LanguageContext';
+import BackIcon from './BackIcon';
 
 export default function HomeScreen() {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ export default function HomeScreen() {
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [startingDice, setStartingDice] = useState(5);
   const [analysisEnabled, setAnalysisEnabled] = useState(true);
-  const [palificoEnabled, setPalificoEnabled] = useState(true);
+  const [palificoEnabled, setPalificoEnabled] = useState(false);
   const [calzaEnabled, setCalzaEnabled] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
@@ -42,7 +43,7 @@ export default function HomeScreen() {
         className="fixed h-10 sm:h-8 text-white text-xs sm:text-sm font-semibold z-50 rounded-xl px-2 shadow-md bg-gradient-to-br from-indigo-700 to-purple-900 flex items-center"
         style={{ left: '0.75rem', top: '0.75rem' }}
       >
-        {t('common.back')}
+        <BackIcon />{t('common.back')}
       </button>
       <div className="max-w-2xl sm:max-w-4xl w-full pt-12 sm:pt-0">
         {/* Logo and title side by side */}
@@ -70,7 +71,7 @@ export default function HomeScreen() {
                 onClick={() => navigate('/profile')}
                 className="h-9 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"
               >
-                {t('profile.title').split(' ')[0]}
+                {t('home.profile')}
               </button>
               <button
                 onClick={() => setShowRules(true)}
