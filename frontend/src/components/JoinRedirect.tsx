@@ -14,9 +14,8 @@ export default function JoinRedirect({ mp }: JoinRedirectProps) {
   useEffect(() => {
     if (!roomCode) return;
     const profile = ProfileStorage.getProfile();
-    const playerName = profile.name && profile.name.trim() && profile.name !== 'You'
-      ? profile.name
-      : 'Player';
+    const playerName = profile.username
+      || (profile.name && profile.name.trim() && profile.name !== 'You' ? profile.name : 'Player');
     mp.connectAndJoin(roomCode.toUpperCase(), playerName);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

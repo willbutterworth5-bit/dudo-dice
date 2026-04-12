@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { RulesContent, FaqContent } from './RulesContent';
 import { RulesContentEs, FaqContentEs } from './RulesContentEs';
+import { RulesContentZhHK, FaqContentZhHK } from './RulesContentZhHK';
 import { useLanguage } from '../i18n/LanguageContext';
 
 interface RulesModalProps {
@@ -42,8 +43,8 @@ export default function RulesModal({ onClose }: RulesModalProps) {
 
         <div className="p-6 space-y-6 overflow-y-auto scrollbar-indigo">
           {tab === 'rules'
-            ? (language === 'es' ? <RulesContentEs /> : <RulesContent />)
-            : (language === 'es' ? <FaqContentEs /> : <FaqContent />)
+            ? (language === 'es' ? <RulesContentEs /> : language === 'zh-HK' ? <RulesContentZhHK /> : <RulesContent />)
+            : (language === 'es' ? <FaqContentEs /> : language === 'zh-HK' ? <FaqContentZhHK /> : <FaqContent />)
           }
         </div>
       </div>

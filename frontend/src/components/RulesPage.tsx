@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RulesContent, FaqContent } from './RulesContent';
 import { RulesContentEs, FaqContentEs } from './RulesContentEs';
+import { RulesContentZhHK, FaqContentZhHK } from './RulesContentZhHK';
 import { useLanguage } from '../i18n/LanguageContext';
 import BackIcon from './BackIcon';
 
@@ -56,8 +57,8 @@ export default function RulesPage() {
         {/* Content card */}
         <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl shadow-2xl p-4 sm:p-8 mb-6">
           {tab === 'rules'
-            ? (language === 'es' ? <RulesContentEs /> : <RulesContent />)
-            : (language === 'es' ? <FaqContentEs /> : <FaqContent />)
+            ? (language === 'es' ? <RulesContentEs /> : language === 'zh-HK' ? <RulesContentZhHK /> : <RulesContent />)
+            : (language === 'es' ? <FaqContentEs /> : language === 'zh-HK' ? <FaqContentZhHK /> : <FaqContent />)
           }
         </div>
       </div>

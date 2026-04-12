@@ -13,7 +13,7 @@ export function RulesContentEs() {
 
       <section>
         <h3 className="text-2xl font-semibold mb-3 text-white">Mecánica básica</h3>
-        <ul className="list-disc list-inside space-y-2 text-lg ml-4 text-white/85">
+        <ul className="list-disc list-outside space-y-2 text-lg pl-5 text-white/85">
           <li>Cada jugador empieza con 5 dados (ocultos para los demás)</li>
           <li>Los jugadores se turnan para hacer apuestas: "X dados mostrando el valor Y"</li>
           <li>Los unos (1s) son comodines y cuentan como cualquier valor (excepto en modo Palifico)</li>
@@ -25,7 +25,7 @@ export function RulesContentEs() {
 
       <section>
         <h3 className="text-2xl font-semibold mb-3 text-white">Reglas especiales para apostar con unos</h3>
-        <ul className="list-disc list-inside space-y-2 text-lg ml-4 text-white/85">
+        <ul className="list-disc list-outside space-y-2 text-lg pl-5 text-white/85">
           <li>
             <strong>Apostar con unos:</strong> Al apostar unos (valor de cara = 1), la cantidad debe ser más de la mitad de la apuesta actual — concretamente, al menos ⌊actual ÷ 2⌋ + 1.
             <br />
@@ -44,7 +44,7 @@ export function RulesContentEs() {
         <p className="text-lg mb-2 text-white/85">
           Cuando un jugador comienza la ronda con <strong>un solo dado</strong> (cantidad = 1), se activa el modo Palifico:
         </p>
-        <ul className="list-disc list-inside space-y-2 text-lg ml-4 text-white/85">
+        <ul className="list-disc list-outside space-y-2 text-lg pl-5 text-white/85">
           <li>Todas las apuestas siguientes en esa ronda deben usar el mismo valor de cara que la apuesta inicial</li>
           <li>Los unos pierden su estado de comodín y <strong>NO se cuentan</strong> (solo cuentan las coincidencias exactas)</li>
           <li>El modo Palifico dura hasta que termina la ronda (cuando se produce un desafío)</li>
@@ -56,7 +56,7 @@ export function RulesContentEs() {
         <p className="text-lg mb-2 text-white/85">
           En lugar de desafiar una apuesta con <strong>Dudo</strong>, un jugador puede llamar <strong>Calza</strong> — reclamando que el recuento exacto en la mesa coincide precisamente con la apuesta.
         </p>
-        <ul className="list-disc list-inside space-y-2 text-lg ml-4 text-white/85">
+        <ul className="list-disc list-outside space-y-2 text-lg pl-5 text-white/85">
           <li><strong>Si acierta</strong> (coincidencia exacta): el que llama recupera un dado, hasta la cantidad inicial</li>
           <li><strong>Si falla</strong>: el que llama pierde un dado como de costumbre</li>
           <li>Si el que llama es eliminado (pierde su último dado en un Calza fallido), el apostador empieza la siguiente ronda</li>
@@ -86,7 +86,7 @@ export function FaqContentEs() {
       a: (
         <>
           <p className="mb-2">Hay tres niveles de dificultad para la IA:</p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
+          <ul className="list-disc list-outside space-y-1 pl-5">
             <li><strong>Fácil</strong> — La IA hace apuestas conservadoras y desafía con frecuencia. Ideal para aprender el juego.</li>
             <li><strong>Normal</strong> — Juego equilibrado. La IA hace faroles de vez en cuando y lee la mesa razonablemente bien.</li>
             <li><strong>Difícil</strong> — La IA lleva la cuenta de los dados, hace faroles estratégicamente y desafía con precisión. Ganar en Difícil consigue el logro <strong>Modo difícil</strong>.</li>
@@ -99,7 +99,7 @@ export function FaqContentEs() {
       a: (
         <>
           <p className="mb-2">El Elo es una puntuación competitiva para partidas multijugador en línea con 3 o más jugadores humanos. Refleja tu nivel de habilidad a lo largo del tiempo.</p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
+          <ul className="list-disc list-outside space-y-1 pl-5">
             <li>Todos los jugadores comienzan en <strong>1500</strong>.</li>
             <li>Tras cada partida clasificatoria, la puntuación se ajusta según dónde terminaste y a quién superaste.</li>
             <li>Superar a un jugador con mayor puntuación te da más Elo; perder ante uno con menor puntuación te cuesta más.</li>
@@ -116,7 +116,7 @@ export function FaqContentEs() {
       a: (
         <>
           <p className="mb-2">Los logros se consiguen alcanzando hitos específicos en partidas de un jugador o multijugador. Se guardan localmente en tu perfil.</p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
+          <ul className="list-disc list-outside space-y-1 pl-5">
             <li><strong>Primera tirada</strong> — Juega tu primera partida</li>
             <li><strong>Primera victoria</strong> — Gana tu primera partida</li>
             <li><strong>¡Dudo!</strong> — Haz una llamada Dudo exitosa</li>
@@ -172,7 +172,7 @@ export function FaqContentEs() {
       a: (
         <>
           <p className="mb-2">Si te desconectas, empieza un temporizador de 60 segundos. Si vuelves a conectarte a tiempo, te reincorporas sin problemas. Si no:</p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
+          <ul className="list-disc list-outside space-y-1 pl-5">
             <li>Una IA toma el control de tus dados y continúa jugando</li>
             <li>En una <strong>partida clasificatoria</strong>, tu puntuación recibe la penalización por último puesto</li>
             <li>En una <strong>partida casual</strong>, no se ve afectada ninguna puntuación</li>

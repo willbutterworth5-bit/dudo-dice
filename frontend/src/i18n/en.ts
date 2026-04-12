@@ -201,6 +201,13 @@ const en: Translations = {
     errorEmailInvalid: 'Please enter a valid email address',
     errorPasswordTooShort: 'Password must be at least 6 characters',
     errorPasswordMismatch: 'Passwords do not match',
+    username: 'Username',
+    usernamePlaceholder: 'e.g. coolplayer_42',
+    errorUsernameRequired: 'Username is required',
+    errorUsernameInvalid: 'Letters, numbers, _ and - only (3–20 chars)',
+    errorUsernameTaken: 'Username already taken',
+    usernameAvailable: '✓ Available',
+    usernameChecking: 'Checking…',
   },
   cookie: {
     title: '🍪 Cookie Preferences',

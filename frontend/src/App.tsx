@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import LandingPage from './components/LandingPage'
 import AnalyticsManager from './components/AnalyticsManager'
@@ -6,6 +6,9 @@ import { GameProvider } from './context/GameContext'
 import { AuthProvider } from './context/AuthContext'
 import { LanguageProvider } from './i18n/LanguageContext'
 import { useMultiplayerConnection } from './hooks/useMultiplayerConnection'
+import { useAuth } from './context/AuthContext'
+import { ProfileStorage } from './utils/profileStorage'
+import UsernamePromptModal from './components/UsernamePromptModal'
 import type { GameConfig } from './types/routes'
 
 const HomeScreen = lazy(() => import('./components/HomeScreen'))
@@ -122,6 +125,14 @@ function App() {
   const navigate = useNavigate()
   const location = useLocation()
   const mp = useMultiplayerConnection()
+  const { user } = useAuth()
+  const [showUsernamePrompt, setShowUsernamePrompt] = useState(false)
+
+  useEffect(() => {
+    if (user && !ProfileStorage.getProfile().username) {
+      setShowUsernamePrompt(true)
+    }
+  }, [user])
 
   // Auto-navigate on multiplayer room phase changes
   useEffect(() => {
@@ -170,6 +181,10 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+
+      {showUsernamePrompt && (
+        <UsernamePromptModal onDone={() => setShowUsernamePrompt(false)} />
+      )}
 
       {/* Reconnecting overlay — shown on top of the online game */}
       {mp.isReconnecting && location.pathname === '/online/game' && (

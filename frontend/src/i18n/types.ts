@@ -199,6 +199,13 @@ export interface Translations {
     errorEmailInvalid: string;
     errorPasswordTooShort: string;
     errorPasswordMismatch: string;
+    username: string;
+    usernamePlaceholder: string;
+    errorUsernameRequired: string;
+    errorUsernameInvalid: string;
+    errorUsernameTaken: string;
+    usernameAvailable: string;
+    usernameChecking: string;
   };
   cookie: {
     title: string;

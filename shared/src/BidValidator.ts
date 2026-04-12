@@ -89,10 +89,11 @@ export class BidValidator {
   }
 
   /**
-   * Check if a bid starts palifico mode
-   * Palifico starts when a player with only one die makes a bid with quantity 1
+   * Check if a bid starts palifico mode.
+   * Palifico starts whenever a player with exactly one die makes the opening bid of a round,
+   * regardless of the bid quantity.
    */
-  static checkPalificoStart(bid: Bid, playerDiceCount: number): boolean {
-    return bid.quantity === 1 && playerDiceCount === 1;
+  static checkPalificoStart(_bid: Bid, playerDiceCount: number): boolean {
+    return playerDiceCount === 1;
   }
 }

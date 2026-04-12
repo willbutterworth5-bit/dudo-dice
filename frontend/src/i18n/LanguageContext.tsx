@@ -2,11 +2,12 @@ import { createContext, useContext, useState, useCallback, type ReactNode } from
 import { ProfileStorage } from '../utils/profileStorage';
 import en from './en';
 import es from './es';
+import zhHK from './zh-HK';
 import type { Translations } from './types';
 
-export type Language = 'en' | 'es';
+export type Language = 'en' | 'es' | 'zh-HK';
 
-const translations: Record<Language, Translations> = { en, es };
+const translations: Record<Language, Translations> = { en, es, 'zh-HK': zhHK };
 
 function resolve(obj: unknown, keys: string[]): string | undefined {
   let cur = obj;
@@ -28,8 +29,11 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
     const stored = ProfileStorage.getProfile().language;
-    if (stored === 'es' || stored === 'en') return stored;
-    return navigator.language?.toLowerCase().startsWith('es') ? 'es' : 'en';
+    if (stored === 'es' || stored === 'en' || stored === 'zh-HK') return stored;
+    const nav = navigator.language?.toLowerCase() ?? '';
+    if (nav.startsWith('es')) return 'es';
+    if (nav === 'zh-hk' || nav.startsWith('yue') || nav === 'zh-hant-hk') return 'zh-HK';
+    return 'en';
   });
 
   const setLanguage = useCallback((lang: Language) => {

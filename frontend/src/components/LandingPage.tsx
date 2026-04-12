@@ -121,7 +121,7 @@ export default function LandingPage() {
         onClick={() => setShowLanguageModal(true)}
         className="fixed top-3 right-3 z-50 py-2 px-3 text-sm font-semibold rounded-xl btn-glass text-white"
       >
-        {language === 'en' ? 'Language' : 'Idioma'}
+        {language === 'zh-HK' ? '語言' : language === 'en' ? 'Language' : 'Idioma'}
       </button>
 
       {showLanguageModal && (
@@ -130,9 +130,9 @@ export default function LandingPage() {
             className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl p-5 w-64 mx-4"
             onClick={e => e.stopPropagation()}
           >
-            <h2 className="text-white font-bold text-lg text-center mb-4">{language === 'en' ? 'Language' : 'Idioma'}</h2>
+            <h2 className="text-white font-bold text-lg text-center mb-4">{language === 'zh-HK' ? '語言' : language === 'en' ? 'Language' : 'Idioma'}</h2>
             <div className="flex flex-col gap-2">
-              {([['en', 'gb', 'English'], ['es', 'es', 'Español']] as const).map(([code, flagCode, label]) => (
+              {([['en', 'gb', 'English'], ['es', 'es', 'Español'], ['zh-HK', 'hk', '廣東話']] as const).map(([code, flagCode, label]) => (
                 <button
                   key={code}
                   onClick={() => { setLanguage(code); setShowLanguageModal(false); }}
@@ -156,7 +156,7 @@ export default function LandingPage() {
               onClick={() => setShowLanguageModal(false)}
               className="mt-4 w-full py-2 rounded-xl btn-glass text-white text-sm font-semibold"
             >
-              {language === 'en' ? 'Close' : 'Cerrar'}
+              {language === 'zh-HK' ? '關閉' : language === 'en' ? 'Close' : 'Cerrar'}
             </button>
           </div>
         </div>
