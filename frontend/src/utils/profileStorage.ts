@@ -36,6 +36,7 @@ export interface PlayerProfile {
   name: string;
   photo: string | null; // Base64 encoded image or URL
   country: string | null; // ISO 3166-1 alpha-2 code, e.g. "GB"
+  username?: string;
   language?: 'en' | 'es' | 'zh-HK';
   stats: PlayerStats;           // mirrors vsComputerStats for backward compat
   vsComputerStats: PlayerStats;

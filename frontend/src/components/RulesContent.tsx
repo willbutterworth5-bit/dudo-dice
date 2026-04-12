@@ -13,7 +13,7 @@ export function RulesContent() {
 
       <section>
         <h3 className="text-2xl font-semibold mb-3 text-white">Basic Gameplay</h3>
-        <ul className="list-disc list-inside space-y-2 text-lg ml-4 text-white/85">
+        <ul className="list-disc list-outside space-y-2 text-lg pl-5 text-white/85">
           <li>Each player starts with 5 dice (hidden from others)</li>
           <li>Players take turns making bids: "X dice showing face value Y"</li>
           <li>Ones (1s) are wild and count as any face value (except in Palifico mode)</li>
@@ -25,7 +25,7 @@ export function RulesContent() {
 
       <section>
         <h3 className="text-2xl font-semibold mb-3 text-white">Special Ones Bidding Rules</h3>
-        <ul className="list-disc list-inside space-y-2 text-lg ml-4 text-white/85">
+        <ul className="list-disc list-outside space-y-2 text-lg pl-5 text-white/85">
           <li>
             <strong>Bidding with ones:</strong> When bidding ones (face value = 1), the quantity must be more than half the current bid — specifically, at least ⌊current ÷ 2⌋ + 1.
             <br />
@@ -44,7 +44,7 @@ export function RulesContent() {
         <p className="text-lg mb-2 text-white/85">
           When a player starts the bidding with <strong>one die</strong> (quantity = 1), Palifico mode is activated:
         </p>
-        <ul className="list-disc list-inside space-y-2 text-lg ml-4 text-white/85">
+        <ul className="list-disc list-outside space-y-2 text-lg pl-5 text-white/85">
           <li>All subsequent bids in that round must use the same face value as the initial bid</li>
           <li>Ones lose their wild status and are <strong>NOT counted</strong> (only exact matches count)</li>
           <li>Palifico mode lasts until the round ends (when a challenge occurs)</li>
@@ -56,7 +56,7 @@ export function RulesContent() {
         <p className="text-lg mb-2 text-white/85">
           Instead of challenging a bid with <strong>Dudo</strong>, a player may call <strong>Calza</strong> — claiming the exact count on the table matches the bid precisely.
         </p>
-        <ul className="list-disc list-inside space-y-2 text-lg ml-4 text-white/85">
+        <ul className="list-disc list-outside space-y-2 text-lg pl-5 text-white/85">
           <li><strong>If correct</strong> (exact match): the caller gains one die back, up to the starting amount</li>
           <li><strong>If wrong</strong>: the caller loses one die as normal</li>
           <li>If the caller is eliminated (loses their last die on a failed Calza), the bidder starts the next round</li>
@@ -87,7 +87,7 @@ export function FaqContent() {
       a: (
         <>
           <p className="mb-2">There are three AI difficulty settings:</p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
+          <ul className="list-disc list-outside space-y-1 pl-5">
             <li><strong>Easy</strong> — The AI makes conservative bids and challenges frequently. Great for learning the game.</li>
             <li><strong>Medium</strong> — Balanced play. The AI bluffs occasionally and reads the table reasonably well.</li>
             <li><strong>Hard</strong> — The AI tracks dice counts, bluffs strategically, and challenges with precision. Winning on Hard earns the <strong>Hard Mode</strong> achievement.</li>
@@ -100,7 +100,7 @@ export function FaqContent() {
       a: (
         <>
           <p className="mb-2">Elo is a competitive rating for online multiplayer matches with 3 or more human players. It tracks your skill level over time.</p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
+          <ul className="list-disc list-outside space-y-1 pl-5">
             <li>All players start at <strong>1500</strong>.</li>
             <li>After each ranked match, ratings adjust based on where you finished and who you beat.</li>
             <li>Beating a higher-rated player earns more Elo; losing to a lower-rated player costs more.</li>
@@ -117,7 +117,7 @@ export function FaqContent() {
       a: (
         <>
           <p className="mb-2">Achievements are earned by hitting specific milestones in single-player or multiplayer games. They're saved locally to your profile.</p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
+          <ul className="list-disc list-outside space-y-1 pl-5">
             <li><strong>First Roll</strong> — Play your first game</li>
             <li><strong>First Win</strong> — Win your first game</li>
             <li><strong>Dudo!</strong> — Make a successful Dudo call</li>
@@ -173,7 +173,7 @@ export function FaqContent() {
       a: (
         <>
           <p className="mb-2">If you disconnect, a 60-second timer starts. If you reconnect in time, you rejoin seamlessly. If not:</p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
+          <ul className="list-disc list-outside space-y-1 pl-5">
             <li>An AI takes over your dice and continues playing</li>
             <li>In a <strong>ranked match</strong>, your rating takes a last-place loss penalty</li>
             <li>In a <strong>casual match</strong>, no rating is affected</li>

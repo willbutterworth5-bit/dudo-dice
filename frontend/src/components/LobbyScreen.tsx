@@ -41,6 +41,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
 
   const getName = () => {
     const profile = ProfileStorage.getProfile();
+    if (profile.username) return profile.username;
     return profile.name === 'You' ? 'Player' : profile.name;
   };
 

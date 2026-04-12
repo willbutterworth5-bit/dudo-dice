@@ -201,6 +201,13 @@ const zhHK: Translations = {
     errorEmailInvalid: '請輸入有效電郵地址',
     errorPasswordTooShort: '密碼必須至少 6 個字元',
     errorPasswordMismatch: '兩次輸入的密碼唔一致',
+    username: '用戶名',
+    usernamePlaceholder: '例：coolplayer_42',
+    errorUsernameRequired: '請輸入用戶名',
+    errorUsernameInvalid: '只可用英文字母、數字、_ 和 -（3–20 個字元）',
+    errorUsernameTaken: '此用戶名已被使用',
+    usernameAvailable: '✓ 可使用',
+    usernameChecking: '查詢中…',
   },
   cookie: {
     title: '🍪 Cookie 偏好設定',

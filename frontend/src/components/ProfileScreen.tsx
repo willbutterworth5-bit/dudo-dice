@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProfileStorage, imageToBase64, PlayerProfile, PlayerStats } from '../utils/profileStorage';
+import { supabase } from '../lib/supabase';
 import { ACHIEVEMENTS } from '../utils/achievements';
 import { COUNTRIES } from '../utils/countries';
 import { useAuth } from '../context/AuthContext';
@@ -23,8 +24,13 @@ export default function ProfileScreen() {
   const [country, setCountry] = useState<string | null>(profile.country ?? null);
   const [countrySearch, setCountrySearch] = useState('');
   const [countryPickerOpen, setCountryPickerOpen] = useState(false);
+  const [username, setUsername] = useState(profile.username ?? '');
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'saved'>('idle');
+  const usernameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  const USERNAME_REGEX = /^[a-zA-Z0-9_-]{3,20}$/;
 
   useEffect(() => {
     const currentProfile = ProfileStorage.getProfile();
@@ -32,7 +38,32 @@ export default function ProfileScreen() {
     setName(currentProfile.name && currentProfile.name.trim() ? currentProfile.name : 'You');
     setPhoto(currentProfile.photo);
     setCountry(currentProfile.country ?? null);
+    setUsername(currentProfile.username ?? '');
+    if (currentProfile.username) setUsernameStatus('saved');
   }, []);
+
+  // Real-time username availability check for profile screen
+  useEffect(() => {
+    if (usernameDebounceRef.current) clearTimeout(usernameDebounceRef.current);
+
+    const savedUsername = ProfileStorage.getProfile().username ?? '';
+    if (!username || username === savedUsername) {
+      setUsernameStatus(username === savedUsername && username ? 'saved' : 'idle');
+      return;
+    }
+    if (!USERNAME_REGEX.test(username)) {
+      setUsernameStatus('invalid');
+      return;
+    }
+    setUsernameStatus('checking');
+    usernameDebounceRef.current = setTimeout(async () => {
+      if (!supabase) { setUsernameStatus('idle'); return; }
+      const { data } = await supabase.rpc('is_username_available', { p_username: username });
+      setUsernameStatus(data ? 'available' : 'taken');
+    }, 400);
+
+    return () => { if (usernameDebounceRef.current) clearTimeout(usernameDebounceRef.current); };
+  }, [username]);
 
   // Focus search when picker opens
   useEffect(() => {
@@ -85,6 +116,14 @@ export default function ProfileScreen() {
     setCountry(null);
     ProfileStorage.updateCountry(null);
     setCountrySearch('');
+  };
+
+  const handleSaveUsername = () => {
+    if (usernameStatus !== 'available') return;
+    const storedProfile = ProfileStorage.getProfile();
+    const trimmed = username.trim();
+    ProfileStorage.saveProfile({ ...storedProfile, name: trimmed, username: trimmed });
+    setUsernameStatus('saved');
   };
 
   const handleBack = () => {
@@ -227,7 +266,7 @@ export default function ProfileScreen() {
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
               {/* Photo Upload */}
               <div className="flex flex-col items-center">
-                <label className="block text-base font-medium text-white mb-2 self-start">
+                <label className="block text-base font-medium text-white mb-1 self-start">
                   {t('profile.photo')}
                 </label>
                 <input
@@ -286,10 +325,10 @@ export default function ProfileScreen() {
               </div>
 
               {/* Name + Country inputs */}
-              <div className="flex-1 flex flex-col gap-3">
+              <div className="flex-1 flex flex-col gap-1">
                 {/* Name Input */}
                 <div>
-                  <label className="block text-base font-medium text-white mb-2">
+                  <label className="block text-base font-medium text-white mb-1">
                     {t('profile.playerName')}
                   </label>
                   <input
@@ -302,13 +341,69 @@ export default function ProfileScreen() {
                     }}
                     placeholder={t('profile.playerNamePlaceholder')}
                     maxLength={20}
-                    className="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-white/40 border border-white/30 focus:border-white/60 focus:outline-none text-lg"
+                    className="w-full px-4 py-2 rounded-lg bg-white/20 text-white placeholder-white/40 border border-white/30 focus:border-white/60 focus:outline-none text-base"
                   />
+                  <div className="h-3" />
+                </div>
+
+                {/* Username Input */}
+                <div>
+                  <label className="block text-base font-medium text-white mb-1">
+                    {t('auth.username')}
+                  </label>
+                  {profile.username ? (
+                    <div className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-base">
+                      @{profile.username}
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex gap-2">
+                        <div className="flex-1 relative">
+                          <input
+                            type="text"
+                            value={username}
+                            onChange={e => setUsername(e.target.value.replace(/\s/g, ''))}
+                            placeholder={t('auth.usernamePlaceholder')}
+                            maxLength={20}
+                            autoCapitalize="none"
+                            className={`w-full px-4 py-2 rounded-lg bg-white/20 text-white placeholder-white/40 border focus:outline-none text-base ${
+                              usernameStatus === 'taken' || usernameStatus === 'invalid'
+                                ? 'border-red-400 focus:border-red-400'
+                                : usernameStatus === 'available'
+                                ? 'border-green-400 focus:border-green-400'
+                                : 'border-white/30 focus:border-white/60'
+                            }`}
+                          />
+                        </div>
+                        {usernameStatus === 'available' && (
+                          <button
+                            onClick={handleSaveUsername}
+                            className="px-4 py-2 rounded-lg btn-3d-accent text-white font-bold text-sm flex-shrink-0"
+                          >
+                            {t('common.done')}
+                          </button>
+                        )}
+                      </div>
+                      <p className={`text-xs leading-3 h-3 overflow-hidden ${
+                        usernameStatus === 'available' ? 'text-green-400'
+                        : usernameStatus === 'taken' ? 'text-red-400'
+                        : usernameStatus === 'invalid' && username.length > 0 ? 'text-yellow-400'
+                        : usernameStatus === 'checking' ? 'text-white/50'
+                        : 'text-transparent'
+                      }`}>
+                        {usernameStatus === 'available' ? t('auth.usernameAvailable')
+                        : usernameStatus === 'taken' ? t('auth.errorUsernameTaken')
+                        : usernameStatus === 'invalid' && username.length > 0 ? t('auth.errorUsernameInvalid')
+                        : usernameStatus === 'checking' ? t('auth.usernameChecking')
+                        : '.'}
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 {/* Country Picker */}
                 <div>
-                  <label className="block text-base font-medium text-white mb-2">
+                  <label className="block text-base font-medium text-white mb-1">
                     {t('profile.country')}
                   </label>
                   <div className="relative">
@@ -316,7 +411,7 @@ export default function ProfileScreen() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setCountryPickerOpen(o => !o)}
-                        className="flex-1 flex items-center gap-2 px-4 py-3 rounded-lg bg-white/20 border border-white/30 hover:border-white/60 focus:outline-none text-lg text-left transition-colors"
+                        className="flex-1 flex items-center gap-2 px-4 py-2 rounded-lg bg-white/20 border border-white/30 hover:border-white/60 focus:outline-none text-base text-left transition-colors"
                       >
                         {country ? (
                           <>
@@ -336,7 +431,7 @@ export default function ProfileScreen() {
                       {country && (
                         <button
                           onClick={handleClearCountry}
-                          className="w-10 h-12 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white/60 hover:text-white font-bold transition-colors text-sm"
+                          className="w-10 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white/60 hover:text-white font-bold transition-colors text-sm"
                         >
                           ×
                         </button>

@@ -13,7 +13,7 @@ export function RulesContentZhHK() {
 
       <section>
         <h3 className="text-2xl font-semibold mb-3 text-white">基本玩法</h3>
-        <ul className="list-disc list-inside space-y-2 text-lg ml-4 text-white/85">
+        <ul className="list-disc list-outside space-y-2 text-lg pl-5 text-white/85">
           <li>每位玩家起始有 5 粒骰子（對其他玩家保密）</li>
           <li>玩家輪流出注：「有 X 粒骰子係 Y 點」</li>
           <li>么點（1點）係萬能骰，可計入任何點數（Palifico 模式除外）</li>
@@ -25,7 +25,7 @@ export function RulesContentZhHK() {
 
       <section>
         <h3 className="text-2xl font-semibold mb-3 text-white">么點出注特別規則</h3>
-        <ul className="list-disc list-inside space-y-2 text-lg ml-4 text-white/85">
+        <ul className="list-disc list-outside space-y-2 text-lg pl-5 text-white/85">
           <li>
             <strong>出注么點：</strong>出注么點（點數 = 1）時，數量必須超過當前出注數量嘅一半——具體係至少 ⌊當前數量 ÷ 2⌋ + 1。
             <br />
@@ -44,7 +44,7 @@ export function RulesContentZhHK() {
         <p className="text-lg mb-2 text-white/85">
           當玩家以<strong>一粒骰子</strong>（數量 = 1）開始出注時，會啟動 Palifico 模式：
         </p>
-        <ul className="list-disc list-inside space-y-2 text-lg ml-4 text-white/85">
+        <ul className="list-disc list-outside space-y-2 text-lg pl-5 text-white/85">
           <li>該回合所有後續出注必須沿用第一注嘅相同點數</li>
           <li>么點失去萬能骰效果，<strong>唔會計算在內</strong>（只有完全吻合的點數才計算）</li>
           <li>Palifico 模式持續至回合結束（即有人叫挑戰）</li>
@@ -56,7 +56,7 @@ export function RulesContentZhHK() {
         <p className="text-lg mb-2 text-white/85">
           除咗用 <strong>Dudo</strong> 挑戰，玩家亦可叫 <strong>Calza</strong>——聲稱桌面骰子數量與出注完全相符。
         </p>
-        <ul className="list-disc list-inside space-y-2 text-lg ml-4 text-white/85">
+        <ul className="list-disc list-outside space-y-2 text-lg pl-5 text-white/85">
           <li><strong>猜中</strong>（完全相符）：叫牌者獲得一粒骰子，最多回復到起始數量</li>
           <li><strong>猜錯</strong>：叫牌者照舊失去一粒骰子</li>
           <li>若叫牌者因 Calza 失敗而被淘汰（失去最後一粒骰子），由出注者開始下一回合</li>
@@ -86,7 +86,7 @@ export function FaqContentZhHK() {
       a: (
         <>
           <p className="mb-2">共有三個 AI 難度設定：</p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
+          <ul className="list-disc list-outside space-y-1 pl-5">
             <li><strong>容易</strong> — AI 出注保守，常常叫挑戰。適合新手學習。</li>
             <li><strong>中等</strong> — 均衡對局。AI 偶爾虛張，判讀桌面能力合理。</li>
             <li><strong>困難</strong> — AI 追蹤骰子數量、策略性虛張，精準挑戰。在困難模式獲勝可解鎖<strong>困難模式</strong>成就。</li>
@@ -99,7 +99,7 @@ export function FaqContentZhHK() {
       a: (
         <>
           <p className="mb-2">Elo 係用於有 3 位或以上真人玩家參與嘅線上多人排名賽評分，追蹤你嘅技術水準。</p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
+          <ul className="list-disc list-outside space-y-1 pl-5">
             <li>所有玩家起始評分為 <strong>1500</strong>。</li>
             <li>每場排名賽後，評分會根據你嘅排名及對手水平調整。</li>
             <li>擊敗高評分玩家可獲得更多 Elo；輸給低評分玩家則失去更多。</li>
@@ -116,7 +116,7 @@ export function FaqContentZhHK() {
       a: (
         <>
           <p className="mb-2">達成特定里程碑即可解鎖成就，適用於單人或多人模式。成就會儲存到你的本地個人檔案。</p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
+          <ul className="list-disc list-outside space-y-1 pl-5">
             <li><strong>首次出賽</strong> — 玩第一場遊戲</li>
             <li><strong>首次勝利</strong> — 贏得第一場遊戲</li>
             <li><strong>Dudo！</strong> — 成功叫 Dudo</li>
@@ -172,7 +172,7 @@ export function FaqContentZhHK() {
       a: (
         <>
           <p className="mb-2">若你斷線，會開始 60 秒計時。如及時重新連線，可無縫重返遊戲。若未能重連：</p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
+          <ul className="list-disc list-outside space-y-1 pl-5">
             <li>AI 會接管你的骰子並繼續出賽</li>
             <li>在<strong>排名賽</strong>中，你的評分會以最後名次計算扣分</li>
             <li>在<strong>休閒賽</strong>中，評分不受影響</li>

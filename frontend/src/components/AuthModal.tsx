@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../i18n/LanguageContext';
+import { supabase } from '../lib/supabase';
 
 interface AuthModalProps {
   onClose: () => void;
 }
+
+const USERNAME_REGEX = /^[a-zA-Z0-9_-]{3,20}$/;
 
 export default function AuthModal({ onClose }: AuthModalProps) {
   const { signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
@@ -21,13 +24,42 @@ export default function AuthModal({ onClose }: AuthModalProps) {
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
   const [signUpConfirm, setSignUpConfirm] = useState('');
-  const [signUpName, setSignUpName] = useState('');
+  const [signUpUsername, setSignUpUsername] = useState('');
   const [signUpDob, setSignUpDob] = useState('');
   const [signUpSuccess, setSignUpSuccess] = useState(false);
   const [signUpLoading, setSignUpLoading] = useState(false);
 
+  // Username availability
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Per-field errors
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Real-time username availability check
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (!signUpUsername) {
+      setUsernameStatus('idle');
+      return;
+    }
+    if (!USERNAME_REGEX.test(signUpUsername)) {
+      setUsernameStatus('invalid');
+      return;
+    }
+
+    setUsernameStatus('checking');
+    debounceRef.current = setTimeout(async () => {
+      if (!supabase) { setUsernameStatus('idle'); return; }
+      const { data } = await supabase.rpc('is_username_available', { p_username: signUpUsername });
+      setUsernameStatus(data ? 'available' : 'taken');
+    }, 400);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [signUpUsername]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +79,15 @@ export default function AuthModal({ onClose }: AuthModalProps) {
 
     const newErrors: Record<string, string> = {};
 
-    if (!signUpName.trim()) newErrors.name = t('auth.errorNameRequired');
+    if (!signUpUsername.trim()) {
+      newErrors.username = t('auth.errorUsernameRequired');
+    } else if (!USERNAME_REGEX.test(signUpUsername)) {
+      newErrors.username = t('auth.errorUsernameInvalid');
+    } else if (usernameStatus === 'taken') {
+      newErrors.username = t('auth.errorUsernameTaken');
+    } else if (usernameStatus === 'checking') {
+      newErrors.username = t('auth.usernameChecking');
+    }
 
     if (!signUpDob) {
       newErrors.dob = t('auth.errorDobRequired');
@@ -77,7 +117,7 @@ export default function AuthModal({ onClose }: AuthModalProps) {
     if (Object.keys(newErrors).length > 0) return;
 
     setSignUpLoading(true);
-    const err = await signUpWithEmail(signUpEmail.trim(), signUpPassword, signUpName.trim(), signUpDob);
+    const err = await signUpWithEmail(signUpEmail.trim(), signUpPassword, signUpUsername.trim(), signUpDob);
     setSignUpLoading(false);
     if (err) {
       setErrors({ submit: err });
@@ -91,6 +131,21 @@ export default function AuthModal({ onClose }: AuthModalProps) {
     `${baseInputClass} ${errors[field] ? 'border-red-400 focus:border-red-400' : 'border-white/25 focus:border-white/60'}`;
   const labelClass = 'block text-white/80 text-xs font-semibold mb-1';
   const fieldErrorClass = 'text-red-400 text-xs mt-1';
+
+  const usernameHint = () => {
+    if (errors.username) return <p className={fieldErrorClass}>{errors.username}</p>;
+    if (usernameStatus === 'checking') return <p className="text-white/50 text-xs mt-1">{t('auth.usernameChecking')}</p>;
+    if (usernameStatus === 'available') return <p className="text-green-400 text-xs mt-1">{t('auth.usernameAvailable')}</p>;
+    if (usernameStatus === 'taken') return <p className="text-red-400 text-xs mt-1">{t('auth.errorUsernameTaken')}</p>;
+    if (usernameStatus === 'invalid' && signUpUsername.length > 0) return <p className="text-yellow-400 text-xs mt-1">{t('auth.errorUsernameInvalid')}</p>;
+    return null;
+  };
+
+  const usernameInputClass = () => {
+    if (errors.username || usernameStatus === 'taken') return `${baseInputClass} border-red-400 focus:border-red-400`;
+    if (usernameStatus === 'available') return `${baseInputClass} border-green-400 focus:border-green-400`;
+    return `${baseInputClass} border-white/25 focus:border-white/60`;
+  };
 
   return (
     <div
@@ -173,17 +228,25 @@ export default function AuthModal({ onClose }: AuthModalProps) {
               </div>
             ) : (
               <form onSubmit={handleSignUp} className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className={labelClass}>{t('auth.name')}</label>
-                    <input type="text" required value={signUpName} onChange={e => { setSignUpName(e.target.value); setErrors(p => ({ ...p, name: '' })); }} className={inputClass('name')} placeholder={t('auth.namePlaceholder')} maxLength={20} />
-                    {errors.name && <p className={fieldErrorClass}>{errors.name}</p>}
-                  </div>
-                  <div>
-                    <label className={labelClass}>{t('auth.dob')}</label>
-                    <input type="date" required value={signUpDob} onChange={e => { setSignUpDob(e.target.value); setErrors(p => ({ ...p, dob: '' })); }} className={inputClass('dob')} max={new Date().toISOString().split('T')[0]} />
-                    {errors.dob && <p className={fieldErrorClass}>{errors.dob}</p>}
-                  </div>
+                <div>
+                  <label className={labelClass}>{t('auth.username')}</label>
+                  <input
+                    type="text"
+                    required
+                    value={signUpUsername}
+                    onChange={e => { setSignUpUsername(e.target.value.replace(/\s/g, '')); setErrors(p => ({ ...p, username: '' })); }}
+                    className={usernameInputClass()}
+                    placeholder={t('auth.usernamePlaceholder')}
+                    maxLength={20}
+                    autoComplete="username"
+                    autoCapitalize="none"
+                  />
+                  {usernameHint()}
+                </div>
+                <div>
+                  <label className={labelClass}>{t('auth.dob')}</label>
+                  <input type="date" required value={signUpDob} onChange={e => { setSignUpDob(e.target.value); setErrors(p => ({ ...p, dob: '' })); }} className={inputClass('dob')} max={new Date().toISOString().split('T')[0]} />
+                  {errors.dob && <p className={fieldErrorClass}>{errors.dob}</p>}
                 </div>
                 <div>
                   <label className={labelClass}>{t('auth.email')}</label>
@@ -201,7 +264,11 @@ export default function AuthModal({ onClose }: AuthModalProps) {
                   {errors.confirm && <p className={fieldErrorClass}>{errors.confirm}</p>}
                 </div>
                 {errors.submit && <p className="text-red-400 text-xs">{errors.submit}</p>}
-                <button type="submit" disabled={signUpLoading} className="w-full btn-3d-accent text-white font-bold py-2.5 rounded-xl text-sm disabled:opacity-60">
+                <button
+                  type="submit"
+                  disabled={signUpLoading || usernameStatus === 'taken' || usernameStatus === 'checking'}
+                  className="w-full btn-3d-accent text-white font-bold py-2.5 rounded-xl text-sm disabled:opacity-60"
+                >
                   {signUpLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
                 </button>
               </form>

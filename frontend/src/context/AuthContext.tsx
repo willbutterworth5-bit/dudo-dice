@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, type React
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { loadFromSupabase, syncProfileToSupabase, syncAchievementToSupabase, updateLastSeen } from '../utils/supabaseSync';
-import { initSupabaseSync } from '../utils/profileStorage';
+import { initSupabaseSync, ProfileStorage } from '../utils/profileStorage';
 
 interface AuthContextValue {
   user: User | null;
@@ -10,7 +10,7 @@ interface AuthContextValue {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<string | null>;
-  signUpWithEmail: (email: string, password: string, name: string, dob: string) => Promise<string | null>;
+  signUpWithEmail: (email: string, password: string, username: string, dob: string) => Promise<string | null>;
   signOut: () => Promise<void>;
 }
 
@@ -89,20 +89,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUpWithEmail = useCallback(async (
     email: string,
     password: string,
-    name: string,
+    username: string,
     dob: string,
   ): Promise<string | null> => {
     if (!supabase) return 'Supabase not configured';
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return error.message;
     if (data.user) {
-      // Store name + date_of_birth in profiles table immediately
+      // Store username + date_of_birth in profiles table immediately
       await supabase.from('profiles').upsert({
         id: data.user.id,
-        name,
+        name: username,
+        username,
         date_of_birth: dob,
         updated_at: new Date().toISOString(),
       });
+      // Persist username locally
+      const profile = ProfileStorage.getProfile();
+      ProfileStorage.saveProfile({ ...profile, name: username, username });
     }
     return null;
   }, []);

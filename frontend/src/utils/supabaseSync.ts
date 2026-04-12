@@ -24,9 +24,12 @@ export async function loadFromSupabase(userId: string, session: Session): Promis
 
     const local = ProfileStorage.getProfile();
 
-    // --- Name ---
+    // --- Name / Username ---
     if (profileRes.data?.name && local.name === 'You') {
       local.name = profileRes.data.name;
+    }
+    if (profileRes.data?.username && !local.username) {
+      local.username = profileRes.data.username;
     }
 
     // --- Avatar ---
@@ -101,6 +104,7 @@ export async function syncProfileToSupabase(userId: string, profile: PlayerProfi
       supabase.from('profiles').upsert({
         id: userId,
         name: profile.name,
+        username: profile.username,
         country: profile.country,
         // Only store URL-style avatars in Supabase; base64 stays local
         avatar_url: profile.photo?.startsWith('http') ? profile.photo : undefined,

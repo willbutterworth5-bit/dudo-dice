@@ -201,6 +201,13 @@ const es: Translations = {
     errorEmailInvalid: 'Por favor, introduce una dirección de correo válida',
     errorPasswordTooShort: 'La contraseña debe tener al menos 6 caracteres',
     errorPasswordMismatch: 'Las contraseñas no coinciden',
+    username: 'Nombre de usuario',
+    usernamePlaceholder: 'p.ej. jugador_42',
+    errorUsernameRequired: 'El nombre de usuario es obligatorio',
+    errorUsernameInvalid: 'Solo letras, números, _ y - (3–20 caracteres)',
+    errorUsernameTaken: 'Nombre de usuario ya en uso',
+    usernameAvailable: '✓ Disponible',
+    usernameChecking: 'Comprobando…',
   },
   cookie: {
     title: '🍪 Preferencias de cookies',
