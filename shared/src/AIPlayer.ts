@@ -363,14 +363,16 @@ export class AIPlayer {
 
   /**
    * Challenge threshold: challenge when P(bid true) < threshold.
-   * Easy AI challenges less aggressively (misses good challenge spots).
-   * Hard AI challenges more aggressively (picks up weak bids).
+   * Randomised per decision so the AI is unpredictable.
+   * Easy: 0.20–0.73 — sometimes call-shy, sometimes over-challenges.
+   * Medium: 0.28–0.63 — moderate variance.
+   * Hard: 0.35–0.55 — consistently aggressive, impossible to read.
    */
   private getChallengeThreshold(): number {
     switch (this.difficulty) {
-      case 'easy': return 0.22;
-      case 'hard': return 0.42;
-      default:     return 0.35;
+      case 'easy': return 0.20 + Math.random() * 0.53;  // 0.20–0.73
+      case 'hard': return 0.35 + Math.random() * 0.20;  // 0.35–0.55
+      default:     return 0.28 + Math.random() * 0.35;  // 0.28–0.63
     }
   }
 
