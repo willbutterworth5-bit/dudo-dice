@@ -173,6 +173,8 @@ const zhHK: Translations = {
     newGame: '新遊戲',
     gameAnalysis: '遊戲分析',
     quit: '離開',
+    backToComputerSetup: '返回電腦設置',
+    backToOnlineSetup: '返回線上設置',
     placed: '你排第 {ordinal}',
   },
   auth: {

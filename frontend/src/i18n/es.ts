@@ -173,6 +173,8 @@ const es: Translations = {
     newGame: 'Nueva partida',
     gameAnalysis: 'Análisis del juego',
     quit: 'Salir',
+    backToComputerSetup: 'Volver a la configuración',
+    backToOnlineSetup: 'Volver al juego en línea',
     placed: 'Quedaste en {ordinal} lugar',
   },
   auth: {
