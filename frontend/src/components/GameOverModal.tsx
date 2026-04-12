@@ -29,7 +29,7 @@ export default function GameOverModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border border-white/20">
+      <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
         <div className="text-center">
           <div
             className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-bold shadow-lg bg-white/15 border border-white/20"

@@ -45,7 +45,7 @@ function SinglePlayerGame() {
         analysisEnabled={config.analysisEnabled}
         palificoEnabled={config.palificoEnabled}
         calzaEnabled={config.calzaEnabled}
-        onBackToHome={() => navigate('/')}
+        onBackToHome={() => navigate('/play')}
       />
     </GameProvider>
   )

@@ -204,16 +204,23 @@ function RoundDetail({
   const { t } = useLanguage();
   const humanPlayer = players.find(player => player.isHuman);
   const humanWasChallenger = humanPlayer?.id === round.challengerId;
+  const humanWasBidder = humanPlayer?.id === round.bidderId;
   const humanLost = humanPlayer?.id === round.loserId;
   const lastBid = round.bids[round.bids.length - 1];
   const challengedBidProb = lastBid ? probabilityFromRecord(lastBid) : null;
   const challenger = players.find(player => player.id === round.challengerId);
   const loser = players.find(player => player.id === round.loserId);
   const palificoMode = round.bids[0]?.palificoMode ?? false;
-  const alternatives =
-    humanWasChallenger && humanLost
+  const prevBid = round.bids.length >= 2 ? round.bids[round.bids.length - 2].bid : null;
+  const alternatives = humanLost
+    ? humanWasChallenger
       ? alternativeBids(round.allDice, round.challengedBid, palificoMode)
-      : [];
+      : (humanWasBidder && prevBid)
+        ? alternativeBids(round.allDice, prevBid, palificoMode).filter(
+            a => !(a.faceValue === round.challengedBid.faceValue && a.quantity === round.challengedBid.quantity)
+          )
+        : []
+    : [];
 
   return (
     <div className="space-y-3">
@@ -271,40 +278,7 @@ function RoundDetail({
         </div>
       )}
 
-      <div className="rounded-lg bg-white/10 p-3">
-        <div className="mb-1.5 flex items-center gap-1.5">
-          <p className="text-xs font-bold uppercase tracking-wider text-white/50">{t('gameAnalysis.bidTimeline')}</p>
-          <InfoTooltip text={t('gameAnalysis.bidTimelineTooltip')} />
-        </div>
-        <div className="space-y-0.5">
-          {round.bids.map((record, index) => {
-            const player = players.find(candidate => candidate.id === record.playerId);
-            const color = player ? PLAYER_COLOR_MAP[player.color] || '#6B7280' : '#6B7280';
-            const name = player?.isHuman ? t('game.you') : player?.name ?? 'Unknown';
-            const prob = probabilityFromRecord(record);
-            const isFinal = index === round.bids.length - 1;
-            return (
-              <div key={index}>
-                <div
-                  className={`flex items-center gap-2 rounded-lg px-2 py-1 ${
-                    isFinal ? 'border border-dashed border-white/30 bg-white/15' : 'bg-white/8'
-                  }`}
-                >
-                  <div className="h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: color }} />
-                  <span className="flex-1 truncate text-xs font-semibold text-white/80">{name}</span>
-                  <BidDisplay quantity={record.bid.quantity} faceValue={record.bid.faceValue} />
-                  <ProbBadge prob={prob} />
-                </div>
-              </div>
-            );
-          })}
-          {round.bids.length === 0 && (
-            <p className="text-xs italic text-white/30">{t('gameAnalysis.noBids')}</p>
-          )}
-        </div>
-      </div>
-
-      {humanWasChallenger && humanLost && (
+      {humanLost && (
         <div className="rounded-lg bg-white/10 p-2.5">
           <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-white/50">{t('gameAnalysis.couldHaveBid')}</p>
           {alternatives.length > 0 ? (
@@ -323,6 +297,55 @@ function RoundDetail({
           )}
         </div>
       )}
+
+      {(() => {
+        const flatDice = round.allDice.flatMap(d => d.dice);
+        const actualCountForFace = (faceValue: number) =>
+          flatDice.filter(d =>
+            palificoMode ? d === faceValue :
+            faceValue === 1 ? d === 1 :
+            d === faceValue || d === 1
+          ).length;
+        return (
+          <div className="rounded-lg bg-white/10 p-3">
+            <div className="mb-1.5 flex items-center gap-1.5">
+              <p className="text-xs font-bold uppercase tracking-wider text-white/50">{t('gameAnalysis.bidTimeline')}</p>
+              <InfoTooltip text={`${t('gameAnalysis.bidTimelineTooltip')} Bids marked ! were false — the dice didn't support them and they could have been challenged.`} />
+            </div>
+            <div className="space-y-0.5">
+              {round.bids.map((record, index) => {
+                const player = players.find(candidate => candidate.id === record.playerId);
+                const color = player ? PLAYER_COLOR_MAP[player.color] || '#6B7280' : '#6B7280';
+                const name = player?.isHuman ? t('game.you') : player?.name ?? 'Unknown';
+                const prob = probabilityFromRecord(record);
+                const isFinal = index === round.bids.length - 1;
+                const isFalseBid = actualCountForFace(record.bid.faceValue) < record.bid.quantity;
+                return (
+                  <div key={index}>
+                    <div
+                      className={`flex items-center gap-2 rounded-lg px-2 py-1 ${
+                        isFalseBid
+                          ? 'bg-red-500/15 border border-red-400/40'
+                          : isFinal ? 'border border-dashed border-white/30 bg-white/15' : 'bg-white/8'
+                      }`}
+                    >
+                      <div className="h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: color }} />
+                      <span className="flex-1 truncate text-xs font-semibold text-white/80">{name}</span>
+                      <BidDisplay quantity={record.bid.quantity} faceValue={record.bid.faceValue} />
+                      {isFalseBid && <span className="text-red-400 font-bold text-xs flex-shrink-0">!</span>}
+                      <ProbBadge prob={prob} />
+                    </div>
+                  </div>
+                );
+              })}
+              {round.bids.length === 0 && (
+                <p className="text-xs italic text-white/30">{t('gameAnalysis.noBids')}</p>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
 
       <div className="rounded-lg bg-white/10 p-2.5">
         <div className="mb-1.5 flex items-center gap-1.5">

@@ -63,14 +63,23 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
   const lastBid = result.bids[result.bids.length - 1];
   const challengedBidProb = lastBid ? probabilityFromRecord(lastBid) : null;
 
-  // If human challenged and lost: what could they have bid instead (based on actual board dice)?
+  // What could the human have bid instead?
+  // - If they challenged and lost: alternatives relative to the challenged bid
+  // - If they were the bidder and lost: alternatives relative to the previous bid
   const palificoMode = result.bids[0]?.palificoMode ?? false;
-  const alternatives = (humanWasChallenger && humanLost)
-    ? alternativeBids(result.allDice, result.challengedBid, palificoMode)
+  const humanWasBidder = humanPlayer?.id === result.bidderId;
+  const prevBid = result.bids.length >= 2 ? result.bids[result.bids.length - 2].bid : null;
+  const alternatives = humanLost
+    ? humanWasChallenger
+      ? alternativeBids(result.allDice, result.challengedBid, palificoMode)
+      : (humanWasBidder && prevBid)
+        ? alternativeBids(result.allDice, prevBid, palificoMode).filter(
+            a => !(a.faceValue === result.challengedBid.faceValue && a.quantity === result.challengedBid.quantity)
+          )
+        : []
     : [];
 
   // If AI challenged and human was the bidder: was human's bid justified?
-  const humanWasBidder = humanPlayer?.id === result.bidderId;
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -182,42 +191,8 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
             </div>
           )}
 
-          {/* Bid timeline */}
-          <div className="bg-white/10 rounded-lg p-3">
-            <div className="flex items-center gap-1.5 mb-2">
-              <p className="text-xs font-bold text-white/50 uppercase tracking-wider">{t('roundAnalysis.bidTimeline')}</p>
-              <InfoTooltip text={t('roundAnalysis.bidTimelineTooltip')} />
-            </div>
-            <div className="space-y-0.5">
-              {result.bids.map((record, i) => {
-                const player = players.find(p => p.id === record.playerId);
-                const color = player ? (PLAYER_COLOR_MAP[player.color] || '#6B7280') : '#6B7280';
-                const name = player?.isHuman ? t('game.you') : (player?.name ?? 'Unknown');
-                const prob = probabilityFromRecord(record);
-                const isFinalBid = i === result.bids.length - 1;
-
-                return (
-                  <div
-                    key={i}
-                    className={`flex items-center gap-2 px-2 py-1 rounded-lg ${
-                      isFinalBid ? 'bg-white/15 border border-white/30 border-dashed' : 'bg-white/8'
-                    }`}
-                  >
-                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-                    <span className="text-xs font-semibold text-white/80 flex-1 truncate">{name}</span>
-                    <BidDisplay quantity={record.bid.quantity} faceValue={record.bid.faceValue} />
-                    <ProbBadge prob={prob} />
-                  </div>
-                );
-              })}
-            </div>
-            {result.bids.length === 0 && (
-              <p className="text-xs text-white/40 italic">{t('roundAnalysis.noBids')}</p>
-            )}
-          </div>
-
-          {/* Alternative bids (when human challenged and lost) */}
-          {humanWasChallenger && humanLost && (
+          {/* Alternative bids (when human lost) */}
+          {humanLost && (
             <div className="bg-white/10 rounded-lg p-3 space-y-2">
               <div className="flex items-center gap-1.5">
                 <p className="text-xs font-bold text-white/50 uppercase tracking-wider">{t('roundAnalysis.couldHaveBid')}</p>
@@ -226,7 +201,6 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
               {alternatives.length > 0 ? (
                 <div className="space-y-1.5">
                   {alternatives.map((alt, i) => {
-                    // Minimum valid bid for this face value
                     const minQty = alt.faceValue === result.challengedBid.faceValue
                       ? result.challengedBid.quantity + 1
                       : alt.faceValue > result.challengedBid.faceValue
@@ -248,6 +222,55 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
               )}
             </div>
           )}
+
+          {/* Bid timeline */}
+          {(() => {
+            const flatDice = result.allDice.flatMap(d => d.dice);
+            const actualCountForFace = (faceValue: number) =>
+              flatDice.filter(d =>
+                palificoMode ? d === faceValue :
+                faceValue === 1 ? d === 1 :
+                d === faceValue || d === 1
+              ).length;
+            return (
+              <div className="bg-white/10 rounded-lg p-3">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <p className="text-xs font-bold text-white/50 uppercase tracking-wider">{t('roundAnalysis.bidTimeline')}</p>
+                  <InfoTooltip text={`${t('roundAnalysis.bidTimelineTooltip')} Bids marked ! were false — the dice didn't support them and they could have been challenged.`} />
+                </div>
+                <div className="space-y-0.5">
+                  {result.bids.map((record, i) => {
+                    const player = players.find(p => p.id === record.playerId);
+                    const color = player ? (PLAYER_COLOR_MAP[player.color] || '#6B7280') : '#6B7280';
+                    const name = player?.isHuman ? t('game.you') : (player?.name ?? 'Unknown');
+                    const prob = probabilityFromRecord(record);
+                    const isFinalBid = i === result.bids.length - 1;
+                    const isFalseBid = actualCountForFace(record.bid.faceValue) < record.bid.quantity;
+                    return (
+                      <div
+                        key={i}
+                        className={`flex items-center gap-2 px-2 py-1 rounded-lg ${
+                          isFalseBid
+                            ? 'bg-red-500/15 border border-red-400/40'
+                            : isFinalBid ? 'bg-white/15 border border-white/30 border-dashed' : 'bg-white/8'
+                        }`}
+                      >
+                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                        <span className="text-xs font-semibold text-white/80 flex-1 truncate">{name}</span>
+                        <BidDisplay quantity={record.bid.quantity} faceValue={record.bid.faceValue} />
+                        {isFalseBid && <span className="text-red-400 font-bold text-xs flex-shrink-0">!</span>}
+                        <ProbBadge prob={prob} />
+                      </div>
+                    );
+                  })}
+                </div>
+                {result.bids.length === 0 && (
+                  <p className="text-xs text-white/40 italic">{t('roundAnalysis.noBids')}</p>
+                )}
+              </div>
+            );
+          })()}
+
 
           {/* Actual dice per player */}
           <div className="bg-white/10 rounded-lg p-3">
