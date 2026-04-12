@@ -72,7 +72,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
       >
         <BackIcon />{t('common.back')}
       </button>
-      <div className="max-w-lg sm:max-w-4xl w-full pt-12 sm:pt-0">
+      <div className="max-w-lg sm:max-w-3xl w-full pt-12 sm:pt-0">
         {/* Header */}
         <div className="flex items-center justify-center gap-4 mb-5 pl-16 sm:pl-0">
           <picture><source srcSet="/Logo.webp" type="image/webp" /><img src="/Logo.png" alt="Dudo Dice Logo" className="flex-shrink-0" style={{ width: '56px', height: '56px' }} /></picture>

@@ -1558,66 +1558,6 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
             ratingUpdate={multiplayerMode?.ratingUpdate}
             isRanked={multiplayerMode?.isRanked}
             onViewGameAnalysis={() => setShowGameAnalysis(true)}
-            onNewGame={isMultiplayer ? undefined : () => {
-              const humanPlayer = gameState.players.find(p => p.isHuman);
-              const humanWon = !!(humanPlayer && winner.id === humanPlayer.id);
-              ProfileStorage.recordGame(humanWon);
-              fireSession(humanWon ? 'win' : 'loss');
-
-              // Achievement checks at game-over
-              const profile = ProfileStorage.getProfile();
-              if (humanWon) {
-                profile.consecutiveWins = (profile.consecutiveWins ?? 0) + 1;
-              } else {
-                profile.consecutiveWins = 0;
-              }
-              ProfileStorage.saveProfile(profile);
-
-              const humanDiceNow = humanWon ? (humanPlayer?.diceCount ?? 0) : 0;
-              const hour = gameStartHour.current;
-              const toUnlock: string[] = [];
-              const unlocked = profile.achievements;
-              const s = profile.vsComputerStats;
-              if (!unlocked.includes('first_game') && s.gamesPlayed >= 1) toUnlock.push('first_game');
-              if (!unlocked.includes('getting_hang') && s.gamesPlayed >= 10) toUnlock.push('getting_hang');
-              if (!unlocked.includes('dice_devotee') && s.gamesPlayed >= 100) toUnlock.push('dice_devotee');
-              if (humanWon) {
-                if (!unlocked.includes('first_win') && s.gamesWon >= 1) toUnlock.push('first_win');
-                if (!unlocked.includes('seasoned_gambler') && s.gamesWon >= 25) toUnlock.push('seasoned_gambler');
-                if (!unlocked.includes('master_of_bluff') && s.gamesWon >= 100) toUnlock.push('master_of_bluff');
-                if (!unlocked.includes('impossible_odds') && humanDiceNow === 1) toUnlock.push('impossible_odds');
-                if (!unlocked.includes('dice_whisperer') && humanWasAtOneDie.current) toUnlock.push('dice_whisperer');
-                if (!unlocked.includes('perfect_game') && humanDiceNow === humanDiceAtGameStart.current) toUnlock.push('perfect_game');
-                if (!unlocked.includes('comeback_king') && humanMinDiceThisGame.current <= humanDiceAtGameStart.current - 3) toUnlock.push('comeback_king');
-                if (!unlocked.includes('hot_streak') && profile.consecutiveWins >= 3) toUnlock.push('hot_streak');
-                if (!unlocked.includes('unstoppable') && profile.consecutiveWins >= 7) toUnlock.push('unstoppable');
-              }
-              if (!unlocked.includes('night_owl') && hour >= 2 && hour < 5) toUnlock.push('night_owl');
-              if (!unlocked.includes('early_bird') && hour >= 5 && hour < 7) toUnlock.push('early_bird');
-              unlockAchievements(toUnlock);
-
-              // Reset transient refs
-              successfulDudosThisGame.current = 0;
-              calzaSucceededThisGame.current = false;
-              humanDiceAtGameStart.current = startingDice;
-              humanMinDiceThisGame.current = startingDice;
-              humanWasAtOneDie.current = false;
-              consecutiveDudoSuccesses.current = 0;
-              consecutiveValidBids.current = 0;
-              gameStartHour.current = new Date().getHours();
-              gameStartTime.current = Date.now();
-              sessionFired.current = false;
-
-              const settings: GameSettings = {
-                playerCount,
-                startingDice,
-                analysisEnabled,
-                palificoEnabled,
-                calzaEnabled,
-              };
-              initializeGame(settings);
-              setAiPlayer(new AIPlayer(difficulty));
-            }}
             onQuit={() => {
               if (!isMultiplayer) {
                 const humanPlayer = gameState.players.find(p => p.isHuman);

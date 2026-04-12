@@ -129,6 +129,8 @@ export const ProfileStorage = {
       rankedLosses: 0,
       rankedForfeits: 0,
       lastRatingChange: 0,
+      playStreak: 0,
+      longestPlayStreak: 0,
     };
   },
 

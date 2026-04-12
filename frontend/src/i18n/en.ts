@@ -172,9 +172,6 @@ const en: Translations = {
     betterLuck: 'Better luck next time',
     newGame: 'New Game',
     gameAnalysis: 'Game Analysis',
-    quit: 'Quit',
-    backToComputerSetup: 'Back to Computer Setup',
-    backToOnlineSetup: 'Back to Online Setup',
     placed: 'You placed {ordinal}',
   },
   auth: {
