@@ -56,7 +56,8 @@ describe('BidValidator', () => {
     assert.match(result.reason ?? '', /face value 4/);
   });
 
-  it('detects palifico starts only for one-die players', () => {
+  it('detects palifico starts only for one-die players, regardless of bid quantity', () => {
+    // 1-die player, opening bid quantity 1 → palifico
     assert.equal(
       BidValidator.checkPalificoStart(
         { quantity: 1, faceValue: 3, playerId: 'p1' },
@@ -64,6 +65,15 @@ describe('BidValidator', () => {
       ),
       true
     );
+    // 1-die player, opening bid quantity > 1 → palifico (the bug: this was false before)
+    assert.equal(
+      BidValidator.checkPalificoStart(
+        { quantity: 2, faceValue: 3, playerId: 'p1' },
+        1
+      ),
+      true
+    );
+    // 2-die player, opening bid quantity 1 → no palifico
     assert.equal(
       BidValidator.checkPalificoStart(
         { quantity: 1, faceValue: 3, playerId: 'p1' },
