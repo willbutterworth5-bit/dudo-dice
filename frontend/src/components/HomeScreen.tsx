@@ -36,7 +36,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center p-4 sm:p-8 relative" style={{ overflowY: 'auto' }}>
+    <div className="h-dvh sm:min-h-dvh sm:h-auto flex flex-col items-center justify-start sm:justify-center p-4 sm:p-8 relative" style={{ overflowY: 'auto' }}>
       {/* Back button - fixed top left */}
       <button
         onClick={() => navigate('/')}
@@ -45,7 +45,7 @@ export default function HomeScreen() {
       >
         <BackIcon />{t('common.back')}
       </button>
-      <div className="max-w-2xl sm:max-w-4xl w-full pt-12 sm:pt-0">
+      <div className="max-w-2xl sm:max-w-4xl w-full pt-12 sm:pt-0 flex flex-col flex-1 sm:flex-none">
         {/* Logo and title side by side */}
         <div className="flex items-center justify-center gap-4 mb-5">
           <picture>
@@ -62,7 +62,7 @@ export default function HomeScreen() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl overflow-hidden mb-4 relative">
+        <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl overflow-hidden mb-4 relative flex flex-col flex-1 sm:flex-none">
           {/* Header */}
           <div className="bg-white/10 border-b border-white/20 px-5 py-4 flex justify-between items-center">
             <h2 className="text-xl font-bold text-white">{t('home.gameSetup')}</h2>
@@ -90,7 +90,7 @@ export default function HomeScreen() {
           </div>
 
           {/* Body */}
-          <div className="px-5 divide-y divide-white/20">
+          <div className="px-5 divide-y divide-white/20 flex-1 flex flex-col sm:block justify-between">
             {/* Players & Dice */}
             <div className="py-3">
               <div className="flex gap-4">
