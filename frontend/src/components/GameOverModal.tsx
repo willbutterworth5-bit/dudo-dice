@@ -4,7 +4,6 @@ import { useLanguage } from '../i18n/LanguageContext';
 
 interface GameOverModalProps {
   winner: Player;
-  onNewGame?: (() => void) | undefined;
   onQuit: () => void;
   onViewGameAnalysis?: () => void;
   analysisEnabled?: boolean;
@@ -17,7 +16,6 @@ const PLACEMENT_LABELS_ES = ['', '1.°', '2.°', '3.°', '4.°', '5.°', '6.°']
 
 export default function GameOverModal({
   winner,
-  onNewGame: _onNewGame,
   onQuit,
   onViewGameAnalysis,
   analysisEnabled = false,

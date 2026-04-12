@@ -170,9 +170,6 @@ export interface Translations {
     betterLuck: string;
     newGame: string;
     gameAnalysis: string;
-    quit: string;
-    backToComputerSetup: string;
-    backToOnlineSetup: string;
     placed: string;
   };
   auth: {
