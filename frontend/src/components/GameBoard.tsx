@@ -1364,7 +1364,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               return (
                 <div
                   key={player.id}
-                  className="flex-1 min-w-0 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md h-9 sm:h-7"
+                  className="flex-1 min-w-0 rounded-lg flex items-center justify-center transition-all duration-300 shadow-md h-9 sm:h-7"
                   style={{
                     background: `linear-gradient(to bottom right, ${color}, ${color}dd)`,
                     boxShadow: isCurrentTurn

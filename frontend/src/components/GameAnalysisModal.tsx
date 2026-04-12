@@ -310,7 +310,7 @@ function RoundDetail({
           <div className="rounded-lg bg-white/10 p-3">
             <div className="mb-1.5 flex items-center gap-1.5">
               <p className="text-xs font-bold uppercase tracking-wider text-white/50">{t('gameAnalysis.bidTimeline')}</p>
-              <InfoTooltip text={`${t('gameAnalysis.bidTimelineTooltip')} Bids marked ! were false — the dice didn't support them and they could have been challenged.`} />
+              <InfoTooltip text={t('gameAnalysis.bidTimelineTooltip')} />
             </div>
             <div className="space-y-0.5">
               {round.bids.map((record, index) => {
@@ -321,20 +321,25 @@ function RoundDetail({
                 const isFinal = index === round.bids.length - 1;
                 const isFalseBid = actualCountForFace(record.bid.faceValue) < record.bid.quantity;
                 return (
-                  <div key={index}>
-                    <div
-                      className={`flex items-center gap-2 rounded-lg px-2 py-1 ${
-                        isFalseBid
-                          ? 'bg-red-500/15 border border-red-400/40'
-                          : isFinal ? 'border border-dashed border-white/30 bg-white/15' : 'bg-white/8'
-                      }`}
-                    >
-                      <div className="h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: color }} />
-                      <span className="flex-1 truncate text-xs font-semibold text-white/80">{name}</span>
-                      <BidDisplay quantity={record.bid.quantity} faceValue={record.bid.faceValue} />
-                      {isFalseBid && <span className="text-red-400 font-bold text-xs flex-shrink-0">!</span>}
-                      <ProbBadge prob={prob} />
-                    </div>
+                  <div
+                    key={index}
+                    tabIndex={isFalseBid ? 0 : undefined}
+                    className={`relative flex items-center gap-2 rounded-lg px-2 py-1 outline-none ${
+                      isFalseBid
+                        ? 'group bg-red-500/15 border border-red-400/40 cursor-default'
+                        : isFinal ? 'border border-dashed border-white/30 bg-white/15' : 'bg-white/8'
+                    }`}
+                  >
+                    <div className="h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: color }} />
+                    <span className="flex-1 truncate text-xs font-semibold text-white/80">{name}</span>
+                    <BidDisplay quantity={record.bid.quantity} faceValue={record.bid.faceValue} />
+                    {isFalseBid && <span className="text-red-400 font-bold text-xs flex-shrink-0">!</span>}
+                    <ProbBadge prob={prob} />
+                    {isFalseBid && (
+                      <span className="absolute right-0 bottom-full mb-1 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus:opacity-100 group-focus:visible transition-all z-50 bg-gray-900/95 text-white/85 text-xs rounded-lg p-2 shadow-xl pointer-events-none border border-white/10 leading-relaxed">
+                        This bid was false — the actual dice didn't support it and it could have been challenged.
+                      </span>
+                    )}
                   </div>
                 );
               })}

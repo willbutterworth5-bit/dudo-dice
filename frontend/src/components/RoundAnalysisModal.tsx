@@ -236,7 +236,7 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
               <div className="bg-white/10 rounded-lg p-3">
                 <div className="flex items-center gap-1.5 mb-2">
                   <p className="text-xs font-bold text-white/50 uppercase tracking-wider">{t('roundAnalysis.bidTimeline')}</p>
-                  <InfoTooltip text={`${t('roundAnalysis.bidTimelineTooltip')} Bids marked ! were false — the dice didn't support them and they could have been challenged.`} />
+                  <InfoTooltip text={t('roundAnalysis.bidTimelineTooltip')} />
                 </div>
                 <div className="space-y-0.5">
                   {result.bids.map((record, i) => {
@@ -249,9 +249,10 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
                     return (
                       <div
                         key={i}
-                        className={`flex items-center gap-2 px-2 py-1 rounded-lg ${
+                        tabIndex={isFalseBid ? 0 : undefined}
+                        className={`relative flex items-center gap-2 px-2 py-1 rounded-lg outline-none ${
                           isFalseBid
-                            ? 'bg-red-500/15 border border-red-400/40'
+                            ? 'group bg-red-500/15 border border-red-400/40 cursor-default'
                             : isFinalBid ? 'bg-white/15 border border-white/30 border-dashed' : 'bg-white/8'
                         }`}
                       >
@@ -260,6 +261,11 @@ export default function RoundAnalysisModal({ result, players, onClose }: RoundAn
                         <BidDisplay quantity={record.bid.quantity} faceValue={record.bid.faceValue} />
                         {isFalseBid && <span className="text-red-400 font-bold text-xs flex-shrink-0">!</span>}
                         <ProbBadge prob={prob} />
+                        {isFalseBid && (
+                          <span className="absolute right-0 bottom-full mb-1 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus:opacity-100 group-focus:visible transition-all z-50 bg-gray-900/95 text-white/85 text-xs rounded-lg p-2 shadow-xl pointer-events-none border border-white/10 leading-relaxed">
+                            This bid was false — the actual dice didn't support it and it could have been challenged.
+                          </span>
+                        )}
                       </div>
                     );
                   })}
