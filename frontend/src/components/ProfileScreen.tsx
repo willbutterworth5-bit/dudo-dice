@@ -322,6 +322,16 @@ export default function ProfileScreen() {
                     </span>
                   )}
                 </div>
+
+                {/* Daily play streak */}
+                <div className="flex flex-col items-center mt-3">
+                  <div className={`flex items-center gap-1 ${(profile.playStreak ?? 0) === 0 ? 'opacity-35' : ''}`}>
+                    <span className="text-xl">🔥</span>
+                    <span className="text-white font-bold text-base">{profile.playStreak ?? 0}</span>
+                    <span className="text-white/50 text-sm">{(profile.playStreak ?? 0) === 1 ? 'day' : 'days'}</span>
+                  </div>
+                  <span className="text-white/35 text-xs">Best streak: {profile.longestPlayStreak ?? 0}</span>
+                </div>
               </div>
 
               {/* Name + Country inputs */}

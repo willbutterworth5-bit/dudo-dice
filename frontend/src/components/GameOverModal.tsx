@@ -17,7 +17,7 @@ const PLACEMENT_LABELS_ES = ['', '1.°', '2.°', '3.°', '4.°', '5.°', '6.°']
 
 export default function GameOverModal({
   winner,
-  onNewGame,
+  onNewGame: _onNewGame,
   onQuit,
   onViewGameAnalysis,
   analysisEnabled = false,
@@ -62,14 +62,12 @@ export default function GameOverModal({
           )}
 
           <div className="flex gap-3 justify-center flex-wrap">
-            {onNewGame && (
-              <button
-                onClick={onNewGame}
-                className="px-6 py-3 text-white font-bold rounded-xl transition-colors text-sm btn-3d-accent"
-              >
-                {t('gameOver.newGame')}
-              </button>
-            )}
+            <button
+              onClick={onQuit}
+              className="px-6 py-3 text-white font-bold rounded-xl transition-colors text-sm btn-3d-accent"
+            >
+              {t('gameOver.newGame')}
+            </button>
             {analysisEnabled && (
               <button
                 onClick={onViewGameAnalysis}
@@ -78,12 +76,6 @@ export default function GameOverModal({
                 {t('gameOver.gameAnalysis')}
               </button>
             )}
-            <button
-              onClick={onQuit}
-              className="px-6 py-3 btn-glass text-white font-bold rounded-xl transition-colors text-sm"
-            >
-              {t('gameOver.quit')}
-            </button>
           </div>
         </div>
       </div>

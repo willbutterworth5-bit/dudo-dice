@@ -44,6 +44,10 @@ export interface PlayerProfile {
   achievements: string[];       // array of unlocked achievement IDs
   consecutiveWins: number;      // persistent streak for Hot Streak / Unstoppable
   uniquePlayerIds: string[];    // unique online opponent IDs for Friendly Face / Social Butterfly
+  // Daily play streak
+  playStreak?: number;          // current consecutive days played
+  longestPlayStreak?: number;   // all-time best
+  lastPlayedDate?: string;      // ISO date string e.g. "2026-04-12"
   // Ranked Elo rating (synced from server, display-only on client)
   persistentPlayerId: string;   // stable UUID for rating identity
   rankedRating: number;         // default 1500
@@ -99,6 +103,8 @@ export const ProfileStorage = {
         if (parsed.rankedLosses === undefined) parsed.rankedLosses = 0;
         if (parsed.rankedForfeits === undefined) parsed.rankedForfeits = 0;
         if (parsed.lastRatingChange === undefined) parsed.lastRatingChange = 0;
+        if (parsed.playStreak === undefined) parsed.playStreak = 0;
+        if (parsed.longestPlayStreak === undefined) parsed.longestPlayStreak = 0;
         return parsed as PlayerProfile;
       } catch (e) {
         console.error('Error parsing profile from storage:', e);
@@ -192,6 +198,37 @@ export const ProfileStorage = {
     }
     if (changed) this.saveProfile(profile);
     return profile.uniquePlayerIds.length;
+  },
+
+  /**
+   * Call when a game starts. Tracks daily play streak.
+   * Returns { isNewDay: true, streak } if this is the first game today (show toast),
+   * or { isNewDay: false } if the player already played today.
+   */
+  recordDailyPlay(): { isNewDay: boolean; streak: number } {
+    const profile = this.getProfile();
+    const todayStr = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+    const last = profile.lastPlayedDate;
+
+    if (last === todayStr) {
+      return { isNewDay: false, streak: profile.playStreak ?? 1 };
+    }
+
+    let newStreak = 1;
+    if (last) {
+      const lastDate = new Date(last);
+      const today = new Date(todayStr);
+      const diffDays = Math.round((today.getTime() - lastDate.getTime()) / 86400000);
+      if (diffDays === 1) {
+        newStreak = (profile.playStreak ?? 0) + 1;
+      }
+    }
+
+    profile.playStreak = newStreak;
+    profile.longestPlayStreak = Math.max(newStreak, profile.longestPlayStreak ?? 0);
+    profile.lastPlayedDate = todayStr;
+    this.saveProfile(profile);
+    return { isNewDay: true, streak: newStreak };
   },
 
   /** Unlock an achievement. Returns true if it was newly unlocked. */

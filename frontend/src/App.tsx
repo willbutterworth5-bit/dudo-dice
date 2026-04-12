@@ -125,14 +125,16 @@ function App() {
   const navigate = useNavigate()
   const location = useLocation()
   const mp = useMultiplayerConnection()
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const [showUsernamePrompt, setShowUsernamePrompt] = useState(false)
 
   useEffect(() => {
-    if (user && !ProfileStorage.getProfile().username) {
+    // Only check after loadFromSupabase has completed (loading = false)
+    // so we don't prompt users who already have a username in Supabase
+    if (!loading && user && !ProfileStorage.getProfile().username) {
       setShowUsernamePrompt(true)
     }
-  }, [user])
+  }, [user, loading])
 
   // Auto-navigate on multiplayer room phase changes
   useEffect(() => {

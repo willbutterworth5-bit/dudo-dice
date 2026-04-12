@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { recordGameSession } from '../utils/supabaseSync';
 import BackIcon from './BackIcon';
 import AchievementToast from './AchievementToast';
+import StreakToast from './StreakToast';
 import DiceFace from './DiceFace';
 import BidInput from './BidInput';
 import GameOverModal from './GameOverModal';
@@ -110,6 +111,14 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   const gameStartTime = useRef(Date.now());              // for session duration tracking
   const unlockAchievementsRef = useRef<(ids: string[]) => void>(() => {});
   const [pendingAchievements, setPendingAchievements] = useState<string[]>([]);
+  const [streakToast, setStreakToast] = useState<number | null>(null);
+
+  // Track daily play streak — fire once on mount
+  useEffect(() => {
+    const result = ProfileStorage.recordDailyPlay();
+    if (result.isNewDay) setStreakToast(result.streak);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Fire-and-forget session recording for Supabase analytics
   const sessionFired = useRef(false);
@@ -682,8 +691,16 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     ? (multiplayerMode?.winnerId ? gameState.players.find(p => p.id === multiplayerMode.winnerId) ?? null : null)
     : gameEngine?.getWinner() ?? null;
 
+  // Freeze dice counts during round result reveal — use pre-round counts from allDice
+  const displayPlayers = lastRoundResult?.allDice
+    ? gameState.players.map(p => {
+        const pre = lastRoundResult.allDice!.find(d => d.playerId === p.id);
+        return pre ? { ...p, diceCount: pre.dice.length } : p;
+      })
+    : gameState.players;
+
   // Calculate total dice
-  const totalDice = gameState.players.reduce((sum, p) => sum + p.diceCount, 0);
+  const totalDice = displayPlayers.reduce((sum, p) => sum + p.diceCount, 0);
   
   // Calculate current matching dice count during reveal
   const currentMatchingCount = countMatchingDice(revealState?.matchingDice);
@@ -791,7 +808,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowDiceBreakdown(false)} />
                 <div className="absolute right-0 top-full mt-1 z-50 bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl shadow-lg border border-white/20 p-2.5 min-w-[140px]">
-                  {gameState.players.filter(p => p.diceCount > 0).map(p => {
+                  {displayPlayers.filter(p => p.diceCount > 0).map(p => {
                     const color = PLAYER_COLOR_MAP[p.color] || '#6B7280';
                     const displayName = playerDisplayName(p);
                     return (
@@ -1684,6 +1701,11 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           ids={pendingAchievements}
           onDismiss={(id) => setPendingAchievements(prev => prev.filter(x => x !== id))}
         />
+
+        {/* Streak Toast */}
+        {streakToast !== null && (
+          <StreakToast streak={streakToast} onDismiss={() => setStreakToast(null)} />
+        )}
       </div>
     </div>
   );
