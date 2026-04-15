@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProfileStorage } from '../utils/profileStorage';
+import { useAuth } from '../context/AuthContext';
 import RulesModal from './RulesModal';
 import type { useMultiplayerConnection, PublicRoom } from '../hooks/useMultiplayerConnection';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -15,6 +16,11 @@ type Tab = 'join' | 'create' | 'browse';
 export default function LobbyScreen({ mp }: LobbyScreenProps) {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const profile = ProfileStorage.getProfile();
+  const profileName = profile.username
+    ? `@${profile.username}`
+    : (profile.name && profile.name !== 'You' ? profile.name : null);
   useEffect(() => {
     document.title = "Play Liar's Dice Online Multiplayer — Dudo Dice";
     return () => { document.title = "Dudo Dice - Play Liar's Dice Online Free"; };
@@ -151,22 +157,20 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
           {activeTab === 'create' && (
             <div className="-m-5 overflow-visible rounded-2xl">
               {/* Header */}
-              <div className="bg-white/10 border-b border-white/20 px-5 py-4 rounded-t-2xl flex justify-between items-center">
-                <h2 className="text-lg font-bold text-white">{t('lobby.createRoomHeading')}</h2>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => navigate('/profile')}
-                    className="h-8 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"
-                  >
-                    {t('profile.settings').split(' ')[0]}
-                  </button>
-                  <button
-                    onClick={() => setShowRules(true)}
-                    className="h-8 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"
-                  >
-                    {t('rules.rulesTab')}
-                  </button>
-                </div>
+              <div className="bg-white/10 border-b border-white/20 flex gap-3 px-2 rounded-t-2xl">
+                <button
+                  onClick={() => navigate('/profile')}
+                  className="flex-1 py-2.5 text-white hover:text-white/80 text-sm font-semibold transition-colors text-center flex items-center justify-center gap-1.5"
+                >
+                  {user && <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />}
+                  👤 {profileName ?? t('home.profile')}
+                </button>
+                <button
+                  onClick={() => setShowRules(true)}
+                  className="flex-1 py-2.5 text-white hover:text-white/80 text-sm font-semibold transition-colors text-center"
+                >
+                  📖 Rules & FAQ
+                </button>
               </div>
 
               {/* Body */}
