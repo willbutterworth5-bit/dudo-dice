@@ -71,22 +71,22 @@ export default function LandingPage() {
             {/* How it works strip */}
             <button
               onClick={() => navigate('/rules')}
-              className="bg-black/20 rounded-xl border border-white/10 px-4 py-3 flex flex-col items-center gap-2"
+              className="bg-black/20 rounded-xl border border-white/10 px-4 py-4 flex flex-col items-center gap-3"
             >
-              <div className="flex items-center justify-center gap-2">
-                <div className="flex flex-col items-center gap-1 animate-fade-slide-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
-                  <span className="text-lg" style={{ animation: 'diceRoll 2.8s ease-in-out infinite', display: 'inline-block' }}>🎲</span>
-                  <span className="text-white/90 text-xs font-semibold">{t('landing.howItWorksRoll')}</span>
+              <div className="flex items-center justify-center gap-4">
+                <div className="flex flex-col items-center gap-1.5 animate-fade-slide-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
+                  <span className="text-3xl" style={{ animation: 'diceRoll 2.8s ease-in-out infinite', display: 'inline-block' }}>🎲</span>
+                  <span className="text-white/90 text-base font-bold">{t('landing.howItWorksRoll')}</span>
                 </div>
-                <span className="text-white/25 text-sm mb-3">›</span>
-                <div className="flex flex-col items-center gap-1 animate-fade-slide-up" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
-                  <span className="text-2xl" style={{ animation: 'bidWobble 1.8s ease-in-out infinite', display: 'inline-block' }}>💬</span>
-                  <span className="text-white/90 text-xs font-semibold">{t('landing.howItWorksBid')}</span>
+                <span className="text-white/30 text-lg mb-4">›</span>
+                <div className="flex flex-col items-center gap-1.5 animate-fade-slide-up" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+                  <span className="text-3xl" style={{ animation: 'bidWobble 1.8s ease-in-out infinite', display: 'inline-block' }}>💬</span>
+                  <span className="text-white/90 text-base font-bold">{t('landing.howItWorksBid')}</span>
                 </div>
-                <span className="text-white/25 text-sm mb-3">›</span>
-                <div className="flex flex-col items-center gap-1 animate-fade-slide-up" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
-                  <span className="text-2xl" style={{ animation: 'challengeFlash 1.8s ease-in-out infinite', display: 'inline-block' }}>⚡</span>
-                  <span className="text-white/90 text-xs font-semibold">{t('landing.howItWorksChallenge')}</span>
+                <span className="text-white/30 text-lg mb-4">›</span>
+                <div className="flex flex-col items-center gap-1.5 animate-fade-slide-up" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
+                  <span className="text-3xl" style={{ animation: 'challengeFlash 1.8s ease-in-out infinite', display: 'inline-block' }}>⚡</span>
+                  <span className="text-white/90 text-base font-bold">{t('landing.howItWorksChallenge')}</span>
                 </div>
               </div>
               <p className="text-white/45 text-xs tracking-wide">
