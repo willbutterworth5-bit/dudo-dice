@@ -7,16 +7,18 @@ html, body {
   font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(160deg, #5B9FD4 0%, #4E82B0 40%, #3A5F8A 75%, #2E4D73 100%);
+  background-image: linear-gradient(160deg, #5B9FD4 0%, #4E82B0 40%, #3A5F8A 75%, #2E4D73 100%);
   background-attachment: fixed;
+  background-color: #4E82B0;
   color: #2C2C2C;
   min-height: 100dvh;
 }
 
 #root {
   min-height: 100dvh;
-  background: linear-gradient(160deg, #5B9FD4 0%, #4E82B0 60%, #3A5F8A 85%, #2E4D73 100%) !important;
+  background-image: linear-gradient(160deg, #5B9FD4 0%, #4E82B0 60%, #3A5F8A 85%, #2E4D73 100%) !important;
   background-attachment: fixed !important;
+  background-color: #4E82B0 !important;
 }
 
 .h-dvh {
