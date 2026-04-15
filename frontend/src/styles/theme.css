@@ -2,18 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
+html, body {
   margin: 0;
   font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #4E82B0;
+  background: linear-gradient(160deg, #5B9FD4 0%, #4E82B0 40%, #3A5F8A 75%, #2E4D73 100%);
+  background-attachment: fixed;
   color: #2C2C2C;
   min-height: 100dvh;
 }
 
 #root {
   min-height: 100dvh;
+  background: linear-gradient(160deg, #5B9FD4 0%, #4E82B0 60%, #3A5F8A 85%, #2E4D73 100%) !important;
+  background-attachment: fixed !important;
 }
 
 .h-dvh {
@@ -543,6 +546,25 @@ img[alt="Dudo Dice Logo"] {
   .animate-board-shake {
     animation: boardShake 0.6s ease-out;
   }
+}
+
+@keyframes diceRoll {
+  0%   { transform: rotate(-45deg); }
+  50%  { transform: rotate(45deg); }
+  100% { transform: rotate(-45deg); }
+}
+
+@keyframes bidWobble {
+  0%, 100% { transform: rotate(0deg); }
+  20%       { transform: rotate(-14deg); }
+  40%       { transform: rotate(12deg); }
+  60%       { transform: rotate(-8deg); }
+  80%       { transform: rotate(5deg); }
+}
+
+@keyframes challengeFlash {
+  0%, 100% { filter: brightness(1); }
+  50%       { filter: brightness(1.7) drop-shadow(0 0 8px rgba(255, 165, 0, 0.9)); }
 }
 
 /* Persistent glow for matching dice — dark red stands out against all segment colors */

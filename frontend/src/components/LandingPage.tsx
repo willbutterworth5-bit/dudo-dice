@@ -5,11 +5,14 @@ import CookieConsentModal from './CookieConsentModal';
 import { APP_VERSION } from '../version';
 import { hasConsent } from '../utils/cookieConsent';
 import { useLanguage } from '../i18n/LanguageContext';
+import { ProfileStorage } from '../utils/profileStorage';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const { t, language, setLanguage } = useLanguage();
   const [consentGiven, setConsentGiven] = useState(hasConsent);
+  const profile = ProfileStorage.getProfile();
+  const profileName = profile.username ? `@${profile.username}` : (profile.name && profile.name !== 'You' ? profile.name : null);
   const [showCookiePrefs, setShowCookiePrefs] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -64,38 +67,70 @@ export default function LandingPage() {
         {/* Mode selection card */}
         <div className={`bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl p-6 transition-opacity duration-200 ${!consentGiven ? 'opacity-40 pointer-events-none select-none' : ''}`}>
           <div className="flex flex-col gap-4">
-            <div className="flex gap-3">
-              <button
-                onClick={() => navigate('/profile')}
-                className="flex-1 py-2.5 text-white font-bold rounded-xl btn-glass flex items-center justify-center gap-2"
-              >
-                {t('landing.profile')}
-              </button>
-              <button
-                onClick={() => navigate('/rules')}
-                className="flex-1 py-2.5 text-white font-bold rounded-xl btn-glass flex items-center justify-center gap-2"
-              >
-                {t('landing.rules')}
-              </button>
-            </div>
 
-            <h2 className="text-xl font-bold text-white text-center">
-              {t('landing.chooseModeHeading')}
-            </h2>
-
+            {/* How it works strip */}
             <button
-              onClick={() => navigate('/play')}
-              className="w-full py-4 text-white font-extrabold text-lg rounded-xl transition-colors btn-3d-accent flex items-center justify-center gap-3"
+              onClick={() => navigate('/rules')}
+              className="bg-black/20 rounded-xl border border-white/10 px-4 py-3 flex flex-col items-center gap-2"
             >
-              {t('landing.playVsComputer')}
+              <div className="flex items-center justify-center gap-2">
+                <div className="flex flex-col items-center gap-1 animate-fade-slide-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
+                  <span className="text-lg" style={{ animation: 'diceRoll 2.8s ease-in-out infinite', display: 'inline-block' }}>🎲</span>
+                  <span className="text-white/90 text-xs font-semibold">{t('landing.howItWorksRoll')}</span>
+                </div>
+                <span className="text-white/25 text-sm mb-3">›</span>
+                <div className="flex flex-col items-center gap-1 animate-fade-slide-up" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+                  <span className="text-2xl" style={{ animation: 'bidWobble 1.8s ease-in-out infinite', display: 'inline-block' }}>💬</span>
+                  <span className="text-white/90 text-xs font-semibold">{t('landing.howItWorksBid')}</span>
+                </div>
+                <span className="text-white/25 text-sm mb-3">›</span>
+                <div className="flex flex-col items-center gap-1 animate-fade-slide-up" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
+                  <span className="text-2xl" style={{ animation: 'challengeFlash 1.8s ease-in-out infinite', display: 'inline-block' }}>⚡</span>
+                  <span className="text-white/90 text-xs font-semibold">{t('landing.howItWorksChallenge')}</span>
+                </div>
+              </div>
+              <p className="text-white/45 text-xs tracking-wide">
+                {t('landing.socialProof')}
+              </p>
             </button>
 
+            <div className="border-t border-white/15" />
+
+            {/* Primary CTA */}
             <button
               onClick={() => navigate('/online')}
               className="w-full py-4 text-white font-extrabold text-lg rounded-xl transition-colors btn-3d-accent flex items-center justify-center gap-3"
             >
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
               {t('landing.playOnline')}
             </button>
+
+            {/* Secondary CTA */}
+            <button
+              onClick={() => navigate('/play')}
+              className="w-full py-3 text-white font-bold text-base rounded-xl btn-glass flex items-center justify-center gap-3"
+            >
+              🎲 {t('landing.playVsComputer')}
+            </button>
+
+            <div className="border-t border-white/15" />
+
+            {/* Tertiary row */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => navigate('/rules')}
+                className="flex-1 py-2 text-white hover:text-white/80 text-sm font-semibold transition-colors text-center"
+              >
+                {t('landing.rules')}
+              </button>
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex-1 py-2 text-white hover:text-white/80 text-sm font-semibold transition-colors text-center"
+              >
+                {profileName ? `👤 ${profileName}` : t('landing.profile')}
+              </button>
+            </div>
+
           </div>
         </div>
 
