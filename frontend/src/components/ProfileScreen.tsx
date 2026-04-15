@@ -14,6 +14,10 @@ export default function ProfileScreen() {
   const navigate = useNavigate();
   const { user, session, signOut } = useAuth();
   const { t, language } = useLanguage();
+  useEffect(() => {
+    document.title = 'Your Profile & Stats — Dudo Dice';
+    return () => { document.title = "Dudo Dice - Play Liar's Dice Online Free"; };
+  }, []);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);

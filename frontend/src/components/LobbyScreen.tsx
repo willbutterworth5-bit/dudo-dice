@@ -15,6 +15,10 @@ type Tab = 'join' | 'create' | 'browse';
 export default function LobbyScreen({ mp }: LobbyScreenProps) {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  useEffect(() => {
+    document.title = "Play Liar's Dice Online Multiplayer — Dudo Dice";
+    return () => { document.title = "Dudo Dice - Play Liar's Dice Online Free"; };
+  }, []);
   const { isConnected, publicRooms, error, connect, createRoom, joinRoom, quickMatch, listRooms } = mp;
 
   const [activeTab, setActiveTab] = useState<Tab>('create');
