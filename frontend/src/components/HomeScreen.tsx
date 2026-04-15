@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RulesModal from './RulesModal';
 import { Difficulty } from '../game/AIPlayer';
@@ -9,6 +9,10 @@ import BackIcon from './BackIcon';
 export default function HomeScreen() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  useEffect(() => {
+    document.title = "Play Liar's Dice vs Computer — Dudo Dice";
+    return () => { document.title = "Dudo Dice - Play Liar's Dice Online Free"; };
+  }, []);
   const [playerCount, setPlayerCount] = useState(6);
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [startingDice, setStartingDice] = useState(5);

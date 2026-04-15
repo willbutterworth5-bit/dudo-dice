@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RulesContent, FaqContent } from './RulesContent';
 import { RulesContentEs, FaqContentEs } from './RulesContentEs';
@@ -10,6 +10,10 @@ export default function RulesPage() {
   const [tab, setTab] = useState<'rules' | 'faq'>('rules');
   const navigate = useNavigate();
   const { t, language } = useLanguage();
+  useEffect(() => {
+    document.title = "Liar's Dice Rules & FAQ — Dudo Dice";
+    return () => { document.title = "Dudo Dice - Play Liar's Dice Online Free"; };
+  }, []);
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center p-4 sm:p-8 relative" style={{ overflowY: 'auto' }}>
