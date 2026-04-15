@@ -154,7 +154,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
                     onClick={() => navigate('/profile')}
                     className="h-8 px-3 text-sm font-semibold rounded-xl transition-colors btn-glass flex items-center"
                   >
-                    {t('profile.title').split(' ')[0]}
+                    {t('profile.settings').split(' ')[0]}
                   </button>
                   <button
                     onClick={() => setShowRules(true)}

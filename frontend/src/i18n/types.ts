@@ -19,9 +19,12 @@ export interface Translations {
     tagline: string;
     profile: string;
     rules: string;
-    chooseModeHeading: string;
     playVsComputer: string;
     playOnline: string;
+    howItWorksRoll: string;
+    howItWorksBid: string;
+    howItWorksChallenge: string;
+    socialProof: string;
     shareFeedback: string;
     privacyPolicy: string;
     cookiePreferences: string;

@@ -1313,7 +1313,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                 {(innerCircleChallenge || (lastRoundResult && !revealState)) ? (
                   // "DUDO!" / "CALZA!" flash — fades out before switching to the Found counter
                   <div className={`text-center text-white flex flex-col items-center justify-center gap-0.5 w-full px-2 ${dudoFadingOut ? 'animate-fade-out' : ''}`}>
-                    <div className="text-3xl font-bold tracking-wide animate-dudo-text" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>{isCalzaRound ? 'CALZA!' : 'DUDO!'}</div>
+                    <div className="text-2xl font-bold tracking-wide animate-dudo-text" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>{isCalzaRound ? 'CALZA!' : 'DUDO!'}</div>
                   </div>
                 ) : lastRoundResult && revealState ? (
                   // Live counter: fades in, then increments with each matching die revealed
