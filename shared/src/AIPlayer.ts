@@ -114,7 +114,7 @@ export class AIPlayer {
     const scored = valid
       .map(b => ({
         bid: b,
-        score: this.scoreBid(b, player, totalDice, gameState.palificoMode, gameState.bidSequence),
+        score: this.scoreBid(b, currentBid, player, totalDice, gameState.palificoMode, gameState.bidSequence),
       }))
       .sort((a, b) => b.score - a.score);
 
@@ -198,21 +198,99 @@ export class AIPlayer {
    */
   private scoreBid(
     bid: Bid,
+    currentBid: Bid,
     player: Player,
     totalDice: number,
     palificoMode: { active: boolean; lockedFaceValue: number | null },
     bidSequence: Bid[]
   ): number {
     const ownEstimate = this.anchoredEstimate(bid.faceValue, player, totalDice, palificoMode);
+    // opponentBonus computed once — reused for both gap calc and endgame bonus
     const opponentBonus = this.inferFromBidSequence(bidSequence, bid.faceValue, player.id);
     const gap = bid.quantity - (ownEstimate + opponentBonus);
 
-    if (gap <= -1) return 10; // Well below combined estimate — very safe
-    if (gap <=  0) return 8;  // Right at estimate — solid
-    if (gap <=  1) return 6;  // Slightly over — mild bluff
-    if (gap <=  2) return 4;  // Moderate bluff
-    if (gap <=  3) return 2;  // Aggressive bluff
-    return 1;                 // Risky bluff
+    // Endgame bonus lowers effective gap, making AI more willing to bluff late game.
+    // Halved when no opponent has vouched for this face (avoids unrealistic bluffs
+    // on faces nobody has signalled holding).
+    const endgameBonus = this.getEndgameBonus(totalDice, opponentBonus, gap);
+    const effectiveGap = gap - endgameBonus;
+
+    // Per-difficulty score table — Easy decays fast, Hard decays slowly
+    let score: number;
+    switch (this.difficulty) {
+      case 'easy':
+        if (effectiveGap <= -1) score = 10;
+        else if (effectiveGap <=  0) score = 8;
+        else if (effectiveGap <=  1) score = 5;  // mild bluff less attractive
+        else if (effectiveGap <=  2) score = 2;  // steep drop
+        else if (effectiveGap <=  3) score = 1;
+        else score = 0.5;                         // big bluffs almost never
+        break;
+      case 'hard':
+        if (effectiveGap <= -1) score = 10;
+        else if (effectiveGap <=  0) score = 8;
+        else if (effectiveGap <=  1) score = 7;  // mild bluff is fine
+        else if (effectiveGap <=  2) score = 5;  // moderate bluff accepted
+        else if (effectiveGap <=  3) score = 3;  // aggressive bluff tolerated
+        else score = 1.5;                         // risky bluffs still in play
+        break;
+      default: // medium — balanced
+        if (effectiveGap <= -1) score = 10;
+        else if (effectiveGap <=  0) score = 8;
+        else if (effectiveGap <=  1) score = 6;
+        else if (effectiveGap <=  2) score = 4;
+        else if (effectiveGap <=  3) score = 2;
+        else score = 1;
+    }
+
+    // Penalise bids claiming an implausibly high fraction of total dice on one face
+    // (medium/hard only — easy's conservative table already handles this)
+    score = Math.max(0.1, score - this.getDensityPenalty(bid.quantity, totalDice));
+
+    // Penalise same-face quantity jumps larger than +1. A +2 raise on the same
+    // face is never more informative than +1 and wastes bidding room for everyone.
+    // On medium/hard, double the penalty when the bid is already at or above
+    // statistical expectation (gap >= 0) — near the limit, q+2 should almost
+    // never happen.
+    if (bid.faceValue === currentBid.faceValue) {
+      const excessJump = bid.quantity - currentBid.quantity - 1; // 0 for +1, 1 for +2
+      if (excessJump > 0) {
+        const atLimit = gap >= 0 && this.difficulty !== 'easy';
+        const penaltyPerUnit = atLimit ? 1.0 : 0.5;
+        score = Math.max(0.1, score - excessJump * penaltyPerUnit);
+      }
+    }
+
+    return score;
+  }
+
+  /**
+   * Endgame bonus: fewer total dice = more willing to bluff (late-game desperation).
+   * Halved when no opponent has bid this face this round — avoids bluffing on faces
+   * nobody has signalled holding (e.g. bidding 11×6s when no one else bid 6s).
+   */
+  private getEndgameBonus(totalDice: number, opponentBonus: number, gap: number): number {
+    // If the bid is already at or above statistical expectation, the endgame
+    // context doesn't justify pushing further — the dice just aren't there.
+    if (gap >= 0) return 0;
+    let bonus = 0;
+    if (totalDice <= 8)  bonus = 2;
+    else if (totalDice <= 15) bonus = 1;
+    if (opponentBonus === 0) bonus = Math.floor(bonus / 2);
+    return bonus;
+  }
+
+  /**
+   * Density penalty: bids claiming >55% or >70% of all dice on one face are
+   * statistically implausible. Applied on medium/hard — easy's gap table is
+   * conservative enough that this isn't needed.
+   */
+  private getDensityPenalty(bidQuantity: number, totalDice: number): number {
+    if (this.difficulty === 'easy') return 0;
+    const density = bidQuantity / totalDice;
+    if (density > 0.70) return 2;
+    if (density > 0.55) return 1;
+    return 0;
   }
 
   // ── Probability calculation ────────────────────────────────────────────────
