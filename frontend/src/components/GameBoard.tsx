@@ -879,8 +879,9 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                 const isDudoChallenged = !!(challengedBidPlayerId && player && player.id === challengedBidPlayerId);
                 // Normal play: track who made the last bid (for subtle glow, not red)
                 const isLastBidder = !challengedBidPlayerId && !!(player && gameState.currentBid && gameState.currentBid.playerId === player.id);
+                const playerHexColor = player ? (PLAYER_COLOR_MAP[player.color] || '#6B7280') : '#9CA3AF';
                 const hexColor = player
-                  ? (isEliminated ? '#9CA3AF' : (PLAYER_COLOR_MAP[player.color] || '#6B7280'))
+                  ? (isEliminated ? '#9CA3AF' : playerHexColor)
                   : '#9CA3AF'; // Grey for empty sectors
                 
                 const endAngle = startAngle + 60; // 60 degrees per sector
@@ -925,11 +926,11 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                       top: '50%',
                       transform: 'translate(-50%, -50%)',
                       zIndex: 1,
-                      opacity: player ? (isEliminated ? 0.4 : 1) : 0.9,
+                      opacity: player ? 1 : 0.9,
                       overflow: 'visible',
                       filter: isDudoChallenged
                         ? 'drop-shadow(0 0 14px rgba(220, 38, 38, 0.6))'
-                        : (isLastBidder ? `drop-shadow(0 0 10px ${hexColor})` : 'none'),
+                        : (isLastBidder ? `drop-shadow(0 0 10px ${playerHexColor})` : 'none'),
                       transition: 'filter 0.6s ease',
                     }}
                   >
@@ -937,7 +938,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                     <path
                       d={`M ${225 + x1} ${225 + y1} L ${225 + x2} ${225 + y2} A ${ringRadius} ${ringRadius} 0 ${largeArc} 1 ${225 + x3} ${225 + y3} L ${225 + x4} ${225 + y4} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${225 + x1} ${225 + y1} Z`}
                       fill={isDudoChallenged ? '#DC2626' : hexColor}
-                      fillOpacity={player ? ((isCurrentPlayer ? 0.65 : isDudoChallenged ? 0.45 : 0.15)) : 0.08}
+                      fillOpacity={player ? (isEliminated ? 0.35 : (isCurrentPlayer ? 0.65 : isDudoChallenged ? 0.45 : 0.15)) : 0.08}
                       stroke={isCurrentPlayer ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.06)'}
                       strokeWidth={isCurrentPlayer ? '2' : '0.5'}
                       style={{ transition: 'fill 0.6s ease, fill-opacity 0.6s ease' }}
@@ -945,8 +946,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                     {/* Outer part of sector (175 to 225) */}
                     <path
                       d={`M ${225 + x5} ${225 + y5} L ${225 + x6} ${225 + y6} A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${225 + x7} ${225 + y7} L ${225 + x8} ${225 + y8} A ${ringRadius} ${ringRadius} 0 ${largeArc} 0 ${225 + x5} ${225 + y5} Z`}
-                      fill={hexColor}
-                      fillOpacity={player ? (isEliminated ? 0.08 : 0.75) : 0.08}
+                      fill={playerHexColor}
+                      fillOpacity={player ? (isEliminated ? 0.45 : 0.75) : 0.08}
                       stroke="rgba(255, 255, 255, 0.5)"
                       strokeWidth="0.5"
                     />

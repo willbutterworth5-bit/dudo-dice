@@ -47,7 +47,7 @@ export function bidProbabilityFromHuman(
   const needed = Math.max(0, quantity - humanMatches);
 
   if (needed === 0) return 1.0;
-  if (needed > unknownDice) return 0.01;
+  if (needed > unknownDice) return 0;
 
   // p = probability each unknown die matches
   const p = palificoMode ? 1 / 6 : faceValue === 1 ? 1 / 6 : 2 / 6;
