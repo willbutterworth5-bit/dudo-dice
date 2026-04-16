@@ -753,6 +753,14 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
   // Current player's color — used to tint the center circle on their turn
   const currentPlayerColor = PLAYER_COLOR_MAP[currentPlayer.color] || '#FFFFFF';
 
+  // Convert a #RRGGBB hex string to rgba() — keeps CSS color transitions smooth
+  function hexToRgba(hex: string, alpha: number): string {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
   // Which sector the last bidder occupies — for displaying the bid in their inner segment
   const lastBidSectorIdx = gameState.currentBid
     ? sectorPlayers.findIndex(p => p?.id === gameState.currentBid!.playerId)
@@ -1285,15 +1293,18 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
           {/* Central Circle - Bid Display with colorful gradient */}
           <div className="absolute inset-0 flex items-center justify-center z-20" style={{ overflow: 'visible' }}>
             <div
-              className="rounded-full flex items-center justify-center transition-all duration-500"
+              className="rounded-full flex items-center justify-center"
               style={{
                 width: '140px',
                 height: '140px',
                 aspectRatio: '1',
                 zIndex: 10,
-                background: (innerCircleChallenge || lastRoundResult) ? (isCalzaRound ? '#CA8A04' : '#E03030') : '#E0E0E0',
-                border: (innerCircleChallenge || lastRoundResult) ? `3px solid ${isCalzaRound ? '#CA8A04' : '#E03030'}` : '1px solid #D0D0D0',
+                background: (innerCircleChallenge || lastRoundResult)
+                  ? (isCalzaRound ? '#CA8A04' : '#E03030')
+                  : hexToRgba(currentPlayerColor, 0.35),
+                border: 'none',
                 overflow: 'visible',
+                transition: 'background-color 500ms ease',
               }}
             >
               <div
@@ -1306,9 +1317,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                   background: (innerCircleChallenge || lastRoundResult)
                     ? (isCalzaRound ? '#CA8A04' : '#E03030')
                     : currentPlayerColor,
-                  border: (innerCircleChallenge || lastRoundResult)
-                    ? '3px solid white'
-                    : '1px solid #E0E0E0',
+                  border: '1px solid rgba(255,255,255,0.5)',
                 }}
               >
                 {(innerCircleChallenge || (lastRoundResult && !revealState)) ? (
