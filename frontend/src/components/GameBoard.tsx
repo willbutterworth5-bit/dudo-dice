@@ -947,7 +947,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                     <path
                       d={`M ${225 + x5} ${225 + y5} L ${225 + x6} ${225 + y6} A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${225 + x7} ${225 + y7} L ${225 + x8} ${225 + y8} A ${ringRadius} ${ringRadius} 0 ${largeArc} 0 ${225 + x5} ${225 + y5} Z`}
                       fill={playerHexColor}
-                      fillOpacity={player ? (isEliminated ? 0.45 : 0.75) : 0.08}
+                      fillOpacity={player ? 0.75 : 0.08}
                       stroke="rgba(255, 255, 255, 0.5)"
                       strokeWidth="0.5"
                     />
