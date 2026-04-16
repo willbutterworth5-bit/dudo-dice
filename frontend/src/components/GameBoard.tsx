@@ -990,6 +990,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                   const gradientId = `active-line-grad-${idx}`;
                   const lineColor = isDudoLine ? '#E03030' : currentPlayerColor;
 
+                  const clipId = `center-clip-${renderActive ? 'a' : 'i'}-${idx}`;
                   return (
                     <svg
                       key={`line-${renderActive ? 'active' : 'inactive'}-${idx}`}
@@ -1004,8 +1005,15 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                         overflow: 'visible',
                       }}
                     >
-                      {isActiveLine && (
-                        <defs>
+                      <defs>
+                        {/* Clip everything inside the centre circle (r=70) so lines never bleed into the ring */}
+                        <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+                          <path
+                            d="M -500 -500 H 950 V 950 H -500 Z M 225 155 A 70 70 0 1 0 225 295 A 70 70 0 1 0 225 155 Z"
+                            clipRule="evenodd"
+                          />
+                        </clipPath>
+                        {isActiveLine && (
                           <linearGradient
                             id={gradientId}
                             gradientUnits="userSpaceOnUse"
@@ -1019,8 +1027,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                             <stop offset="65%" stopColor={lineColor} stopOpacity="1" />
                             <stop offset="100%" stopColor={darkenHex(lineColor, 65)} stopOpacity="1" />
                           </linearGradient>
-                        </defs>
-                      )}
+                        )}
+                      </defs>
                       <line
                         x1={225 + startX}
                         y1={225 + startY}
@@ -1029,6 +1037,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                         stroke={isActiveLine ? `url(#${gradientId})` : 'rgba(255, 255, 255, 0.33)'}
                         strokeWidth={isDudoLine ? '14' : '12'}
                         strokeLinecap="round"
+                        clipPath={`url(#${clipId})`}
                         style={{ transition: 'stroke-width 0.4s ease' }}
                       />
                     </svg>
@@ -1317,7 +1326,7 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                   background: (innerCircleChallenge || lastRoundResult)
                     ? (isCalzaRound ? '#CA8A04' : '#E03030')
                     : currentPlayerColor,
-                  border: '1px solid rgba(255,255,255,0.5)',
+                  border: (innerCircleChallenge || lastRoundResult) ? '1px solid rgba(255,255,255,0.5)' : 'none',
                 }}
               >
                 {(innerCircleChallenge || (lastRoundResult && !revealState)) ? (
