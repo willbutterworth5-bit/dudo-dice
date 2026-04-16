@@ -87,9 +87,9 @@ export default function HomeScreen() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl overflow-visible mb-4 animate-fade-slide-up">
+        <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl overflow-hidden mb-4 animate-fade-slide-up">
           {/* Tertiary header row — Profile & Rules as text links */}
-          <div className="bg-white/10 border-b border-white/20 flex gap-3 px-2">
+          <div className="bg-white/10 border-b border-white/20 flex gap-3 px-2 rounded-t-2xl">
             <button
               onClick={() => navigate('/profile')}
               className="flex-1 py-2.5 text-white hover:text-white/80 text-sm font-semibold transition-colors text-center flex items-center justify-center gap-1.5"
@@ -211,7 +211,7 @@ export default function HomeScreen() {
             <div className="py-1">
               <button
                 onClick={() => setShowAdvancedSettings(v => !v)}
-                className="w-full flex items-center justify-between py-3 text-sm font-semibold text-white/70 hover:text-white transition-colors"
+                className={`w-full flex items-center justify-between py-3 text-base transition-colors ${showAdvancedSettings ? 'font-semibold text-white' : 'font-bold text-white/70 hover:text-white'}`}
               >
                 <span>{t('home.advancedRules')}</span>
                 <svg
@@ -226,7 +226,7 @@ export default function HomeScreen() {
                 </svg>
               </button>
 
-              {showAdvancedSettings && (
+              <div className={`overflow-hidden transition-all duration-500 ease-in-out ${showAdvancedSettings ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="pb-4 space-y-4">
 
                   {/* Palifico */}
@@ -288,7 +288,7 @@ export default function HomeScreen() {
                   </div>
 
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Start Game */}
