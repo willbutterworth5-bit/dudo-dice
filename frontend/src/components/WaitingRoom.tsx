@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { RoomPlayerInfo } from '../hooks/useMultiplayerConnection';
 import { PLAYER_COLOR_MAP, PLAYER_COLORS } from '@dudo-dice/shared';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -34,6 +35,7 @@ export default function WaitingRoom({
   onLeave,
 }: WaitingRoomProps) {
   const { t } = useLanguage();
+  const [copied, setCopied] = useState(false);
   const humanPlayers = players.filter(p => !p.isAI);
   const canStart = players.length >= 2;
   const isHost = myPlayerId === hostId;
@@ -42,6 +44,8 @@ export default function WaitingRoom({
 
   const copyCode = () => {
     navigator.clipboard.writeText(roomCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -55,14 +59,14 @@ export default function WaitingRoom({
         <BackIcon />{t('common.back')}
       </button>
       <div className="max-w-md w-full pt-12 sm:pt-0">
-        <div className="flex items-center justify-center gap-4 mb-5 pl-16 sm:pl-0">
-          <picture><source srcSet="/Logo.webp" type="image/webp" /><img src="/Logo.png" alt="Dudo Dice Logo" className="flex-shrink-0" style={{ width: '56px', height: '56px' }} /></picture>
+        <div className="flex items-center justify-center gap-4 mb-5">
+          <picture><source srcSet="/Logo.webp" type="image/webp" /><img src="/Logo.png" alt="Dudo Dice Logo" className="flex-shrink-0" style={{ width: '72px', height: '72px' }} /></picture>
           <div className="flex flex-col">
-            <h1 className="text-3xl font-bold text-white">{t('waitingRoom.title')}</h1>
+            <h1 className="text-4xl font-bold text-white">{t('waitingRoom.title')}</h1>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl p-5 mb-4">
+        <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-2xl shadow-2xl p-5 mb-4 animate-fade-slide-up">
           {/* Room code */}
           <div className="text-center mb-5">
             <p className="text-sm text-white/60 mb-1">{t('waitingRoom.roomCode')}</p>
@@ -73,7 +77,9 @@ export default function WaitingRoom({
             >
               {roomCode}
             </button>
-            <p className="text-xs text-white/40 mt-1">{t('waitingRoom.shareInstructions')}</p>
+            <p className={`text-xs mt-1 transition-colors ${copied ? 'text-green-400' : 'text-white/40'}`}>
+              {copied ? '✓ Copied!' : t('waitingRoom.shareInstructions')}
+            </p>
           </div>
 
           <div className="h-px bg-white/20 mb-4" />
@@ -87,7 +93,7 @@ export default function WaitingRoom({
           </div>
 
           {/* Ranked / Casual banner */}
-          <div className={`text-center text-xs font-semibold rounded-lg py-1.5 mb-4 ${
+          <div className={`text-center text-sm font-semibold rounded-lg py-1.5 mb-4 ${
             isRanked
               ? 'bg-yellow-500/15 text-yellow-300 border border-yellow-500/30'
               : 'bg-white/5 text-white/50 border border-white/10'
@@ -97,7 +103,7 @@ export default function WaitingRoom({
 
           {/* Player list */}
           <div className="space-y-2 mb-5">
-            <p className="text-sm font-semibold text-white">
+            <p className="text-base font-bold text-white">
               {t('waitingRoom.playersHeading')} ({players.length}/{settings.maxPlayers})
             </p>
             {players.map((p, idx) => {
@@ -106,13 +112,20 @@ export default function WaitingRoom({
               return (
                 <div
                   key={p.id}
-                  className="flex items-center gap-3 p-2 rounded-xl bg-white/5"
+                  className="flex items-center gap-3 p-2 rounded-xl bg-white/10"
                 >
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                    style={{ backgroundColor: color }}
-                  >
-                    {p.name.charAt(0).toUpperCase()}
+                  <div className="relative flex-shrink-0">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                      style={{ backgroundColor: color }}
+                    >
+                      {p.name.charAt(0).toUpperCase()}
+                    </div>
+                    {!p.isAI && (
+                      <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-indigo-800 ${
+                        p.isConnected ? 'bg-green-400' : 'bg-red-400'
+                      }`} />
+                    )}
                   </div>
                   <span className="text-white font-semibold text-sm flex-1">
                     {p.name}
@@ -132,7 +145,7 @@ export default function WaitingRoom({
 
             {/* Empty slots */}
             {Array.from({ length: settings.maxPlayers - players.length }).map((_, i) => (
-              <div key={`empty-${i}`} className="flex items-center gap-3 p-2 rounded-xl bg-white/5 opacity-30">
+              <div key={`empty-${i}`} className="flex items-center gap-3 p-2 rounded-xl bg-white/10 opacity-30">
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                   <span className="text-white/40 text-sm">?</span>
                 </div>
@@ -147,7 +160,7 @@ export default function WaitingRoom({
               <button
                 onClick={onStartGame}
                 disabled={!canStart}
-                className="w-full py-2.5 text-white font-extrabold rounded-xl btn-3d-accent disabled:opacity-50"
+                className="w-full py-4 text-white font-extrabold text-lg rounded-xl btn-3d-accent disabled:opacity-50"
               >
                 {canStart ? t('waitingRoom.startGame') : t('waitingRoom.needMorePlayers')}
               </button>
@@ -157,7 +170,7 @@ export default function WaitingRoom({
               <button
                 onClick={onVoteStartWithBots}
                 disabled={hasVotedBots || !canStart}
-                className="w-full py-2.5 text-white font-bold rounded-xl btn-glass disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 text-white font-bold rounded-xl btn-glass disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {hasVotedBots ? (
                   <>
