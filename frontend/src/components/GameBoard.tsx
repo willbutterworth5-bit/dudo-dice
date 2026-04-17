@@ -662,6 +662,32 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
     }
   }, [gameEngine, gameState, localCallCalza, startChallengeAnimation, updateGameState, isMultiplayer, multiplayerMode, unlockAchievements]);
 
+  // Auto-skip to game over when the human is the last player eliminated (1 bot left).
+  // This avoids showing the "Skip to End" button when the game is already decided.
+  useEffect(() => {
+    if (isMultiplayer || !gameEngine || !gameState || !showDice || !lastRoundResult) return;
+    const humanPlayer = gameState.players.find(p => p.isHuman);
+    if (!humanPlayer) return;
+    const humanJustEliminated = humanPlayer.diceCount === 0 && lastRoundResult.loserId === humanPlayer.id;
+    if (!humanJustEliminated) return;
+    const activePlayers = gameState.players.filter(p => p.diceCount > 0).length;
+    if (activePlayers > 1) return; // More bots still playing — show button normally
+    // Only 1 bot left = game over: skip straight to final screen
+    gameEngine.simulateToEnd(difficulty);
+    updateGameState();
+    setShowDice(false);
+    setLastRoundResult(null);
+    setChallengedBidPlayerId(null);
+    setRevealState(null);
+    setRevealComplete(false);
+    setInnerCircleChallenge(false);
+    setIsTallying(false);
+    setIsCalzaRound(false);
+    setModalClosing(false);
+  }, [isMultiplayer, gameEngine, gameState, showDice, lastRoundResult, difficulty, updateGameState,
+      setShowDice, setLastRoundResult, setChallengedBidPlayerId, setRevealState,
+      setRevealComplete, setInnerCircleChallenge, setIsTallying, setIsCalzaRound, setModalClosing]);
+
   if (!gameState || (!isMultiplayer && !gameEngine)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
