@@ -18,6 +18,7 @@ export function RulesContent() {
           <li>Players take turns making bids: "X dice showing face value Y"</li>
           <li>Ones (1s) are wild and count as any face value (except in Palifico mode)</li>
           <li>You can either raise the bid or challenge the previous bid</li>
+          <li>To raise a bid you can increase the quantity of dice, the face value, or both — but you must change at least one</li>
           <li>If challenged, all dice are revealed and counted</li>
           <li>The loser of a challenge loses one die</li>
         </ul>

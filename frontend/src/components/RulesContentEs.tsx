@@ -18,6 +18,7 @@ export function RulesContentEs() {
           <li>Los jugadores se turnan para hacer apuestas: "X dados mostrando el valor Y"</li>
           <li>Los unos (1s) son comodines y cuentan como cualquier valor (excepto en modo Palifico)</li>
           <li>Puedes subir la apuesta o desafiar la apuesta anterior</li>
+          <li>Para subir la apuesta puedes aumentar la cantidad de dados, el valor de la cara o ambos — pero debes cambiar al menos uno</li>
           <li>Si se desafía, se revelan y cuentan todos los dados</li>
           <li>El perdedor de un desafío pierde un dado</li>
         </ul>
