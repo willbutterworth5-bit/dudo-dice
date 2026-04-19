@@ -319,6 +319,177 @@ const zhHK: Translations = {
     bidWasBluff: '——出注係虛張。',
     bidWasReal: '——出注係真的，你失去一粒骰。',
   },
+  tutorial: {
+    welcome: {
+      title: '歡迎來到 Dudo Dice！',
+      body: '**6 位玩家**，每人將骰子藏於杯中。你的任務：虛張聲勢、挑戰對手、生存到最後。',
+    },
+    yourDice: {
+      title: '你的骰子',
+      body: '這些是**你的骰子**——只有你能看見。用它們判斷其他玩家的出注是否可信。',
+    },
+    diceCount: {
+      title: '概率與么點',
+      body: '右上角的**🎲標誌**顯示場上骰子總數。**30粒骰子**中，任何點數大約有**5粒**——但**么點是萬能牌**，計入任何點數，因此每次出注預計有約**10粒**匹配。用這個來判斷出注是否可信！',
+    },
+    centerCircle: {
+      title: '現在輪到誰？',
+      body: '**中央圓圈**顯示現在輪到誰。現在是 Priya 的回合——她即將開注。',
+    },
+    kaiBids: {
+      title: '競注開始',
+      body: 'Priya 以 **5 × 4** 開局——聲稱所有人的骰子中至少有 **5 個四點**。出注按**順時針**進行，每次新出注必須更高。',
+    },
+    priyaBids: {
+      title: 'Marco 加注',
+      body: 'Marco 加注至 **7 × 4**。出注籌碼隨每位玩家移動，每次出注必須**更高**——更多骰子、更高點數，或兩者皆升。',
+    },
+    aiBids: {
+      title: '你加注',
+      body: '你加注至 **4 × 4**。出注在桌面巡迴——每位玩家都要決定：加注還是叫 Dudo。',
+    },
+    raiseBid: {
+      title: '你的回合！',
+      body: '出注需要**數量**和**點數**。你可以提高**數量**、提高**點數**，或兩者同時提高。試試 **8 × 4**，然後點擊出注！',
+    },
+    sofiaBids: {
+      title: 'Sofia 加注',
+      body: 'Sofia 加注至 **9 × 4**。出注持續攀升，現在輪到 Lena。',
+    },
+    lenaBidsR1: {
+      title: 'Lena 再加注',
+      body: 'Lena 推高至 **10 × 4**——大膽的聲稱！Kai 是下一個，他相信嗎？',
+    },
+    kaiDudoR1: {
+      title: 'Kai 叫 Dudo！',
+      body: 'Kai 不相信 Lena 的 **10 × 4**——他挑戰！**DUDO** 的意思是「你在說謊」。揭曉所有骰子的時刻到了。',
+    },
+    dudoPrompt: {
+      title: '叫 Dudo！',
+      body: 'Lena 聲稱有 **6 個四點**——但你自己的杯中只看到 2 個。點擊 **Dudo** 挑戰她！你猜對，她失去一粒骰；你猜錯，你失去一粒骰。',
+    },
+    revealR1: {
+      title: '揭曉所有骰子……',
+      body: '所有骰子翻面揭曉。數一數四點——**么點是萬能牌**，可充當任何點數！',
+    },
+    roundResultR1: {
+      title: 'Lena 失去一粒骰',
+      body: '桌面只有 **9 個四點**——Lena 的 10×4 出注太高了，她剩 4 粒骰。你仍有 **5 粒骰**。**輸的玩家永遠先開注下一回合。**',
+    },
+    sofiaOpensR2: {
+      title: '第 2 回合——Sofia 先開',
+      body: 'Sofia 失去一粒骰，所以她先手開局。她出注 **2 × 6**。輸家永遠先行。',
+    },
+    lenaOpensR2: {
+      title: '第 2 回合——Lena 先開',
+      body: 'Lena 失去一粒骰，所以她先手開局。她出注 **4 × 6**。輸家永遠先行。',
+    },
+    lenaBidsR2: {
+      title: 'Kai 加注',
+      body: 'Kai 加注至 **6 × 6**。出注籌碼順時針移動——每位玩家必須加注或挑戰。',
+    },
+    kaiBidsR2: {
+      title: 'Priya 加注',
+      body: 'Priya 加注至 **8 × 6**。Marco 是下一個——他接著要出奇招了。',
+    },
+    priyaBidsR2: {
+      title: 'Marco 加注',
+      body: 'Marco 加注至 **5 × 6**。現在 Sofia 需要決定——再加注，還是轉換至么點？',
+    },
+    round2Context: {
+      title: '第 2 回合——Lena 先開',
+      body: 'Lena 先開（她輸了）。出注按**順時針**方向：Lena → Kai → Priya → Marco → Sofia → 你。',
+    },
+    onesWild: {
+      title: '你的回合——出注么點！',
+      body: '你的杯中有一個 **1**——么點可充當**任何點數**（萬能）。但**出注么點時**，只計算真正的么點——無萬能牌。桌面有 **6 個么點**。試試 **6 × 1**——選擇么點並點擊**出注**！',
+    },
+    bidToOnes: {
+      title: '么點規則',
+      body: '出注么點時，**么點不是萬能牌**——只計算真正的么點。你的杯中有一個 **1**。現在輪到你出注了！',
+    },
+    marcoBidsR2: {
+      title: 'Marco 轉換至么點',
+      body: '從 Priya 的 **8 × 6**，最少么點數為 **floor (8 ÷ 2) + 1 = 5**。Marco 轉換至 **5 × 1**——現在輪到你。出注么點時，只計算**真實么點**。',
+    },
+    r2Dudo: {
+      title: '你的回合——出注么點！',
+      body: 'Marco 出注 **3 × 1**。你必須出更高——試試 **4 × 1**。出注么點時，**只計算真實么點**，沒有萬能牌。點擊出注！',
+    },
+    lenaDudoWrong: {
+      title: 'Sofia 叫 Dudo！',
+      body: 'Sofia 認為你的么點出注太高了。但桌面上有 **6 個么點**，她即將被證明是錯的！',
+    },
+    r2Reveal: {
+      title: 'Sofia 錯了！',
+      body: '桌面有 **6 個么點**——你的 6×1 出注完全有效。Sofia 錯誤叫 Dudo，她失去一粒骰。你仍有 **5 粒骰**。',
+    },
+    r2Result: {
+      title: 'Sofia 失去一粒骰',
+      body: 'Sofia 只剩 **4 粒骰**。她錯誤叫 Dudo 並付出代價。輸家先開下一回合。',
+    },
+    r3LenaBids: {
+      title: '第 3 回合——Sofia 先開',
+      body: 'Sofia 失去一粒骰，所以她先開第 3 回合。她出注 **9 × 3**。場上有 **28 粒骰子**，預計約有 **9** 個三點——這正好在統計預期值上。',
+    },
+    lenaBidsR3: {
+      title: 'Lena 加注',
+      body: 'Lena 加注至 **10 × 3**。仍在合理範圍——Kai 是下一個。',
+    },
+    kaiBidsR3: {
+      title: 'Kai 加注',
+      body: 'Kai 加注至 **11 × 3**。愈來愈接近極限。Priya 是下一個。',
+    },
+    priyaBidsR3: {
+      title: 'Priya 加注',
+      body: 'Priya 加注至 **12 × 3**。已超過預期的 9 個。Marco 是下一個——他即將出大招。',
+    },
+    r3MarcoDudo: {
+      title: 'Marco 的大膽聲稱',
+      body: 'Marco 跳至 **14 × 3**。你的杯中有 **2 個三點**——那意味著 23 粒隱藏骰子中還需要 12 個三點。隱藏骰子的預期值約為 8。說得通嗎？',
+    },
+    callDudoR3: {
+      title: '你的回合——叫牌！',
+      body: 'Marco 聲稱有 **14 個三點**。你看到 **2 個三點**——那意味著 23 粒隱藏骰子中還需要 12 個。預期只有約 8 個，這遠遠太多了。點擊 **Dudo** 挑戰他！',
+    },
+    r3Reveal: {
+      title: '揭曉所有骰子……',
+      body: '所有骰子翻面揭曉。數一數三點——**么點是萬能牌**，可充當任何點數！',
+    },
+    roundResultR3: {
+      title: '你是對的！',
+      body: '桌面只有 **9 個三點**——Marco 的 14×3 出注遠超實際。Marco 失去一粒骰。這是一次判斷精準的 Dudo！',
+    },
+    palificoIntro: {
+      title: 'Palifico！',
+      body: 'Marco 只剩 **1 粒骰**——Palifico 觸發！本回合：么點**不再是萬能牌**，所有玩家必須出注 Marco 首注的**相同點數**。',
+    },
+    palificoBid: {
+      title: 'Palifico 回合',
+      body: 'Marco 以 **2 × 2** 開注，將點數鎖定為二。你只能加注**數量**——點數已固定。試試出注 3 個或以上的二點。',
+    },
+    calzaIntro: {
+      title: 'Calza——精確計數',
+      body: '**Calza** 是高風險一招：不加注，而是宣稱出注數量**完全正確**。猜對→獲得一粒骰；猜錯→失去一粒骰。',
+    },
+    calzaInteractive: {
+      title: '試試 Calza！',
+      body: '現在的出注是 **3 × 5**。你看到杯中有 [5, 5]——你幾乎確定剛好有 3 個五點。點擊 **Calza**！',
+    },
+    calzaReveal: {
+      title: '🎯 精確！Calza 成功',
+      body: '你有 **2 個五點**，Kai 有 **1 個**——合共剛好 3 個。你取回一粒骰！Calza 風險高但回報豐厚。',
+    },
+    gameOver: {
+      title: '教學完成！🎉',
+      body: '你已見識一切：**出注**、**么點萬能**、**捱過 Dudo 挑戰**，以及**親自叫出制勝 Dudo**。準備好真正對戰了嗎？',
+    },
+    skipTutorial: '跳過教學',
+    next: '下一步 →',
+    playNow: '立即遊玩！',
+    step: '步驟',
+    clickHint: '在上方做出你的行動 ↑',
+  },
 };
 
 export default zhHK;
