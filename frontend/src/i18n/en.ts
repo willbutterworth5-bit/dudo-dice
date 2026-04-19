@@ -277,6 +277,177 @@ const en: Translations = {
     totalWithWild: '{total}× total ({exact} + {wilds} wild)',
     probability: 'Bid probability was {probability}%',
   },
+  tutorial: {
+    welcome: {
+      title: 'Welcome to Dudo Dice!',
+      body: '**6 players**, each hiding dice in their cup. Your job: bluff, challenge, survive.',
+    },
+    yourDice: {
+      title: 'Your Dice',
+      body: 'These are **your dice** — only you can see them. Use them to judge how likely other players\' bids really are.',
+    },
+    diceCount: {
+      title: 'Probability & Ones',
+      body: 'See the **🎲 badge** top-right — that\'s the total dice in play. With **30 dice**, expect about **5** of any face value. But **ones are wild** and count as any face, so you\'d expect closer to **10** matching dice per bid. Use this to decide if a bid is believable!',
+    },
+    centerCircle: {
+      title: 'Whose Turn?',
+      body: 'The **centre circle** shows whose turn it is. Right now it\'s Priya\'s turn — she\'s about to open the bidding.',
+    },
+    kaiBids: {
+      title: 'The Bidding Begins',
+      body: 'Priya opens with **5 × 4** — claiming there are at least **5 fours** across all dice. Bids travel **clockwise**. Each new bid must be higher than the last.',
+    },
+    priyaBids: {
+      title: 'Marco Raises',
+      body: 'Marco raises to **7 × 4**. The bid chip moves with each player. Each bid must be **higher** — more dice, a higher face, or both.',
+    },
+    aiBids: {
+      title: 'You Raise',
+      body: 'You raise to **4 × 4**. The bid goes around the table — everyone must decide: raise the bid or call Dudo.',
+    },
+    raiseBid: {
+      title: 'Your Turn!',
+      body: 'A bid needs a **quantity** and a **face value**. You can raise the **quantity** (more dice), the **face value** (higher number), or both. Try **8 × 4** — then hit Bid!',
+    },
+    sofiaBids: {
+      title: 'Sofia Raises',
+      body: 'Sofia raises to **9 × 4**. The bid keeps climbing. Now it\'s Lena\'s turn.',
+    },
+    lenaBidsR1: {
+      title: 'Lena Goes Higher',
+      body: 'Lena pushes to **10 × 4** — a bold claim! Kai is next. Will he believe it?',
+    },
+    kaiDudoR1: {
+      title: 'Kai Calls Dudo!',
+      body: 'Kai doesn\'t believe Lena\'s **10 × 4** — he challenges! **DUDO** means "I lie". Time to reveal all the dice.',
+    },
+    dudoPrompt: {
+      title: 'Call Dudo!',
+      body: 'Lena is claiming **6 fours** — but you\'ve only seen 2 in your own cup. Click **Dudo** to challenge! Right → Lena loses a die. Wrong → you do.',
+    },
+    revealR1: {
+      title: 'Revealing All Dice...',
+      body: 'Every die is flipped face-up. Count the fours — **ones are wild** and count as any face value!',
+    },
+    roundResultR1: {
+      title: 'Lena Loses a Die',
+      body: 'Only **9 fours** on the table — Lena\'s bid of 10×4 was too high. She drops to 4 dice. You still have **5 dice**. **The loser always starts the next round.**',
+    },
+    sofiaOpensR2: {
+      title: 'Round 2 — Sofia Opens',
+      body: 'Sofia lost a die, so she starts this round. She bids **2 × 6**. The loser always goes first.',
+    },
+    lenaOpensR2: {
+      title: 'Round 2 — Lena Opens',
+      body: 'Lena lost a die, so she starts this round. She bids **4 × 6**. The loser always goes first.',
+    },
+    lenaBidsR2: {
+      title: 'Kai Raises',
+      body: 'Kai raises to **6 × 6**. The bid chip travels clockwise — each player must raise or challenge.',
+    },
+    kaiBidsR2: {
+      title: 'Priya Raises',
+      body: 'Priya raises to **8 × 6**. Marco is up next — and he\'s about to do something interesting.',
+    },
+    priyaBidsR2: {
+      title: 'Marco Raises',
+      body: 'Marco raises to **5 × 6**. Now Sofia has to decide — raise higher, or switch to ones?',
+    },
+    round2Context: {
+      title: 'Round 2 — Lena Opens',
+      body: 'Lena starts this round (she lost). Bids travel **clockwise**: Lena → Kai → Priya → Marco → Sofia → You.',
+    },
+    onesWild: {
+      title: 'Your Turn — Bid Ones!',
+      body: 'You have a **1** in your cup — ones count as **any face value** (wild). But when **bidding ones**, only real ones count — no wilds. There are **6 ones** on the table. Try **6 × 1** — select ones and hit **Bid**!',
+    },
+    bidToOnes: {
+      title: 'The Ones Rule',
+      body: 'When bidding ones, there are **no wild cards** — only actual ones count. You can see **1** in your cup. Now it\'s your turn to bid!',
+    },
+    marcoBidsR2: {
+      title: 'Marco Switches to Ones',
+      body: 'From Priya\'s **8 × 6**, the minimum ones bid is **floor (8 ÷ 2) + 1 = 5**. Marco switches to **5 × 1** — now it\'s your turn. When bidding ones, only **real ones** count — no wilds.',
+    },
+    r2Dudo: {
+      title: 'Your Turn — Bid Ones!',
+      body: 'Marco bid **3 × 1**. You must bid higher — try **4 × 1**. When bidding ones, **only real ones count** — no wild cards. Hit Bid!',
+    },
+    lenaDudoWrong: {
+      title: 'Sofia Calls Dudo!',
+      body: 'Sofia thinks your ones bid is too high. But with **6 ones** on the table, she\'s about to be proven wrong!',
+    },
+    r2Reveal: {
+      title: 'Sofia Was Wrong!',
+      body: 'There are **6 ones** on the table — your bid of 6×1 was valid all along. Sofia incorrectly called Dudo and loses a die. You still have **5 dice**.',
+    },
+    r2Result: {
+      title: 'Sofia Loses a Die',
+      body: 'Sofia is down to **4 dice**. She called Dudo incorrectly and paid the price. The loser starts the next round.',
+    },
+    r3LenaBids: {
+      title: 'Round 3 — Sofia Opens',
+      body: 'Sofia lost a die, so she starts Round 3. She opens with **9 × 3**. With **28 dice** in play, expect about **9** threes — so this is right at the expected count.',
+    },
+    lenaBidsR3: {
+      title: 'Lena Raises',
+      body: 'Lena raises to **10 × 3**. Still plausible — Kai is next.',
+    },
+    kaiBidsR3: {
+      title: 'Kai Raises',
+      body: 'Kai raises to **11 × 3**. Getting closer to the edge. Priya is next.',
+    },
+    priyaBidsR3: {
+      title: 'Priya Raises',
+      body: 'Priya raises to **12 × 3**. That\'s already past the expected count of 9. Marco is next — and he\'s about to go bold.',
+    },
+    r3MarcoDudo: {
+      title: 'Marco\'s Bold Claim',
+      body: 'Marco jumps to **14 × 3**. You have **2 threes** in your cup — that means 12 more from 23 hidden dice. Expected from hidden is about 8. Does that add up?',
+    },
+    callDudoR3: {
+      title: 'Your Turn — Call It!',
+      body: 'Marco claims **14 threes**. You see **2 threes** yourself — so 12 more from 23 hidden dice. With only ~8 expected from hidden, that\'s way too many. Hit **Dudo** to challenge!',
+    },
+    r3Reveal: {
+      title: 'Revealing All Dice...',
+      body: 'Every die is flipped face-up. Count the threes — **ones are wild** and count as any face!',
+    },
+    roundResultR3: {
+      title: 'You Were Right!',
+      body: 'Only **9 threes** on the table — Marco\'s bid of 14×3 was way too high. Marco loses a die. A well-read Dudo call!',
+    },
+    palificoIntro: {
+      title: 'Palifico!',
+      body: 'Marco is down to **1 die** — Palifico is triggered! For this round: ones are **not wild**, and all players must bid the **same face value** that Marco opens with.',
+    },
+    palificoBid: {
+      title: 'Palifico Round',
+      body: 'Marco opened with **2 × 2**, locking face value to twos. You can only raise the **quantity** — face value is fixed. Try bidding 3 or more twos.',
+    },
+    calzaIntro: {
+      title: 'Calza — Exact Count',
+      body: '**Calza** is a gamble: instead of raising the bid, you claim the count is **exactly right**. Correct → gain a die. Wrong → lose one.',
+    },
+    calzaInteractive: {
+      title: 'Try Calza!',
+      body: 'The bid is **3 × 5**. You can see [5, 5] in your cup — you\'re nearly certain there are exactly 3 fives. Click **Calza**!',
+    },
+    calzaReveal: {
+      title: '🎯 Exact! Calza Succeeds',
+      body: 'You had **2 fives**, Kai had **1** — exactly 3 total. You gain a die back! Calza is high-risk but very rewarding.',
+    },
+    gameOver: {
+      title: 'Tutorial Complete! 🎉',
+      body: 'You\'ve seen it all: **bidding**, **wild ones**, **surviving a Dudo challenge**, and **calling a winning Dudo** yourself. Ready for a real game?',
+    },
+    skipTutorial: 'Skip Tutorial',
+    next: 'Next →',
+    playNow: 'Play Now!',
+    step: 'Step',
+    clickHint: 'Make your move above ↑',
+  },
   gameAnalysis: {
     title: 'Game Analysis',
     summary: 'Summary',

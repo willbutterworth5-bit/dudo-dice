@@ -116,7 +116,13 @@ export default function LandingPage() {
             <div className="border-t border-white/15" />
 
             {/* Tertiary row */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex-1 py-2 text-white hover:text-white/80 text-sm font-semibold transition-colors text-center"
+              >
+                {profileName ? `👤 ${profileName}` : t('landing.profile')}
+              </button>
               <button
                 onClick={() => navigate('/rules')}
                 className="flex-1 py-2 text-white hover:text-white/80 text-sm font-semibold transition-colors text-center"
@@ -124,10 +130,10 @@ export default function LandingPage() {
                 {t('landing.rules')}
               </button>
               <button
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate('/tutorial')}
                 className="flex-1 py-2 text-white hover:text-white/80 text-sm font-semibold transition-colors text-center"
               >
-                {profileName ? `👤 ${profileName}` : t('landing.profile')}
+                🎓 Tutorial
               </button>
             </div>
 

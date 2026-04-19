@@ -319,6 +319,177 @@ const es: Translations = {
     bidWasBluff: '— era un farol.',
     bidWasReal: '— era real, perdiste un dado.',
   },
+  tutorial: {
+    welcome: {
+      title: '¡Bienvenido a Dudo Dice!',
+      body: '**6 jugadores**, cada uno con dados ocultos en su cubilete. Tu objetivo: farolear, desafiar y sobrevivir.',
+    },
+    yourDice: {
+      title: 'Tus dados',
+      body: 'Estos son **tus dados** — solo tú puedes verlos. Úsalos para juzgar si las apuestas de los demás son creíbles.',
+    },
+    diceCount: {
+      title: 'Probabilidad y unos',
+      body: 'El **distintivo 🎲** arriba a la derecha muestra los dados en juego. Con **30 dados**, espera unos **5** de cualquier valor de cara. Pero los **unos son comodines** y cuentan como cualquier cara, por lo que esperarías unos **10** dados que coincidan por apuesta.',
+    },
+    centerCircle: {
+      title: '¿De quién es el turno?',
+      body: 'El **círculo central** muestra de quién es el turno. Ahora es el turno de Priya — está a punto de abrir la apuesta.',
+    },
+    kaiBids: {
+      title: 'Comienza la apuesta',
+      body: 'Priya abre con **5 × 4**: afirma que hay al menos **5 cuatros** entre todos los dados. Las apuestas van **en sentido horario**. Cada nueva apuesta debe ser más alta.',
+    },
+    priyaBids: {
+      title: 'Marco sube',
+      body: 'Marco sube a **7 × 4**. La ficha se mueve con cada jugador. Cada apuesta debe ser **más alta** — más dados, un valor mayor, o ambos.',
+    },
+    aiBids: {
+      title: 'Tú subes',
+      body: 'Subes a **4 × 4**. La apuesta recorre la mesa — todos deben decidir: subir o llamar Dudo.',
+    },
+    raiseBid: {
+      title: '¡Tu turno!',
+      body: 'Una apuesta necesita **cantidad** y **valor de cara**. Puedes subir la **cantidad**, el **valor**, o ambos. Prueba **8 × 4** y pulsa Apostar.',
+    },
+    sofiaBids: {
+      title: 'Sofia sube',
+      body: 'Sofia sube a **9 × 4**. La apuesta sigue escalando. Ahora le toca a Lena.',
+    },
+    lenaBidsR1: {
+      title: 'Lena sube más',
+      body: 'Lena sube a **10 × 4** — ¡una afirmación audaz! Kai es el siguiente. ¿Lo creerá?',
+    },
+    kaiDudoR1: {
+      title: '¡Kai llama a Dudo!',
+      body: 'Kai no cree el **10 × 4** de Lena — ¡desafía! **DUDO** significa "mientes". Es hora de revelar todos los dados.',
+    },
+    dudoPrompt: {
+      title: '¡Llama a Dudo!',
+      body: 'Lena afirma que hay **6 cuatros** — pero tú solo ves 2 en tu cubilete. Haz clic en **Dudo** para desafiarla. Si tienes razón, ella pierde un dado. Si te equivocas, lo pierdes tú.',
+    },
+    revealR1: {
+      title: 'Revelando todos los dados...',
+      body: 'Se dan la vuelta todos los dados. Cuenta los cuatros — ¡los **unos son comodines** y valen como cualquier valor!',
+    },
+    roundResultR1: {
+      title: 'Lena pierde un dado',
+      body: 'Solo había **9 cuatros** en la mesa — la apuesta de 10×4 de Lena era demasiado alta. Ella baja a 4 dados. Tú sigues con **5 dados**. **El perdedor siempre abre la siguiente ronda.**',
+    },
+    sofiaOpensR2: {
+      title: 'Ronda 2 — Sofia abre',
+      body: 'Sofia perdió un dado, así que abre esta ronda. Apuesta **2 × 6**. El perdedor siempre va primero.',
+    },
+    lenaOpensR2: {
+      title: 'Ronda 2 — Lena abre',
+      body: 'Lena perdió un dado, así que abre esta ronda. Apuesta **4 × 6**. El perdedor siempre va primero.',
+    },
+    lenaBidsR2: {
+      title: 'Kai sube',
+      body: 'Kai sube a **6 × 6**. La ficha viaja en sentido horario — cada jugador debe subir o desafiar.',
+    },
+    kaiBidsR2: {
+      title: 'Priya sube',
+      body: 'Priya sube a **8 × 6**. Marco es el siguiente — y está a punto de hacer algo interesante.',
+    },
+    priyaBidsR2: {
+      title: 'Marco sube',
+      body: 'Marco sube a **5 × 6**. Ahora Sofia tiene que decidir — ¿subir más o cambiar a unos?',
+    },
+    round2Context: {
+      title: 'Ronda 2 — Lena abre',
+      body: 'Lena abre esta ronda (ella perdió). Las apuestas van **en sentido horario**: Lena → Kai → Priya → Marco → Sofia → Tú.',
+    },
+    onesWild: {
+      title: '¡Tu turno — apuesta unos!',
+      body: 'Tienes un **1** en tu cubilete — los unos cuentan como **cualquier valor** (comodín). Pero al **apostar unos**, solo cuentan los unos reales — sin comodines. Hay **6 unos** en la mesa. Prueba **6 × 1** — selecciona unos y pulsa **Apostar**.',
+    },
+    bidToOnes: {
+      title: 'La regla de los unos',
+      body: 'Al apostar unos, **no hay comodines** — solo cuentan los unos reales. Tienes un **1** en tu cubilete. ¡Ahora te toca apostar!',
+    },
+    marcoBidsR2: {
+      title: 'Marco cambia a unos',
+      body: 'Desde la apuesta de **8 × 6** de Priya, el mínimo de unos es **piso (8 ÷ 2) + 1 = 5**. Marco cambia a **5 × 1** — ahora te toca a ti. Al apostar unos, solo cuentan los **unos reales**.',
+    },
+    r2Dudo: {
+      title: '¡Tu turno — apuesta unos!',
+      body: 'Marco apostó **3 × 1**. Debes apostar más alto — prueba **4 × 1**. Al apostar unos, **solo cuentan los unos reales**, sin comodines. ¡Pulsa Apostar!',
+    },
+    lenaDudoWrong: {
+      title: '¡Sofia llama a Dudo!',
+      body: 'Sofia cree que tu apuesta de unos es demasiado alta. Pero con **6 unos** en la mesa, ¡está a punto de equivocarse!',
+    },
+    r2Reveal: {
+      title: '¡Sofia estaba equivocada!',
+      body: 'Hay **6 unos** en la mesa — tu apuesta de 6×1 era válida. Sofia llamó a Dudo incorrectamente y pierde un dado. Tú sigues con **5 dados**.',
+    },
+    r2Result: {
+      title: 'Sofia pierde un dado',
+      body: 'Sofia se queda con **4 dados**. Llamó a Dudo incorrectamente y pagó el precio. El perdedor abre la siguiente ronda.',
+    },
+    r3LenaBids: {
+      title: 'Ronda 3 — Sofia abre',
+      body: 'Sofia perdió un dado, así que abre la Ronda 3. Apuesta **9 × 3**. Con **28 dados** en juego, espera unos **9** treses — esta apuesta está justo en el promedio estadístico.',
+    },
+    lenaBidsR3: {
+      title: 'Lena sube',
+      body: 'Lena sube a **10 × 3**. Aún plausible — Kai es el siguiente.',
+    },
+    kaiBidsR3: {
+      title: 'Kai sube',
+      body: 'Kai sube a **11 × 3**. Cada vez más al límite. Priya es la siguiente.',
+    },
+    priyaBidsR3: {
+      title: 'Priya sube',
+      body: 'Priya sube a **12 × 3**. Ya supera el conteo esperado de 9. Marco es el siguiente — y va a ser audaz.',
+    },
+    r3MarcoDudo: {
+      title: 'La osada apuesta de Marco',
+      body: 'Marco salta a **14 × 3**. Tú tienes **2 treses** en tu cubilete — eso significa 12 más de los 23 dados ocultos. De los ocultos se esperan unos 8. ¿Cuadra?',
+    },
+    callDudoR3: {
+      title: '¡Tu turno — ¡desafía!',
+      body: 'Marco afirma **14 treses**. Tú ves **2 treses** — así que necesita 12 más de 23 ocultos. Con solo ~8 esperados, son demasiados. ¡Pulsa **Dudo**!',
+    },
+    r3Reveal: {
+      title: 'Revelando todos los dados...',
+      body: 'Se dan la vuelta todos los dados. Cuenta los treses — ¡los **unos son comodines** y cuentan como cualquier valor!',
+    },
+    roundResultR3: {
+      title: '¡Tenías razón!',
+      body: 'Solo había **9 treses** en la mesa — la apuesta de 14×3 de Marco era demasiado alta. Marco pierde un dado. ¡Una llamada Dudo bien calculada!',
+    },
+    palificoIntro: {
+      title: '¡Palifico!',
+      body: 'Marco se queda con **1 dado** — ¡se activa el Palifico! Esta ronda: los unos **no son comodines**, y todos deben apostar el **mismo valor** que abra Marco.',
+    },
+    palificoBid: {
+      title: 'Ronda de Palifico',
+      body: 'Marco abrió con **2 × 2**, bloqueando el valor en doses. Solo puedes subir la **cantidad** — el valor está fijo. Intenta apostar 3 o más doses.',
+    },
+    calzaIntro: {
+      title: 'Calza — Cantidad exacta',
+      body: '**Calza** es una apuesta arriesgada: en lugar de subir, afirmas que el recuento es **exactamente correcto**. Correcto → ganas un dado. Incorrecto → pierdes uno.',
+    },
+    calzaInteractive: {
+      title: '¡Intenta la Calza!',
+      body: 'La apuesta es **3 × 5**. Ves [5, 5] en tu cubilete — estás casi seguro de que hay exactamente 3 cincos. ¡Haz clic en **Calza**!',
+    },
+    calzaReveal: {
+      title: '🎯 ¡Exacto! Calza tiene éxito',
+      body: 'Tenías **2 cincos**, Kai tenía **1** — exactamente 3 en total. ¡Recuperas un dado! La Calza es arriesgada, pero muy rentable.',
+    },
+    gameOver: {
+      title: '¡Tutorial completo! 🎉',
+      body: 'Lo has visto todo: **apuestas**, **unos como comodines**, **sobrevivir un Dudo** y **llamar un Dudo ganador** tú mismo. ¿Listo para una partida de verdad?',
+    },
+    skipTutorial: 'Saltar tutorial',
+    next: 'Siguiente →',
+    playNow: '¡Jugar ahora!',
+    step: 'Paso',
+    clickHint: 'Haz tu movimiento arriba ↑',
+  },
 };
 
 export default es;

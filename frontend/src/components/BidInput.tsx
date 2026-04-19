@@ -98,8 +98,9 @@ export default function BidInput({
     return 30; // Reasonable upper limit
   };
 
-  // Can bid ones if not in palifico mode (validation will check if quantity is high enough)
-  const canBidOnes = !palificoMode.active;
+  // Can bid ones unless in palifico mode — EXCEPT when palifico is used to lock face=1
+  // (tutorial uses { active: true, lockedFaceValue: 1 } to grey non-1 faces while keeping 1 enabled)
+  const canBidOnes = !palificoMode.active || palificoMode.lockedFaceValue === 1;
   const canBidNonOnes = !palificoMode.active || (palificoMode.lockedFaceValue !== null && faceValue === palificoMode.lockedFaceValue);
 
   return (
