@@ -181,6 +181,49 @@ export function FaqContentEs() {
         </>
       ),
     },
+    {
+      q: '¿Cuántos jugadores pueden jugar al Perudo / Liar\'s Dice?',
+      a: (
+        <p>El Perudo y el Liar's Dice están diseñados para 2–6 jugadores. En Dudo Dice, el modo un jugador te enfrenta a 1–5 oponentes IA, y el multijugador online admite de 2 a 6 jugadores humanos en la misma sala. El juego se acelera a medida que se eliminan jugadores, con la tensión máxima en el duelo final.</p>
+      ),
+    },
+    {
+      q: '¿Qué es el Palifico en el Perudo?',
+      a: (
+        <p>El Palifico es una ronda especial que se activa cuando un jugador se queda con exactamente un dado. Ese jugador abre la puja y establece el valor de cara; todas las pujas siguientes en esa ronda deben usar ese mismo valor. Además, durante el Palifico los unos pierden su condición de comodín y solo cuentan como valor 1.</p>
+      ),
+    },
+    {
+      q: '¿Qué es la Calza en el Liar\'s Dice?',
+      a: (
+        <p>La Calza es una llamada opcional disponible en lugar de desafiar con Dudo. En vez de reclamar que la puja es demasiado alta, afirmas que el recuento es exactamente correcto. Si aciertas, recuperas un dado (hasta tu cantidad inicial). Si fallas, pierdes un dado como de costumbre. La Calza puede activarse o desactivarse en los ajustes del modo un jugador.</p>
+      ),
+    },
+    {
+      q: '¿Cuál es la diferencia entre Perudo, Liar\'s Dice, Dudo y Cacho?',
+      a: (
+        <p>Los cuatro nombres hacen referencia al mismo juego con pequeñas variaciones regionales. <em>Liar's Dice</em> es el nombre inglés usado en Norteamérica. <em>Perudo</em> es el juego de mesa comercial de 1993 de Richard Borg que lo popularizó mundialmente. <em>Dudo</em> («Lo dudo» en español) es la llamada y el nombre habitual del juego en Sudamérica. <em>Cacho</em> es el nombre usado en Chile y países andinos vecinos.</p>
+      ),
+    },
+    {
+      q: '¿Cuál es la mejor estrategia para el Liar\'s Dice / Perudo?',
+      a: (
+        <>
+          <p className="mb-2">La clave es la probabilidad: con N dados totales en la mesa, cada valor de cara aparece aproximadamente N÷6 veces de media, más todos los 1s como comodines. Puja dentro de ese rango para ser creíble, o blufea ligeramente por encima.</p>
+          <ul className="list-disc list-outside space-y-1 pl-5">
+            <li>Desafía cuando una puja supere claramente lo que las estadísticas permiten</li>
+            <li>Observa la agresividad de las pujas ajenas — una puja inusualmente atrevida suele indicar un farol</li>
+            <li>En rondas de Palifico, el valor de cara inicial es crucial ya que todos deben seguirlo</li>
+          </ul>
+        </>
+      ),
+    },
+    {
+      q: '¿Con cuántos dados empieza cada jugador en el Liar\'s Dice?',
+      a: (
+        <p>En el Perudo clásico, cada jugador comienza con 5 dados. Dudo Dice usa 5 dados por jugador de forma predeterminada y permite ajustar entre 1 y 7 dados iniciales en el modo un jugador. Más dados significa partidas más largas con mayor margen para la estrategia antes de que comience la presión de eliminación en la fase final.</p>
+      ),
+    },
   ];
 
   return (

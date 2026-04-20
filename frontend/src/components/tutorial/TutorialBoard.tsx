@@ -64,6 +64,23 @@ export default function TutorialBoard({
   const bidChipX = Math.cos(bidMidRad) * innerRingMidR;
   const bidChipY = Math.sin(bidMidRad) * innerRingMidR;
 
+  // Dudo animation state
+  const [isShaking, setIsShaking] = useState(false);
+
+  const isDudoScene = scene.innerCircleText === 'DUDO!';
+  const challengedPlayerId = isDudoScene
+    ? (scene.revealState?.challengedBid.playerId ?? scene.currentBid?.playerId ?? null)
+    : null;
+  const challengedSectorIdx = challengedPlayerId ? (PLAYER_SECTOR[challengedPlayerId] ?? -1) : -1;
+
+  useEffect(() => {
+    if (isDudoScene && revealPhase === 'hidden') {
+      setIsShaking(true);
+      const t = setTimeout(() => setIsShaking(false), 600);
+      return () => clearTimeout(t);
+    }
+  }, [isDudoScene, revealPhase]);
+
   // Bid chip entrance animation: fade in when bid first appears (null → bid)
   const prevBidExisted = useRef<boolean>(false);
   const [chipOpacity, setChipOpacity] = useState(1);
@@ -159,7 +176,7 @@ export default function TutorialBoard({
   return (
     <div
       ref={boardRef}
-      className="relative"
+      className={`relative ${isShaking ? 'animate-board-shake' : ''}`}
       style={{ width: '450px', height: '450px', flexShrink: 0 }}
     >
       {/* Palifico badge */}
@@ -188,6 +205,7 @@ export default function TutorialBoard({
         const player = sectorPlayer[sectorIdx];
         const isCurrentPlayer = sectorIdx === scene.currentPlayerIdx;
         const hexColor = player?.color ?? '#9CA3AF';
+        const isDudoChallenged = isDudoScene && !player?.isEliminated && sectorIdx === challengedSectorIdx;
         const endAngle = startAngle + 60;
         const startRad = (startAngle * Math.PI) / 180;
         const endRad = (endAngle * Math.PI) / 180;
@@ -222,12 +240,14 @@ export default function TutorialBoard({
               transform: 'translate(-50%, -50%)',
               zIndex: 1, overflow: 'visible',
               opacity,
+              filter: isDudoChallenged ? 'drop-shadow(0 0 14px rgba(220, 38, 38, 0.6))' : 'none',
+              transition: 'filter 0.6s ease',
             }}
           >
             <path
               d={`M ${225 + x1} ${225 + y1} L ${225 + x2} ${225 + y2} A ${ringRadius} ${ringRadius} 0 ${largeArc} 1 ${225 + x3} ${225 + y3} L ${225 + x4} ${225 + y4} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${225 + x1} ${225 + y1} Z`}
-              fill={hexColor}
-              fillOpacity={isCurrentPlayer ? 0.65 : 0.15}
+              fill={isDudoChallenged ? '#DC2626' : hexColor}
+              fillOpacity={isDudoChallenged ? 0.45 : isCurrentPlayer ? 0.65 : 0.15}
               stroke={isCurrentPlayer ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.06)'}
               strokeWidth={isCurrentPlayer ? '2' : '0.5'}
             />
@@ -249,9 +269,15 @@ export default function TutorialBoard({
           const startY = Math.sin((angle * Math.PI) / 180) * innerRadius;
           const endX = Math.cos((angle * Math.PI) / 180) * outerRadius;
           const endY = Math.sin((angle * Math.PI) / 180) * outerRadius;
-          const isActiveLine = idx === scene.currentPlayerIdx || idx === (scene.currentPlayerIdx + 1) % 6;
+          const isDudoLine = isDudoScene && challengedSectorIdx >= 0 &&
+            (idx === challengedSectorIdx || idx === (challengedSectorIdx + 1) % 6);
+          const isActiveLine = isDudoScene
+            ? isDudoLine
+            : (idx === scene.currentPlayerIdx || idx === (scene.currentPlayerIdx + 1) % 6);
           if (isActiveLine !== renderActive) return null;
           const gradientId = `tut-line-grad-${idx}`;
+          const activeColor = isDudoLine ? '#E03030' : currentPlayerColor;
+          const activeDarkColor = isDudoLine ? darkenHex('#E03030', 65) : darkenHex(currentPlayerColor, 65);
 
           return (
             <svg
@@ -273,9 +299,9 @@ export default function TutorialBoard({
                     x2={225 + endX} y2={225 + endY}
                   >
                     <stop offset="0%" stopColor="white" stopOpacity="1" />
-                    <stop offset="15%" stopColor={currentPlayerColor} stopOpacity="1" />
-                    <stop offset="65%" stopColor={currentPlayerColor} stopOpacity="1" />
-                    <stop offset="100%" stopColor={darkenHex(currentPlayerColor, 65)} stopOpacity="1" />
+                    <stop offset="15%" stopColor={activeColor} stopOpacity="1" />
+                    <stop offset="65%" stopColor={activeColor} stopOpacity="1" />
+                    <stop offset="100%" stopColor={activeDarkColor} stopOpacity="1" />
                   </linearGradient>
                 </defs>
               )}
@@ -283,7 +309,7 @@ export default function TutorialBoard({
                 x1={225 + startX} y1={225 + startY}
                 x2={225 + endX} y2={225 + endY}
                 stroke={isActiveLine ? `url(#${gradientId})` : 'rgba(255,255,255,0.33)'}
-                strokeWidth="12"
+                strokeWidth={isDudoLine ? '14' : '12'}
                 strokeLinecap="round"
               />
             </svg>
@@ -463,15 +489,16 @@ export default function TutorialBoard({
           transform: 'translate(-50%, -50%)',
           zIndex: 20,
           borderRadius: '50%',
-          background: hexToRgba(currentPlayerColor, 0.35),
+          background: isDudoScene ? '#E03030' : hexToRgba(currentPlayerColor, 0.35),
         }}
       >
         <div
           className="rounded-full flex items-center justify-center"
           style={{
             width: '120px', height: '120px',
-            background: currentPlayerColor,
-            transition: 'background 0.4s ease',
+            background: isDudoScene ? '#E03030' : currentPlayerColor,
+            border: isDudoScene ? '1px solid rgba(255,255,255,0.5)' : 'none',
+            transition: 'background 0.5s ease',
           }}
         >
           <div className="text-center flex flex-col items-center justify-center w-full px-2 gap-0 select-none">
