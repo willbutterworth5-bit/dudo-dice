@@ -182,6 +182,49 @@ export function FaqContent() {
         </>
       ),
     },
+    {
+      q: 'How many players can play Perudo / Liar\'s Dice?',
+      a: (
+        <p>Perudo and Liar's Dice are designed for 2–6 players. In Dudo Dice, single-player mode pits you against 1–5 AI opponents, and online multiplayer supports 2–6 human players in the same room. The game gets faster as players are eliminated, with tension peaking in the final heads-up.</p>
+      ),
+    },
+    {
+      q: 'What is Palifico in Perudo?',
+      a: (
+        <p>Palifico is a special round triggered when any player is reduced to exactly one die. The player with one die opens bidding and sets the face value — all subsequent bids in that round must use the same face value. Crucially, ones lose their wild status during Palifico and only count as literal 1s.</p>
+      ),
+    },
+    {
+      q: 'What is Calza in liar\'s dice?',
+      a: (
+        <p>Calza is an optional call available instead of challenging with Dudo. Rather than claiming the bid is too high, you claim the count is exactly right. If correct, you gain one die back (up to your starting amount). If wrong, you lose one die as normal. Calza can be enabled or disabled in the single-player settings.</p>
+      ),
+    },
+    {
+      q: 'What is the difference between Perudo, Liar\'s Dice, Dudo, and Cacho?',
+      a: (
+        <p>All four names refer to the same game with slight regional variation. <em>Liar's Dice</em> is the broad English name used in North America. <em>Perudo</em> is the 1993 commercial board game by Richard Borg that popularised it globally. <em>Dudo</em> (Spanish for "I doubt it") is the common call and game name across South America. <em>Cacho</em> is the name used in Chile and neighbouring Andean countries.</p>
+      ),
+    },
+    {
+      q: 'What is the best strategy for liar\'s dice / Perudo?',
+      a: (
+        <>
+          <p className="mb-2">The key is probability: with N total dice on the table, each face value appears roughly N÷6 times on average, plus all 1s as wilds. Bid within that range to stay credible, or bluff slightly above it.</p>
+          <ul className="list-disc list-outside space-y-1 pl-5">
+            <li>Challenge when a bid far exceeds what the dice can statistically support</li>
+            <li>Watch how aggressively others bid — an unusually bold bid often signals a bluff</li>
+            <li>In Palifico rounds, the opening face value matters enormously since everyone must follow it</li>
+          </ul>
+        </>
+      ),
+    },
+    {
+      q: 'How many dice does each player start with in liar\'s dice?',
+      a: (
+        <p>In classic Perudo, each player starts with 5 dice. Dudo Dice uses 5 dice per player by default and lets you adjust from 1 to 7 starting dice in single-player settings. More starting dice means longer games with more room for strategy before the endgame elimination pressure begins.</p>
+      ),
+    },
   ];
 
   return (

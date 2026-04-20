@@ -39,7 +39,17 @@ export default function HomeScreen() {
 
   useEffect(() => {
     document.title = "Play Liar's Dice vs Computer — Dudo Dice";
-    return () => { document.title = "Dudo Dice - Play Liar's Dice Online Free"; };
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href', 'https://dudodice.com/play');
+    document.querySelector('meta[name="description"]')?.setAttribute('content', "Play Liar's Dice against computer AI for free. Single-player Perudo with bidding, bluffing and challenges. Pick your difficulty and start in seconds.");
+    document.querySelector('meta[property="og:url"]')?.setAttribute('content', 'https://dudodice.com/play');
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content', "Play Liar's Dice vs Computer — Dudo Dice");
+    return () => {
+      document.title = "Dudo Dice - Play Liar's Dice Online Free";
+      document.querySelector('link[rel="canonical"]')?.setAttribute('href', 'https://dudodice.com/');
+      document.querySelector('meta[name="description"]')?.setAttribute('content', "Free online Liar's Dice game. Bid, bluff, and challenge — play against AI or in real-time multiplayer. Also known as Perudo. No download required.");
+      document.querySelector('meta[property="og:url"]')?.setAttribute('content', 'https://dudodice.com/');
+      document.querySelector('meta[property="og:title"]')?.setAttribute('content', "Dudo Dice - Play Liar's Dice Online Free");
+    };
   }, []);
 
   const [playerCount, setPlayerCount] = useState(6);

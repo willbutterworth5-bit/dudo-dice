@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { readFileSync } from 'fs';
 import { RoomManager } from './RoomManager.js';
 import { RatingStore } from './RatingStore.js';
 import { setupSocketHandlers } from './SocketHandlers.js';
@@ -118,9 +119,51 @@ setupSocketHandlers(io, roomManager, ratingStore, supabase);
 // In production, serve the frontend build
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = join(__dirname, '../../frontend/dist');
+  const indexHtml = readFileSync(join(frontendPath, 'index.html'), 'utf-8');
+
+  function injectMeta(html: string, meta: {
+    title: string;
+    description: string;
+    canonical: string;
+    ogTitle: string;
+  }): string {
+    return html
+      .replace(/<title>[^<]*<\/title>/, `<title>${meta.title}</title>`)
+      .replace(/(<meta\s+name="description"\s+content=")[^"]*(")/,       `$1${meta.description}$2`)
+      .replace(/(<link\s+rel="canonical"\s+href=")[^"]*(")/,             `$1${meta.canonical}$2`)
+      .replace(/(<meta\s+property="og:url"\s+content=")[^"]*(")/,        `$1${meta.canonical}$2`)
+      .replace(/(<meta\s+property="og:title"\s+content=")[^"]*(")/,      `$1${meta.ogTitle}$2`)
+      .replace(/(<meta\s+property="og:description"\s+content=")[^"]*(")/,`$1${meta.description}$2`)
+      .replace(/(<meta\s+name="twitter:title"\s+content=")[^"]*(")/,     `$1${meta.ogTitle}$2`)
+      .replace(/(<meta\s+name="twitter:description"\s+content=")[^"]*(")/,`$1${meta.description}$2`);
+  }
+
+  // Route-specific pages — must be registered before express.static and the SPA fallback
+  app.get('/rules', (_req, res) => {
+    res.sendFile(join(frontendPath, 'rules.html'));
+  });
+
+  app.get('/play', (_req, res) => {
+    res.type('html').send(injectMeta(indexHtml, {
+      title: "Play Liar's Dice vs Computer — Dudo Dice",
+      description: "Play Liar's Dice against computer AI for free. Single-player Perudo with bidding, bluffing and challenges. Pick your difficulty and start in seconds.",
+      canonical: 'https://dudodice.com/play',
+      ogTitle: "Play Liar's Dice vs Computer — Dudo Dice",
+    }));
+  });
+
+  app.get('/online', (_req, res) => {
+    res.type('html').send(injectMeta(indexHtml, {
+      title: "Play Liar's Dice Online Multiplayer — Dudo Dice",
+      description: "Play Perudo (Liar's Dice) online with friends in real-time. Create private rooms, share a code, and challenge players across any device. Free to play.",
+      canonical: 'https://dudodice.com/online',
+      ogTitle: "Play Liar's Dice Online Multiplayer — Dudo Dice",
+    }));
+  });
+
   app.use(express.static(frontendPath));
 
-  // SPA fallback
+  // SPA fallback for all other routes
   app.get('*', (_req, res) => {
     res.sendFile(join(frontendPath, 'index.html'));
   });
