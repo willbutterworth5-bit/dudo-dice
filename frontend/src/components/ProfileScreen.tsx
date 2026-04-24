@@ -156,10 +156,6 @@ export default function ProfileScreen() {
 
   const [activeTab, setActiveTab] = useState<'vs-computer' | 'online' | 'achievements'>('online');
 
-  const winRate = ProfileStorage.getWinRate();
-  const dudoSuccessRate = ProfileStorage.getDudoSuccessRate();
-  const calledAgainstSuccessRate = ProfileStorage.getCalledAgainstSuccessRate();
-
   const unlockedIds = profile.achievements ?? [];
   const unlockedCount = unlockedIds.length;
 
@@ -334,7 +330,7 @@ export default function ProfileScreen() {
                     <span className="text-white font-bold text-base">{profile.playStreak ?? 0}</span>
                     <span className="text-white/50 text-sm">{(profile.playStreak ?? 0) === 1 ? 'day' : 'days'}</span>
                   </div>
-                  <span className="text-white/35 text-xs">Best streak: {profile.longestPlayStreak ?? 0}</span>
+                  <span className="text-white/35 text-xs">Best play streak: {profile.longestPlayStreak ?? 0} days</span>
                 </div>
               </div>
 
@@ -498,58 +494,89 @@ export default function ProfileScreen() {
         <div className="bg-gradient-to-br from-indigo-700 to-purple-900 rounded-xl shadow-2xl overflow-hidden mb-6">
           {/* Tab bar */}
           <div className="flex gap-2 p-3 border-b border-white/20">
-            {(['online', 'vs-computer', 'achievements'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2 rounded-xl font-bold text-sm transition-colors ${
-                  activeTab === tab ? 'text-white btn-3d-accent' : 'btn-glass'
-                }`}
-              >
-                {tab === 'vs-computer' ? t('profile.tabVsComputer') : tab === 'online' ? t('profile.tabOnline') : t('profile.tabAchievements')}
-              </button>
-            ))}
+            {(['online', 'vs-computer', 'achievements'] as const).map((tab) => {
+              const label = tab === 'vs-computer' ? t('profile.tabVsComputer') : tab === 'online' ? t('profile.tabOnline') : t('profile.tabAchievements');
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-1 py-2 rounded-xl font-bold text-sm transition-colors ${
+                    activeTab === tab ? 'text-white btn-3d-accent' : 'btn-glass'
+                  }`}
+                >
+                  {label}
+                  {tab === 'achievements' && (
+                    <span className={`ml-1 text-xs font-normal ${activeTab === tab ? 'text-white/70' : 'text-white/50'}`}>
+                      ({unlockedCount}/{ACHIEVEMENTS.length})
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           <div className="p-4 sm:p-6">
             {/* VS Computer tab */}
             {activeTab === 'vs-computer' && (() => {
               const s = profile.vsComputerStats;
+              const wr = statsWinRate(s);
+              const dr = statsDudoRate(s);
+              const cr = statsCalledAgainstRate(s);
+              const losses = s.gamesPlayed - s.gamesWon;
+              const avgDudo = s.gamesPlayed > 0 ? (s.dudoCalls / s.gamesPlayed).toFixed(1) : '0.0';
               return (
                 <>
                   <p className="text-white font-bold text-sm mb-3">{t('profile.vsComputerStats')}</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                    <div className="text-white/65 text-sm mb-1">{t('profile.gamesPlayed')}</div>
-                    <div className="text-3xl font-bold text-white">{s.gamesPlayed}</div>
-                  </div>
-                  <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                    <div className="text-white/65 text-sm mb-1">{t('profile.gamesWon')}</div>
-                    <div className="text-3xl font-bold text-white">{s.gamesWon}</div>
-                  </div>
-                  <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                    <div className="text-white/65 text-sm mb-1">{t('profile.winRate')}</div>
-                    <div className="text-3xl font-bold text-white">{winRate}%</div>
-                  </div>
-                  <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                    <div className="text-white/65 text-sm mb-1">{t('profile.dudoCalls')}</div>
-                    <div className="text-3xl font-bold text-white">{s.dudoCalls}</div>
-                  </div>
-                  <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                    <div className="text-white/65 text-sm mb-1">{t('profile.dudoSuccessRate')}</div>
-                    <div className="text-3xl font-bold text-white">{dudoSuccessRate}%</div>
-                    <div className="text-xs text-white/50 mt-1">
-                      {s.successfulDudoCalls} / {s.dudoCalls} calls
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <div className="text-white/65 text-sm mb-1">{t('profile.record')}</div>
+                      <div className="text-3xl font-bold text-white">
+                        <span className="text-green-400">{s.gamesWon}W</span>
+                        <span className="text-white/40 mx-1">–</span>
+                        <span className="text-red-400">{losses}L</span>
+                      </div>
+                      <div className="text-xs text-white/50 mt-1">{s.gamesPlayed} played</div>
+                    </div>
+                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <div className="text-white/65 text-sm mb-1">{t('profile.winRate')}</div>
+                      <div className="text-3xl font-bold text-white">{wr}%</div>
+                      <div className="mt-2 h-1.5 rounded-full bg-white/10">
+                        <div className={`h-full rounded-full transition-all ${wr >= 60 ? 'bg-green-400' : wr >= 40 ? 'bg-yellow-400' : 'bg-red-400'}`} style={{ width: `${wr}%` }} />
+                      </div>
+                    </div>
+                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <div className="text-white/65 text-sm mb-1">{t('profile.dudoSuccessRate')}</div>
+                      <div className="text-3xl font-bold text-white">{dr}%</div>
+                      <div className="text-xs text-white/50 mt-1">{s.successfulDudoCalls} / {s.dudoCalls} calls</div>
+                      <div className="mt-2 h-1.5 rounded-full bg-white/10">
+                        <div className={`h-full rounded-full transition-all ${dr >= 60 ? 'bg-green-400' : dr >= 40 ? 'bg-yellow-400' : 'bg-red-400'}`} style={{ width: `${dr}%` }} />
+                      </div>
+                    </div>
+                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <div className="text-white/65 text-sm mb-1">{t('profile.calledAgainstRate')}</div>
+                      <div className="text-3xl font-bold text-white">{cr}%</div>
+                      <div className="text-xs text-white/50 mt-1">{s.successfulCallsAgainst} / {s.timesCalledAgainst} times</div>
+                      <div className="mt-2 h-1.5 rounded-full bg-white/10">
+                        <div className={`h-full rounded-full transition-all ${cr >= 60 ? 'bg-green-400' : cr >= 40 ? 'bg-yellow-400' : 'bg-red-400'}`} style={{ width: `${cr}%` }} />
+                      </div>
+                    </div>
+                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <div className="text-white/65 text-sm mb-1">{t('profile.diceWon')}</div>
+                      <div className="text-3xl font-bold text-white">{s.successfulDudoCalls}</div>
+                    </div>
+                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <div className="text-white/65 text-sm mb-1">{t('profile.avgDudoPerGame')}</div>
+                      <div className="text-3xl font-bold text-white">{avgDudo}</div>
+                    </div>
+                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <div className="text-white/65 text-sm mb-1">{t('profile.roundsPlayed')}</div>
+                      <div className="text-3xl font-bold text-white">{s.roundsPlayed ?? 0}</div>
+                    </div>
+                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <div className="text-white/65 text-sm mb-1">{t('profile.bestWinStreak')}</div>
+                      <div className="text-3xl font-bold text-white">{profile.longestWinStreak ?? 0}</div>
                     </div>
                   </div>
-                  <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                    <div className="text-white/65 text-sm mb-1">{t('profile.calledAgainstRate')}</div>
-                    <div className="text-3xl font-bold text-white">{calledAgainstSuccessRate}%</div>
-                    <div className="text-xs text-white/50 mt-1">
-                      {s.successfulCallsAgainst} / {s.timesCalledAgainst} times
-                    </div>
-                  </div>
-                </div>
                 </>
               );
             })()}
@@ -560,13 +587,17 @@ export default function ProfileScreen() {
               const wr = statsWinRate(s);
               const dr = statsDudoRate(s);
               const cr = statsCalledAgainstRate(s);
+              const losses = s.gamesPlayed - s.gamesWon;
+              const avgDudo = s.gamesPlayed > 0 ? (s.dudoCalls / s.gamesPlayed).toFixed(1) : '0.0';
+              const peak = profile.peakRating ?? profile.rankedRating ?? 1500;
+              const current = profile.rankedRating ?? 1500;
               return (
                 <>
                   <p className="text-white font-bold text-sm mb-3">{t('profile.onlineStats')}</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-white/10 rounded-lg p-4 border border-white/20">
                       <div className="text-white/65 text-sm mb-1">{t('profile.ranking')}</div>
-                      <div className="text-3xl font-bold text-white">{profile.rankedRating ?? 1500}</div>
+                      <div className="text-3xl font-bold text-white">{current}</div>
                       {(profile.lastRatingChange ?? 0) !== 0 && (
                         <div className={`text-xs font-semibold mt-1 ${(profile.lastRatingChange ?? 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
                           {(profile.lastRatingChange ?? 0) > 0 ? '+' : ''}{profile.lastRatingChange} last game
@@ -574,34 +605,56 @@ export default function ProfileScreen() {
                       )}
                     </div>
                     <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                      <div className="text-white/65 text-sm mb-1">{t('profile.gamesPlayed')}</div>
-                      <div className="text-3xl font-bold text-white">{s.gamesPlayed}</div>
+                      <div className="text-white/65 text-sm mb-1">{t('profile.peakRating')}</div>
+                      <div className="text-3xl font-bold text-white">{peak}</div>
                     </div>
                     <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                      <div className="text-white/65 text-sm mb-1">{t('profile.gamesWon')}</div>
-                      <div className="text-3xl font-bold text-white">{s.gamesWon}</div>
+                      <div className="text-white/65 text-sm mb-1">{t('profile.record')}</div>
+                      <div className="text-3xl font-bold text-white">
+                        <span className="text-green-400">{s.gamesWon}W</span>
+                        <span className="text-white/40 mx-1">–</span>
+                        <span className="text-red-400">{losses}L</span>
+                      </div>
+                      <div className="text-xs text-white/50 mt-1">{s.gamesPlayed} played</div>
                     </div>
                     <div className="bg-white/10 rounded-lg p-4 border border-white/20">
                       <div className="text-white/65 text-sm mb-1">{t('profile.winRate')}</div>
                       <div className="text-3xl font-bold text-white">{wr}%</div>
-                    </div>
-                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                      <div className="text-white/65 text-sm mb-1">{t('profile.dudoCalls')}</div>
-                      <div className="text-3xl font-bold text-white">{s.dudoCalls}</div>
+                      <div className="mt-2 h-1.5 rounded-full bg-white/10">
+                        <div className={`h-full rounded-full transition-all ${wr >= 60 ? 'bg-green-400' : wr >= 40 ? 'bg-yellow-400' : 'bg-red-400'}`} style={{ width: `${wr}%` }} />
+                      </div>
                     </div>
                     <div className="bg-white/10 rounded-lg p-4 border border-white/20">
                       <div className="text-white/65 text-sm mb-1">{t('profile.dudoSuccessRate')}</div>
                       <div className="text-3xl font-bold text-white">{dr}%</div>
-                      <div className="text-xs text-white/50 mt-1">
-                        {s.successfulDudoCalls} / {s.dudoCalls} calls
+                      <div className="text-xs text-white/50 mt-1">{s.successfulDudoCalls} / {s.dudoCalls} calls</div>
+                      <div className="mt-2 h-1.5 rounded-full bg-white/10">
+                        <div className={`h-full rounded-full transition-all ${dr >= 60 ? 'bg-green-400' : dr >= 40 ? 'bg-yellow-400' : 'bg-red-400'}`} style={{ width: `${dr}%` }} />
                       </div>
                     </div>
                     <div className="bg-white/10 rounded-lg p-4 border border-white/20">
                       <div className="text-white/65 text-sm mb-1">{t('profile.calledAgainstRate')}</div>
                       <div className="text-3xl font-bold text-white">{cr}%</div>
-                      <div className="text-xs text-white/50 mt-1">
-                        {s.successfulCallsAgainst} / {s.timesCalledAgainst} times
+                      <div className="text-xs text-white/50 mt-1">{s.successfulCallsAgainst} / {s.timesCalledAgainst} times</div>
+                      <div className="mt-2 h-1.5 rounded-full bg-white/10">
+                        <div className={`h-full rounded-full transition-all ${cr >= 60 ? 'bg-green-400' : cr >= 40 ? 'bg-yellow-400' : 'bg-red-400'}`} style={{ width: `${cr}%` }} />
                       </div>
+                    </div>
+                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <div className="text-white/65 text-sm mb-1">{t('profile.diceWon')}</div>
+                      <div className="text-3xl font-bold text-white">{s.successfulDudoCalls}</div>
+                    </div>
+                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <div className="text-white/65 text-sm mb-1">{t('profile.avgDudoPerGame')}</div>
+                      <div className="text-3xl font-bold text-white">{avgDudo}</div>
+                    </div>
+                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <div className="text-white/65 text-sm mb-1">{t('profile.roundsPlayed')}</div>
+                      <div className="text-3xl font-bold text-white">{s.roundsPlayed ?? 0}</div>
+                    </div>
+                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <div className="text-white/65 text-sm mb-1">{t('profile.bestWinStreak')}</div>
+                      <div className="text-3xl font-bold text-white">{profile.longestWinStreak ?? 0}</div>
                     </div>
                   </div>
                   <p className="text-white/40 text-xs text-center mt-4">{t('profile.onlineStatsNote')}</p>

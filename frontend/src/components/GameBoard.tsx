@@ -1612,9 +1612,13 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                 const profile = ProfileStorage.getProfile();
                 if (humanWon) {
                   profile.consecutiveWins = (profile.consecutiveWins ?? 0) + 1;
+                  if (profile.consecutiveWins > (profile.longestWinStreak ?? 0)) {
+                    profile.longestWinStreak = profile.consecutiveWins;
+                  }
                 } else {
                   profile.consecutiveWins = 0;
                 }
+                profile.vsComputerStats.roundsPlayed = (profile.vsComputerStats.roundsPlayed ?? 0) + gameState.roundNumber;
                 ProfileStorage.saveProfile(profile);
 
                 const humanDiceNow = humanWon ? (humanPlayer?.diceCount ?? 0) : 0;
@@ -1643,6 +1647,9 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
               if (isMultiplayer) {
                 const humanWonMp = !!(multiplayerMode?.playerId && winner.id === multiplayerMode.playerId);
                 fireSession(humanWonMp ? 'win' : 'loss');
+                const mpProfile = ProfileStorage.getProfile();
+                mpProfile.onlineStats.roundsPlayed = (mpProfile.onlineStats.roundsPlayed ?? 0) + gameState.roundNumber;
+                ProfileStorage.saveProfile(mpProfile);
                 // Track unique online opponents for Friendly Face / Social Butterfly
                 const opponentIds = gameState.players.filter(p => !p.isHuman).map(p => p.id);
                 if (opponentIds.length > 0) {
