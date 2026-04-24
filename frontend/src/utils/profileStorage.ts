@@ -21,6 +21,7 @@ export interface PlayerStats {
   successfulDudoCalls: number;
   timesCalledAgainst: number;
   successfulCallsAgainst: number;
+  roundsPlayed?: number;
 }
 
 const EMPTY_STATS: PlayerStats = {
@@ -43,6 +44,7 @@ export interface PlayerProfile {
   onlineStats: PlayerStats;
   achievements: string[];       // array of unlocked achievement IDs
   consecutiveWins: number;      // persistent streak for Hot Streak / Unstoppable
+  longestWinStreak?: number;    // all-time best win streak
   uniquePlayerIds: string[];    // unique online opponent IDs for Friendly Face / Social Butterfly
   // Daily play streak
   playStreak?: number;          // current consecutive days played
@@ -51,6 +53,7 @@ export interface PlayerProfile {
   // Ranked Elo rating (synced from server, display-only on client)
   persistentPlayerId: string;   // stable UUID for rating identity
   rankedRating: number;         // default 1500
+  peakRating?: number;          // highest ELO ever reached
   rankedGamesPlayed: number;
   rankedWins: number;
   rankedLosses: number;
@@ -85,19 +88,24 @@ export const ProfileStorage = {
         } else {
           parsed.vsComputerStats.timesCalledAgainst = parsed.vsComputerStats.timesCalledAgainst ?? 0;
           parsed.vsComputerStats.successfulCallsAgainst = parsed.vsComputerStats.successfulCallsAgainst ?? 0;
+          parsed.vsComputerStats.roundsPlayed = parsed.vsComputerStats.roundsPlayed ?? 0;
         }
         if (!parsed.onlineStats) {
           parsed.onlineStats = { ...EMPTY_STATS };
+        } else {
+          parsed.onlineStats.roundsPlayed = parsed.onlineStats.roundsPlayed ?? 0;
         }
         // Migrate achievements and streak
         if (!parsed.achievements) parsed.achievements = [];
         if (parsed.consecutiveWins === undefined) parsed.consecutiveWins = 0;
+        if (parsed.longestWinStreak === undefined) parsed.longestWinStreak = parsed.consecutiveWins ?? 0;
         if (!parsed.uniquePlayerIds) parsed.uniquePlayerIds = [];
         // Migrate country
         if (parsed.country === undefined) parsed.country = null;
         // Migrate ranked rating fields
         if (!parsed.persistentPlayerId) parsed.persistentPlayerId = crypto.randomUUID();
         if (parsed.rankedRating === undefined) parsed.rankedRating = 1500;
+        if (parsed.peakRating === undefined) parsed.peakRating = parsed.rankedRating;
         if (parsed.rankedGamesPlayed === undefined) parsed.rankedGamesPlayed = 0;
         if (parsed.rankedWins === undefined) parsed.rankedWins = 0;
         if (parsed.rankedLosses === undefined) parsed.rankedLosses = 0;
@@ -278,6 +286,7 @@ export const ProfileStorage = {
   updateRankedRating(rating: number, delta: number, won: boolean, forfeited: boolean): void {
     const profile = this.getProfile();
     profile.rankedRating = rating;
+    if (rating > (profile.peakRating ?? 1500)) profile.peakRating = rating;
     profile.lastRatingChange = delta;
     profile.rankedGamesPlayed++;
     if (won) profile.rankedWins++;

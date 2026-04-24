@@ -81,10 +81,16 @@ export interface Translations {
     onlineStats: string;
     gamesPlayed: string;
     gamesWon: string;
+    record: string;
     winRate: string;
     dudoCalls: string;
     dudoSuccessRate: string;
     calledAgainstRate: string;
+    roundsPlayed: string;
+    bestWinStreak: string;
+    peakRating: string;
+    avgDudoPerGame: string;
+    diceWon: string;
     onlineStatsNote: string;
     achievementsUnlocked: string;
     exportData: string;

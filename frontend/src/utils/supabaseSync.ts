@@ -74,6 +74,7 @@ export async function loadFromSupabase(userId: string, session: Session): Promis
     if (ratingsRes.data) {
       const r = ratingsRes.data;
       local.rankedRating = r.rating ?? 1500;
+      local.peakRating = Math.max(local.peakRating ?? 1500, local.rankedRating);
       local.rankedGamesPlayed = r.games_played ?? 0;
       local.rankedWins = r.wins ?? 0;
       local.rankedLosses = r.losses ?? 0;
