@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, useCallback, type ReactNode } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { loadFromSupabase, syncProfileToSupabase, syncAchievementToSupabase, updateLastSeen } from '../utils/supabaseSync';
@@ -29,18 +29,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Mutable ref so profileStorage can call sync without re-renders
-  const userRef = { current: user };
+  // Stable ref so the closure passed to initSupabaseSync always sees the current user
+  const userRef = useRef<User | null>(null);
   userRef.current = user;
 
   // Wire up profileStorage sync once on mount
-  useState(() => {
+  useEffect(() => {
     initSupabaseSync(
       (userId, profile) => syncProfileToSupabase(userId, profile),
       (userId, achievementId) => syncAchievementToSupabase(userId, achievementId),
       () => userRef.current?.id ?? null,
     );
-  });
+  }, []);
 
   const handleSession = useCallback(async (newSession: Session | null) => {
     setSession(newSession);

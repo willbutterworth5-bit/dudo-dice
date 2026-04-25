@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Player } from '../game/GameState';
 import type { RatingUpdate } from '../hooks/useMultiplayerConnection';
 import { useLanguage } from '../i18n/LanguageContext';
+import { shareOrCopy, whatsAppUrl } from '../utils/share';
 
 interface GameOverModalProps {
   winner: Player;
@@ -24,6 +26,15 @@ export default function GameOverModal({
 }: GameOverModalProps) {
   const { t, language } = useLanguage();
   const placementLabels = language === 'es' ? PLACEMENT_LABELS_ES : PLACEMENT_LABELS_EN;
+  const [shareState, setShareState] = useState<'idle' | 'copied'>('idle');
+
+  const handleShare = async () => {
+    const result = await shareOrCopy('https://dudodice.com', 'Dudo Dice', 'I just won at Dudo Dice! 🎲 Come play: https://dudodice.com');
+    if (result === 'copied') {
+      setShareState('copied');
+      setTimeout(() => setShareState('idle'), 2000);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -75,6 +86,28 @@ export default function GameOverModal({
               </button>
             )}
           </div>
+
+          {winner.isHuman && (
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <p className="text-xs text-white/50 mb-2">{t('gameOver.sharePrompt')}</p>
+              <div className="flex gap-2 justify-center">
+                <button
+                  onClick={handleShare}
+                  className="px-4 py-2 btn-glass text-white text-xs font-semibold rounded-lg"
+                >
+                  {shareState === 'copied' ? t('gameOver.shareCopied') : t('gameOver.share')}
+                </button>
+                <a
+                  href={whatsAppUrl('I just won at Dudo Dice! 🎲 Come play: https://dudodice.com')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 btn-glass text-white text-xs font-semibold rounded-lg"
+                >
+                  WhatsApp
+                </a>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

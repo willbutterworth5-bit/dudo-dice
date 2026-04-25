@@ -6,6 +6,7 @@ import { APP_VERSION } from '../version';
 import { hasConsent } from '../utils/cookieConsent';
 import { useLanguage } from '../i18n/LanguageContext';
 import { ProfileStorage } from '../utils/profileStorage';
+import { shareOrCopy } from '../utils/share';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -21,6 +22,15 @@ export default function LandingPage() {
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [feedbackEmail, setFeedbackEmail] = useState('');
   const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [shareState, setShareState] = useState<'idle' | 'copied'>('idle');
+
+  const handleShare = async () => {
+    const result = await shareOrCopy('https://dudodice.com', 'Dudo Dice', "Play free Liar's Dice online: https://dudodice.com");
+    if (result === 'copied') {
+      setShareState('copied');
+      setTimeout(() => setShareState('idle'), 2000);
+    }
+  };
 
   const handleFeedbackSubmit = async () => {
     if (!feedbackMessage.trim()) return;
@@ -154,6 +164,10 @@ export default function LandingPage() {
           <span>·</span>
           <button onClick={() => setShowFeedback(true)} className="hover:text-white/70 transition-colors whitespace-nowrap">
             {t('landing.shareFeedback')}
+          </button>
+          <span>·</span>
+          <button onClick={handleShare} className="hover:text-white/70 transition-colors whitespace-nowrap">
+            {shareState === 'copied' ? t('landing.shareCopied') : t('landing.share')}
           </button>
         </div>
       </div>

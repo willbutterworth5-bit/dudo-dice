@@ -1648,6 +1648,8 @@ export default function GameBoard({ playerCount, difficulty, startingDice, analy
                 const humanWonMp = !!(multiplayerMode?.playerId && winner.id === multiplayerMode.playerId);
                 fireSession(humanWonMp ? 'win' : 'loss');
                 const mpProfile = ProfileStorage.getProfile();
+                mpProfile.onlineStats.gamesPlayed++;
+                if (humanWonMp) mpProfile.onlineStats.gamesWon++;
                 mpProfile.onlineStats.roundsPlayed = (mpProfile.onlineStats.roundsPlayed ?? 0) + gameState.roundNumber;
                 ProfileStorage.saveProfile(mpProfile);
                 // Track unique online opponents for Friendly Face / Social Butterfly

@@ -505,11 +505,6 @@ export default function ProfileScreen() {
                   }`}
                 >
                   {label}
-                  {tab === 'achievements' && (
-                    <span className={`ml-1 text-xs font-normal ${activeTab === tab ? 'text-white/70' : 'text-white/50'}`}>
-                      ({unlockedCount}/{ACHIEVEMENTS.length})
-                    </span>
-                  )}
                 </button>
               );
             })}
