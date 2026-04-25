@@ -26,6 +26,8 @@ export interface Translations {
     howItWorksChallenge: string;
     socialProof: string;
     shareFeedback: string;
+    share: string;
+    shareCopied: string;
     privacyPolicy: string;
     cookiePreferences: string;
     feedbackTitle: string;
@@ -130,6 +132,9 @@ export interface Translations {
     title: string;
     roomCode: string;
     shareInstructions: string;
+    shareLink: string;
+    shareLinkCopied: string;
+    openWhatsApp: string;
     ranked: string;
     casual: string;
     playersHeading: string;
@@ -180,6 +185,9 @@ export interface Translations {
     newGame: string;
     gameAnalysis: string;
     placed: string;
+    sharePrompt: string;
+    share: string;
+    shareCopied: string;
   };
   auth: {
     signIn: string;

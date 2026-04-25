@@ -3,6 +3,7 @@ import type { RoomPlayerInfo } from '../hooks/useMultiplayerConnection';
 import { PLAYER_COLOR_MAP, PLAYER_COLORS } from '@dudo-dice/shared';
 import { useLanguage } from '../i18n/LanguageContext';
 import BackIcon from './BackIcon';
+import { shareOrCopy, whatsAppUrl } from '../utils/share';
 
 interface WaitingRoomProps {
   roomCode: string;
@@ -36,6 +37,7 @@ export default function WaitingRoom({
 }: WaitingRoomProps) {
   const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
+  const [shareState, setShareState] = useState<'idle' | 'copied'>('idle');
   const humanPlayers = players.filter(p => !p.isAI);
   const canStart = players.length >= 2;
   const isHost = myPlayerId === hostId;
@@ -46,6 +48,19 @@ export default function WaitingRoom({
     navigator.clipboard.writeText(roomCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShareLink = async () => {
+    const joinUrl = `https://dudodice.com/online/join/${roomCode}`;
+    const result = await shareOrCopy(
+      joinUrl,
+      'Join my Dudo Dice game',
+      `Join my Dudo Dice game! Use code ${roomCode} or tap: ${joinUrl}`,
+    );
+    if (result === 'copied') {
+      setShareState('copied');
+      setTimeout(() => setShareState('idle'), 2000);
+    }
   };
 
   return (
@@ -77,9 +92,25 @@ export default function WaitingRoom({
             >
               {roomCode}
             </button>
-            <p className={`text-xs mt-1 transition-colors ${copied ? 'text-green-400' : 'text-white/40'}`}>
+            <p className={`text-xs mt-1 mb-3 transition-colors ${copied ? 'text-green-400' : 'text-white/40'}`}>
               {copied ? '✓ Copied!' : t('waitingRoom.shareInstructions')}
             </p>
+            <div className="flex gap-2 justify-center">
+              <button
+                onClick={handleShareLink}
+                className="flex-1 px-3 py-2 btn-glass text-white text-xs font-semibold rounded-lg"
+              >
+                {shareState === 'copied' ? t('waitingRoom.shareLinkCopied') : t('waitingRoom.shareLink')}
+              </button>
+              <a
+                href={whatsAppUrl(`Join my Dudo Dice game! Use code ${roomCode} or tap: https://dudodice.com/online/join/${roomCode}`)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 px-3 py-2 btn-glass text-white text-xs font-semibold rounded-lg text-center"
+              >
+                {t('waitingRoom.openWhatsApp')}
+              </a>
+            </div>
           </div>
 
           <div className="h-px bg-white/20 mb-4" />
