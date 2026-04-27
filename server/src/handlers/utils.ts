@@ -36,6 +36,7 @@ export function emitRoomUpdate(io: Server, room: Room, ratingStore?: RatingStore
         isAI: player.isAI,
         rating: rating?.rating ?? null,
         provisional: rating?.provisional ?? null,
+        supabaseUserId: player.supabaseUserId ?? null,
       };
     }),
     hostId: room.hostId,

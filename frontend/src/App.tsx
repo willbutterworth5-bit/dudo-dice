@@ -20,6 +20,7 @@ const JoinRedirect = lazy(() => import('./components/JoinRedirect'))
 const RulesPage = lazy(() => import('./components/RulesPage'))
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'))
 const TutorialScreen = lazy(() => import('./components/tutorial/TutorialScreen'))
+const FriendsScreen = lazy(() => import('./components/FriendsScreen'))
 
 function PageLoader() {
   return (
@@ -175,6 +176,7 @@ function App() {
           } />
           <Route path="/game" element={<SinglePlayerGame />} />
           <Route path="/profile" element={<ProfileScreen />} />
+          <Route path="/friends" element={<FriendsScreen />} />
           <Route path="/online" element={<LobbyScreen mp={mp} />} />
           <Route path="/online/waiting" element={<OnlineWaiting mp={mp} />} />
           <Route path="/online/game" element={<OnlineGame mp={mp} />} />

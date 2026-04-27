@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { RoomPlayerInfo } from '../hooks/useMultiplayerConnection';
 import { PLAYER_COLOR_MAP, PLAYER_COLORS } from '@dudo-dice/shared';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import BackIcon from './BackIcon';
 import { shareOrCopy, whatsAppUrl } from '../utils/share';
+import { getFriends, sendFriendRequest } from '../utils/friends';
 
 interface WaitingRoomProps {
   roomCode: string;
@@ -36,13 +38,35 @@ export default function WaitingRoom({
   onLeave,
 }: WaitingRoomProps) {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [shareState, setShareState] = useState<'idle' | 'copied'>('idle');
+  const [friendStatuses, setFriendStatuses] = useState<Record<string, 'pending' | 'accepted' | 'sending' | 'sent'>>({});
   const humanPlayers = players.filter(p => !p.isAI);
   const canStart = players.length >= 2;
   const isHost = myPlayerId === hostId;
   const hasVotedBots = myPlayerId ? startWithBotsVotes.includes(myPlayerId) : false;
   const hasEmptySlots = players.length < settings.maxPlayers;
+
+  useEffect(() => {
+    if (!user) return;
+    getFriends(user.id).then(friends => {
+      const statuses: Record<string, 'pending' | 'accepted'> = {};
+      for (const f of friends) {
+        statuses[f.userId] = f.status;
+      }
+      setFriendStatuses(statuses);
+    });
+  }, [user]);
+
+  const handleAddFriend = async (supabaseUserId: string) => {
+    if (!user) return;
+    setFriendStatuses(s => ({ ...s, [supabaseUserId]: 'sending' }));
+    const res = await sendFriendRequest(user.id, supabaseUserId);
+    if (res === 'ok' || res === 'already_sent') {
+      setFriendStatuses(s => ({ ...s, [supabaseUserId]: 'sent' }));
+    }
+  };
 
   const copyCode = () => {
     navigator.clipboard.writeText(roomCode);
@@ -169,6 +193,18 @@ export default function WaitingRoom({
                   )}
                   {p.id === hostId && (
                     <span className="text-xs text-yellow-400 font-bold">{t('waitingRoom.host')}</span>
+                  )}
+                  {!p.isAI && p.id !== myPlayerId && user && p.supabaseUserId && (
+                    <button
+                      onClick={() => handleAddFriend(p.supabaseUserId!)}
+                      disabled={!!friendStatuses[p.supabaseUserId]}
+                      className="text-xs px-2 py-1 rounded-lg btn-glass text-white font-semibold disabled:opacity-60"
+                    >
+                      {friendStatuses[p.supabaseUserId] === 'accepted' ? t('friends.alreadyFriends')
+                        : friendStatuses[p.supabaseUserId] === 'pending' || friendStatuses[p.supabaseUserId] === 'sent' ? t('friends.requestSent')
+                        : friendStatuses[p.supabaseUserId] === 'sending' ? '…'
+                        : t('friends.addFriend')}
+                    </button>
                   )}
                 </div>
               );

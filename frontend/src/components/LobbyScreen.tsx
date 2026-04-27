@@ -44,7 +44,7 @@ export default function LobbyScreen({ mp }: LobbyScreenProps) {
     return () => {
       document.title = "Dudo Dice - Play Liar's Dice Online Free";
       document.querySelector('link[rel="canonical"]')?.setAttribute('href', 'https://dudodice.com/');
-      document.querySelector('meta[name="description"]')?.setAttribute('content', "Free online Liar's Dice game. Bid, bluff, and challenge — play against AI or in real-time multiplayer. Also known as Perudo. No download required.");
+      document.querySelector('meta[name="description"]')?.setAttribute('content', "Play Liar's Dice online free — bid, bluff and challenge in real-time multiplayer or solo vs AI. Also known as Perudo or Dudo. No download required.");
       document.querySelector('meta[property="og:url"]')?.setAttribute('content', 'https://dudodice.com/');
       document.querySelector('meta[property="og:title"]')?.setAttribute('content', "Dudo Dice - Play Liar's Dice Online Free");
     };

@@ -11,6 +11,7 @@ export interface RoomPlayerInfo {
   isAI: boolean;
   rating: number | null;
   provisional: boolean | null;
+  supabaseUserId: string | null;
 }
 
 export interface RoomUpdate {

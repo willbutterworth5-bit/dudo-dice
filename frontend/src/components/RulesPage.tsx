@@ -13,13 +13,13 @@ export default function RulesPage() {
   useEffect(() => {
     document.title = "Liar's Dice Rules & FAQ — Dudo Dice";
     document.querySelector('link[rel="canonical"]')?.setAttribute('href', 'https://dudodice.com/rules');
-    document.querySelector('meta[name="description"]')?.setAttribute('content', "Learn how to play Liar's Dice (also known as Perudo or Dudo). Full rules including bidding, wild ones, Palifico, Calza, and winning conditions.");
+    document.querySelector('meta[name="description"]')?.setAttribute('content', "Full rules for Liar's Dice (Perudo / Dudo) — how to bid, use wild ones, play Palifico and Calza, and win. Free online game included.");
     document.querySelector('meta[property="og:url"]')?.setAttribute('content', 'https://dudodice.com/rules');
     document.querySelector('meta[property="og:title"]')?.setAttribute('content', "Liar's Dice Rules (Perudo / Dudo) — Dudo Dice");
     return () => {
       document.title = "Dudo Dice - Play Liar's Dice Online Free";
       document.querySelector('link[rel="canonical"]')?.setAttribute('href', 'https://dudodice.com/');
-      document.querySelector('meta[name="description"]')?.setAttribute('content', "Free online Liar's Dice game. Bid, bluff, and challenge — play against AI or in real-time multiplayer. Also known as Perudo. No download required.");
+      document.querySelector('meta[name="description"]')?.setAttribute('content', "Play Liar's Dice online free — bid, bluff and challenge in real-time multiplayer or solo vs AI. Also known as Perudo or Dudo. No download required.");
       document.querySelector('meta[property="og:url"]')?.setAttribute('content', 'https://dudodice.com/');
       document.querySelector('meta[property="og:title"]')?.setAttribute('content', "Dudo Dice - Play Liar's Dice Online Free");
     };

@@ -1,9 +1,11 @@
 User-agent: *
 Allow: /
+Allow: /rules.html
 Disallow: /game
 Disallow: /online/game
 Disallow: /online/waiting
 Disallow: /online/join/
 Disallow: /profile
+Disallow: /admin
 
 Sitemap: https://dudodice.com/sitemap.xml

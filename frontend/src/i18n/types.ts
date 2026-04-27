@@ -43,6 +43,7 @@ export interface Translations {
     feedbackErrorMsg: string;
     feedbackSubmitting: string;
     feedbackSubmit: string;
+    friends: string;
   };
   home: {
     gameSetup: string;
@@ -336,6 +337,23 @@ export interface Translations {
     playNow: string;
     step: string;
     clickHint: string;
+  };
+  friends: {
+    title: string;
+    addFriend: string;
+    requestSent: string;
+    alreadyFriends: string;
+    searchPlaceholder: string;
+    searchButton: string;
+    noPlayerFound: string;
+    incomingRequests: string;
+    accept: string;
+    decline: string;
+    remove: string;
+    friendsList: string;
+    noFriends: string;
+    pendingOutgoing: string;
+    signInPrompt: string;
   };
   gameAnalysis: {
     title: string;

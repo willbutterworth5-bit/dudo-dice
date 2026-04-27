@@ -25,7 +25,8 @@ export function registerLobbyHandlers(ctx: SocketContext): void {
     const room = await roomManager.createRoom(data.settings, data.isPublic);
     const pid = resolvedPersistentId(ctx, data.persistentId);
     await ratingStore.loadFromSupabase(pid, ctx.supabase);
-    const player = room.addPlayer(socket.id, data.playerName, pid);
+    const supabaseUserId = ctx.socket.data?.supabaseUserId as string | undefined;
+    const player = room.addPlayer(socket.id, data.playerName, pid, supabaseUserId);
     if (!player) {
       socket.emit('error', { message: 'Could not create room' });
       return;
@@ -64,7 +65,8 @@ export function registerLobbyHandlers(ctx: SocketContext): void {
 
     const pid = resolvedPersistentId(ctx, data.persistentId);
     await ratingStore.loadFromSupabase(pid, ctx.supabase);
-    const player = room.addPlayer(socket.id, data.playerName, pid);
+    const supabaseUserId = ctx.socket.data?.supabaseUserId as string | undefined;
+    const player = room.addPlayer(socket.id, data.playerName, pid, supabaseUserId);
     if (!player) {
       socket.emit('error', { message: 'Room is full' });
       return;
@@ -98,7 +100,8 @@ export function registerLobbyHandlers(ctx: SocketContext): void {
 
     const pid = resolvedPersistentId(ctx, data.persistentId);
     await ratingStore.loadFromSupabase(pid, ctx.supabase);
-    const player = room.addPlayer(socket.id, data.playerName, pid);
+    const supabaseUserId = ctx.socket.data?.supabaseUserId as string | undefined;
+    const player = room.addPlayer(socket.id, data.playerName, pid, supabaseUserId);
     if (!player) {
       socket.emit('error', { message: 'Could not join room' });
       return;

@@ -125,25 +125,33 @@ export default function LandingPage() {
 
             <div className="border-t border-white/15" />
 
-            {/* Tertiary row */}
+            {/* Tertiary rows */}
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => navigate('/profile')}
-                className="flex-1 py-2 text-white hover:text-white/80 text-sm font-semibold transition-colors text-center"
+                className="flex-1 py-2.5 text-white hover:text-white/80 text-xs font-semibold transition-colors text-center rounded-xl border border-white/20 hover:border-white/40"
               >
                 {profileName ? `👤 ${profileName}` : t('landing.profile')}
               </button>
               <button
                 onClick={() => navigate('/rules')}
-                className="flex-1 py-2 text-white hover:text-white/80 text-sm font-semibold transition-colors text-center"
+                className="flex-1 py-2.5 text-white hover:text-white/80 text-xs font-semibold transition-colors text-center rounded-xl border border-white/20 hover:border-white/40"
               >
                 {t('landing.rules')}
               </button>
+            </div>
+            <div className="flex gap-3 justify-center">
               <button
                 onClick={() => navigate('/tutorial')}
-                className="flex-1 py-2 text-white hover:text-white/80 text-sm font-semibold transition-colors text-center"
+                className="flex-1 py-2.5 text-white hover:text-white/80 text-xs font-semibold transition-colors text-center rounded-xl border border-white/20 hover:border-white/40"
               >
                 🎓 Tutorial
+              </button>
+              <button
+                onClick={() => navigate('/friends')}
+                className="flex-1 py-2.5 text-white hover:text-white/80 text-xs font-semibold transition-colors text-center rounded-xl border border-white/20 hover:border-white/40"
+              >
+                {t('landing.friends')}
               </button>
             </div>
 
@@ -151,24 +159,27 @@ export default function LandingPage() {
         </div>
 
         {/* Footer */}
-        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mt-5 text-xs text-white/40 text-center">
-          <span className="whitespace-nowrap">{APP_VERSION}</span>
-          <span>·</span>
-          <button onClick={() => setShowPrivacy(true)} className="hover:text-white/70 transition-colors whitespace-nowrap">
-            {t('landing.privacyPolicy')}
-          </button>
-          <span>·</span>
-          <button onClick={() => setShowCookiePrefs(true)} className="hover:text-white/70 transition-colors whitespace-nowrap">
-            {t('landing.cookiePreferences')}
-          </button>
-          <span>·</span>
-          <button onClick={() => setShowFeedback(true)} className="hover:text-white/70 transition-colors whitespace-nowrap">
-            {t('landing.shareFeedback')}
-          </button>
-          <span>·</span>
-          <button onClick={handleShare} className="hover:text-white/70 transition-colors whitespace-nowrap">
-            {shareState === 'copied' ? t('landing.shareCopied') : t('landing.share')}
-          </button>
+        <div className="flex flex-col items-center gap-y-1 mt-5 text-xs text-white/40 text-center">
+          <div className="flex items-center justify-center gap-x-3">
+            <span className="whitespace-nowrap">{APP_VERSION}</span>
+            <span>·</span>
+            <button onClick={() => setShowPrivacy(true)} className="hover:text-white/70 transition-colors whitespace-nowrap">
+              {t('landing.privacyPolicy')}
+            </button>
+            <span>·</span>
+            <button onClick={() => setShowCookiePrefs(true)} className="hover:text-white/70 transition-colors whitespace-nowrap">
+              {t('landing.cookiePreferences')}
+            </button>
+          </div>
+          <div className="flex items-center justify-center gap-x-3">
+            <button onClick={() => setShowFeedback(true)} className="hover:text-white/70 transition-colors whitespace-nowrap">
+              {t('landing.shareFeedback')}
+            </button>
+            <span>·</span>
+            <button onClick={handleShare} className="hover:text-white/70 transition-colors whitespace-nowrap">
+              {shareState === 'copied' ? t('landing.shareCopied') : t('landing.share')}
+            </button>
+          </div>
         </div>
       </div>
 

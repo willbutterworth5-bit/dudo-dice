@@ -31,6 +31,7 @@ export interface RoomPlayer {
   isAI: boolean;
   disconnectedAt: number | null;
   persistentId: string;     // stable ID for rating tracking (from client localStorage)
+  supabaseUserId?: string;  // set only when the player is authenticated (Supabase auth.uid())
   forfeited: boolean;       // true if disconnected and didn't return in time
 }
 
@@ -81,7 +82,7 @@ export class Room {
     this.aiPlayer = new AIPlayer(settings.difficulty);
   }
 
-  addPlayer(socketId: string, name: string, persistentId?: string): RoomPlayer | null {
+  addPlayer(socketId: string, name: string, persistentId?: string, supabaseUserId?: string): RoomPlayer | null {
     if (this.phase !== 'waiting') return null;
     if (this.players.length >= this.settings.maxPlayers) return null;
 
@@ -94,6 +95,7 @@ export class Room {
       isAI: false,
       disconnectedAt: null,
       persistentId: persistentId || randomUUID(),
+      supabaseUserId,
       forfeited: false,
     };
 
