@@ -108,19 +108,19 @@ export default function LandingPage() {
 
             {/* Primary CTA */}
             <button
-              onClick={() => navigate('/online')}
+              onClick={() => navigate('/play')}
               className="w-full py-4 text-white font-extrabold text-lg rounded-xl transition-colors btn-3d-accent flex items-center justify-center gap-3"
             >
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
-              {t('landing.playOnline')}
+              🎲 {t('landing.playVsComputer')}
             </button>
 
             {/* Secondary CTA */}
             <button
-              onClick={() => navigate('/play')}
+              onClick={() => navigate('/online')}
               className="w-full py-3 text-white font-bold text-base rounded-xl btn-glass flex items-center justify-center gap-3"
             >
-              🎲 {t('landing.playVsComputer')}
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
+              {t('landing.playOnline')}
             </button>
 
             <div className="border-t border-white/15" />
